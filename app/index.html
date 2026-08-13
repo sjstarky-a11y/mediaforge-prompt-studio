@@ -1,0 +1,1208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MediaForge Prompt Studio</title>
+
+  <style>
+    :root {
+      --bg: #0b0b10;
+      --panel: #15141d;
+      --panel2: #1d1b27;
+      --text: #f6f1ff;
+      --muted: #aaa2bd;
+      --accent: #9d6cff;
+      --accent2: #5fe0c0;
+      --danger: #ff7474;
+      --border: rgba(255,255,255,0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(157,108,255,0.22), transparent 340px),
+        radial-gradient(circle at bottom right, rgba(95,224,192,0.12), transparent 360px),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .shell {
+      width: min(1220px, calc(100% - 24px));
+      margin: 0 auto;
+      padding: 14px 0 16px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #0b0b10;
+      display: grid;
+      place-items: center;
+      font-weight: 950;
+      letter-spacing: -0.06em;
+      box-shadow: 0 18px 44px rgba(157,108,255,0.22);
+      flex: 0 0 auto;
+      overflow: hidden;
+    }
+
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 21px;
+      line-height: 1.05;
+      letter-spacing: -0.045em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badge {
+      border: 1px solid var(--border);
+      color: var(--accent2);
+      background: rgba(95,224,192,0.07);
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(420px, 0.96fr) minmax(360px, 1.04fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025));
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: 0 22px 70px rgba(0,0,0,0.34);
+      overflow: hidden;
+    }
+
+    .card-inner {
+      padding: 18px;
+    }
+
+    .intro {
+      margin-bottom: 14px;
+    }
+
+    .intro h2 {
+      margin: 0 0 7px;
+      font-size: clamp(25px, 3.4vw, 40px);
+      line-height: 0.98;
+      letter-spacing: -0.065em;
+    }
+
+    .intro p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      max-width: 680px;
+    }
+
+    .form {
+      display: grid;
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 850;
+      color: #e7def7;
+      margin-bottom: 7px;
+    }
+
+    textarea, select {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.27);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 13px;
+      font: inherit;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 118px;
+      max-height: 190px;
+      resize: vertical;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    textarea:focus,
+    select:focus {
+      border-color: rgba(157,108,255,0.84);
+      box-shadow: 0 0 0 4px rgba(157,108,255,0.12);
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .chip {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.045);
+      color: var(--muted);
+      border-radius: 13px;
+      padding: 9px 8px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 850;
+      font-size: 12px;
+      user-select: none;
+    }
+
+    .chip.active {
+      color: #08080d;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-color: transparent;
+    }
+
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 150px;
+      gap: 10px;
+      align-items: end;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 900;
+      border-radius: 14px;
+      padding: 13px 15px;
+    }
+
+    .primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #08080d;
+      box-shadow: 0 18px 45px rgba(157,108,255,0.22);
+      width: 100%;
+    }
+
+    .secondary {
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 11px 14px;
+    }
+
+    .result-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 9px;
+    }
+
+    .result-head label {
+      margin: 0;
+    }
+
+    .result {
+      white-space: pre-wrap;
+      line-height: 1.5;
+      color: #f7f2ff;
+      min-height: 330px;
+      max-height: 56vh;
+      overflow: auto;
+      background: rgba(0,0,0,0.24);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 15px;
+      overflow-wrap: anywhere;
+      font-size: 14px;
+    }
+
+    .result.empty {
+      color: var(--muted);
+      min-height: 300px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      font-size: 12px;
+      color: var(--muted);
+      min-height: 18px;
+      overflow-wrap: anywhere;
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .fidelity-status {
+      display: none;
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.035);
+    }
+
+    .fidelity-status.visible {
+      display: block;
+    }
+
+    .fidelity-status.protected {
+      border-color: rgba(95,224,192,0.28);
+      background: rgba(95,224,192,0.07);
+    }
+
+    .fidelity-status.review {
+      border-color: rgba(255,205,92,0.30);
+      background: rgba(255,205,92,0.07);
+    }
+
+    .fidelity-status.conflict {
+      border-color: rgba(255,116,116,0.30);
+      background: rgba(255,116,116,0.07);
+    }
+
+    .fidelity-title {
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+    }
+
+    .fidelity-status.protected .fidelity-title {
+      color: var(--accent2);
+    }
+
+    .fidelity-status.review .fidelity-title {
+      color: #ffd36f;
+    }
+
+    .fidelity-status.conflict .fidelity-title {
+      color: var(--danger);
+    }
+
+    .fidelity-copy {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+
+    .proof-panel {
+      display: none;
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 13px;
+      background: rgba(0,0,0,0.20);
+    }
+
+    .proof-panel.visible {
+      display: block;
+    }
+
+    .proof-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .proof-title {
+      font-size: 12px;
+      font-weight: 900;
+      color: #e7def7;
+      letter-spacing: 0.02em;
+    }
+
+    .proof-meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .proof-generate {
+      width: 100%;
+      background: rgba(157,108,255,0.13);
+      color: #f6f1ff;
+      border: 1px solid rgba(157,108,255,0.34);
+    }
+
+    .proof-generate:hover {
+      background: rgba(157,108,255,0.20);
+    }
+
+    .proof-stage {
+      display: none;
+      margin-top: 12px;
+    }
+
+    .proof-stage.visible {
+      display: block;
+    }
+
+    .proof-image-wrap {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.30);
+      min-height: 180px;
+      display: grid;
+      place-items: center;
+    }
+
+    .proof-image {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .proof-loading {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 34px 12px;
+      text-align: center;
+    }
+
+    .proof-caption {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.4;
+    }
+
+    .proof-actions {
+      display: flex;
+      gap: 9px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .proof-actions button {
+      flex: 1 1 150px;
+    }
+
+    .approve {
+      background: rgba(95,224,192,0.12);
+      color: var(--accent2);
+      border: 1px solid rgba(95,224,192,0.30);
+    }
+
+    .regenerate {
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .proof-approved {
+      display: none;
+      margin-top: 9px;
+      color: var(--accent2);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .proof-approved.visible {
+      display: block;
+    }
+
+    .adapter-panel {
+      display: none;
+      margin-top: 12px;
+      border: 1px solid rgba(157,108,255,0.28);
+      border-radius: 18px;
+      padding: 13px;
+      background: rgba(157,108,255,0.055);
+    }
+
+    .adapter-panel.visible {
+      display: block;
+    }
+
+    .adapter-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .adapter-title {
+      font-size: 12px;
+      font-weight: 900;
+      color: #e7def7;
+      letter-spacing: 0.02em;
+    }
+
+    .adapter-status {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .adapter-controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 9px;
+      align-items: end;
+    }
+
+    .adapter-controls button {
+      white-space: nowrap;
+    }
+
+    .adapter-output {
+      display: none;
+      margin-top: 10px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(0,0,0,0.24);
+      color: #f7f2ff;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .adapter-output.visible {
+      display: block;
+    }
+
+    .adapter-ready {
+      display: none;
+      margin-top: 9px;
+      color: var(--accent2);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .adapter-ready.visible {
+      display: block;
+    }
+
+    .adapter-copy {
+      display: none;
+      margin-top: 9px;
+    }
+
+    .adapter-copy.visible {
+      display: inline-flex;
+    }
+
+    .footer {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .shell {
+        width: min(100% - 16px, 760px);
+        padding: 10px 0 12px;
+      }
+
+      .badge {
+        display: none;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .card-inner {
+        padding: 14px;
+      }
+
+      .intro {
+        margin-bottom: 11px;
+      }
+
+      .intro h2 {
+        font-size: 24px;
+        line-height: 1.03;
+      }
+
+      .intro p {
+        font-size: 13px;
+      }
+
+      textarea {
+        min-height: 96px;
+        max-height: 150px;
+      }
+
+      .mode-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+      }
+
+      .chip {
+        padding: 8px 5px;
+        font-size: 10.5px;
+      }
+
+      .bottom-row {
+        grid-template-columns: 1fr 1fr 140px;
+        gap: 8px;
+      }
+
+      select {
+        padding: 11px;
+        font-size: 13px;
+      }
+
+      .primary {
+        padding: 12px;
+      }
+
+      .result {
+        min-height: 180px;
+        max-height: 300px;
+      }
+
+      .result.empty {
+        min-height: 150px;
+      }
+
+      .adapter-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .adapter-controls button {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .brand h1 {
+        font-size: 17px;
+      }
+
+      .brand p {
+        display: none;
+      }
+
+      .logo {
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+      }
+
+      .intro h2 {
+        font-size: 21px;
+      }
+
+      .mode-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .bottom-row {
+        grid-template-columns: 1fr;
+      }
+
+      .result {
+        min-height: 160px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo"><img src="/assets/mediaforge-logo.png" alt="MediaForge logo"></div>
+        <div>
+          <h1>MediaForge Prompt Studio</h1>
+          <p>Local AI prompt tool for cinematic video creation</p>
+        </div>
+      </div>
+      <div class="badge">LOCAL AI · PRIVATE · DOCKER MODEL RUNNER</div>
+    </header>
+
+    <section class="workspace">
+      <section class="card">
+        <div class="card-inner">
+          <div class="intro">
+            <h2>Build stronger AI video prompts.</h2>
+            <p>Turn rough ideas into cinematic prompts with camera direction, lighting, movement, framing and negative constraints.</p>
+          </div>
+
+          <form class="form" id="generateForm">
+            <div>
+              <label for="userInput">Your rough idea or weak prompt</label>
+              <textarea id="userInput" placeholder="Example: a lonely man entering an old cinema"></textarea>
+            </div>
+
+            <div>
+              <label>Mode</label>
+              <div class="mode-grid" id="modeGrid">
+                <div class="chip active" data-mode="improve">Improve</div>
+                <div class="chip" data-mode="diagnose">Diagnose</div>
+                <div class="chip" data-mode="cinematic">Cinematic</div>
+                <div class="chip" data-mode="commercial">Ad</div>
+                <div class="chip" data-mode="shotlist">Shots</div>
+              </div>
+            </div>
+
+            <div class="bottom-row">
+              <div>
+                <label for="aspectRatio">Format</label>
+                <select id="aspectRatio">
+                  <option value="16:9">16:9 horizontal</option>
+                  <option value="9:16">9:16 vertical</option>
+                  <option value="1:1">1:1 square</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="language">Language</label>
+                <select id="language">
+                  <option value="English">English</option>
+                </select>
+              </div>
+
+              <div>
+                <label>&nbsp;</label>
+                <button class="primary" type="submit">Generate</button>
+              </div>
+            </div>
+
+            <div class="status" id="status">Ready.</div>
+          </form>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-inner">
+          <div class="result-head">
+            <label>Result</label>
+            <div class="status" id="modelStatus">Model: loading...</div>
+          </div>
+
+          <div class="result empty" id="result">Your improved prompt will appear here.</div>
+
+          <div class="fidelity-status" id="fidelityStatus" aria-live="polite">
+            <div class="fidelity-title" id="fidelityTitle"></div>
+            <div class="fidelity-copy" id="fidelityCopy"></div>
+          </div>
+
+          <div class="proof-panel" id="proofPanel">
+            <div class="proof-head">
+              <div class="proof-title">Visual Proof Frame</div>
+              <div class="proof-meta" id="proofMeta">Fast Proof · 768×768</div>
+            </div>
+
+            <button class="proof-generate" type="button" id="proofGenerateBtn">Generate Proof Frame</button>
+
+            <div class="proof-stage" id="proofStage">
+              <div class="proof-image-wrap" id="proofImageWrap">
+                <div class="proof-loading" id="proofLoading">Preparing proof frame...</div>
+                <img class="proof-image" id="proofImage" alt="Generated visual proof frame" hidden>
+              </div>
+
+              <div class="proof-caption" id="proofCaption"></div>
+
+              <div class="proof-actions">
+                <button class="approve" type="button" id="approveProofBtn">✓ Approve scene</button>
+                <button class="regenerate" type="button" id="regenerateProofBtn">↻ Regenerate</button>
+              </div>
+
+              <div class="proof-approved" id="proofApproved">✓ Scene approved</div>
+            </div>
+          </div>
+
+          <div class="adapter-panel" id="adapterPanel">
+            <div class="adapter-head">
+              <div class="adapter-title">Model Adapter</div>
+              <div class="adapter-status" id="adapterStatus">Choose target model</div>
+            </div>
+
+            <div class="adapter-controls">
+              <div>
+                <label for="adapterProfile">Target Model</label>
+                <select id="adapterProfile">
+                  <option value="generic_video">Generic Video</option>
+                  <option value="runway_gen4_5">Runway Gen-4.5</option>
+                  <option value="veo_3_1">Veo 3.1</option>
+                  <option value="kling_video_3_0">Kling VIDEO 3.0</option>
+                </select>
+              </div>
+
+              <button class="primary" type="button" id="adaptModelBtn">Adapt for Model</button>
+            </div>
+
+            <div class="adapter-ready" id="adapterReady">✓ MODEL READY</div>
+            <div class="adapter-output" id="adapterOutput"></div>
+            <button class="secondary adapter-copy" type="button" id="copyAdapterBtn">Copy Model Prompt</button>
+          </div>
+
+          <div class="actions">
+            <div class="button-group">
+              <button class="secondary" type="button" id="copyBtn">Copy</button>
+              <button class="secondary" type="button" id="clearBtn">Clear</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <div class="footer">
+      Runs locally through Pi SoloHost. Your creative work stays on your computer.
+    </div>
+  </main>
+
+  <script>
+    const modeGrid = document.getElementById("modeGrid");
+    const chips = Array.from(modeGrid.querySelectorAll(".chip"));
+    const form = document.getElementById("generateForm");
+    const input = document.getElementById("userInput");
+    const aspectRatio = document.getElementById("aspectRatio");
+    const language = document.getElementById("language");
+    const result = document.getElementById("result");
+    const statusEl = document.getElementById("status");
+    const modelStatus = document.getElementById("modelStatus");
+    const copyBtn = document.getElementById("copyBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const fidelityStatus = document.getElementById("fidelityStatus");
+    const fidelityTitle = document.getElementById("fidelityTitle");
+    const fidelityCopy = document.getElementById("fidelityCopy");
+    const proofPanel = document.getElementById("proofPanel");
+    const proofGenerateBtn = document.getElementById("proofGenerateBtn");
+    const proofStage = document.getElementById("proofStage");
+    const proofLoading = document.getElementById("proofLoading");
+    const proofImage = document.getElementById("proofImage");
+    const proofCaption = document.getElementById("proofCaption");
+    const proofMeta = document.getElementById("proofMeta");
+    const approveProofBtn = document.getElementById("approveProofBtn");
+    const regenerateProofBtn = document.getElementById("regenerateProofBtn");
+    const proofApproved = document.getElementById("proofApproved");
+    const adapterPanel = document.getElementById("adapterPanel");
+    const adapterProfile = document.getElementById("adapterProfile");
+    const adaptModelBtn = document.getElementById("adaptModelBtn");
+    const adapterStatus = document.getElementById("adapterStatus");
+    const adapterReady = document.getElementById("adapterReady");
+    const adapterOutput = document.getElementById("adapterOutput");
+    const copyAdapterBtn = document.getElementById("copyAdapterBtn");
+
+    let activeMode = "improve";
+    let lastSourcePrompt = "";
+    let lastFinalPrompt = "";
+    let lastFidelityStatus = "";
+    let proofSeed = 42;
+
+    function hideFidelity() {
+      fidelityStatus.className = "fidelity-status";
+      fidelityTitle.textContent = "";
+      fidelityCopy.textContent = "";
+    }
+
+    function showFidelity(fidelity) {
+      hideFidelity();
+
+      if (!fidelity || !fidelity.status) {
+        return;
+      }
+
+      const issues = Array.isArray(fidelity.issues) ? fidelity.issues : [];
+
+      if (fidelity.status === "INTENT PROTECTED") {
+        fidelityStatus.className = "fidelity-status visible protected";
+        fidelityTitle.textContent = "🛡 INTENT PROTECTED";
+        fidelityCopy.textContent = "Original creative direction preserved.";
+        return;
+      }
+
+      if (fidelity.status === "REVIEW") {
+        fidelityStatus.className = "fidelity-status visible review";
+        fidelityTitle.textContent = "⚠ REVIEW";
+        fidelityCopy.textContent = issues[0] || "A locked creative detail may have changed.";
+        return;
+      }
+
+      if (fidelity.status === "CONFLICT") {
+        fidelityStatus.className = "fidelity-status visible conflict";
+        fidelityTitle.textContent = "⚠ CLARIFICATION RECOMMENDED";
+        fidelityCopy.textContent = issues[0] || "The source prompt contains conflicting instructions.";
+      }
+    }
+
+
+    function resetModelAdapter() {
+      adapterPanel.className = "adapter-panel";
+      adapterStatus.textContent = "Choose target model";
+      adapterReady.className = "adapter-ready";
+      adapterOutput.className = "adapter-output";
+      adapterOutput.textContent = "";
+      copyAdapterBtn.className = "secondary adapter-copy";
+      adaptModelBtn.disabled = false;
+      adaptModelBtn.textContent = "Adapt for Model";
+    }
+
+    function showModelAdapter() {
+      adapterPanel.className = "adapter-panel visible";
+      adapterStatus.textContent = "Scene approved · ready to adapt";
+    }
+
+    async function adaptForModel() {
+      if (!lastSourcePrompt || !lastFinalPrompt || lastFidelityStatus !== "INTENT PROTECTED") {
+        return;
+      }
+
+      adaptModelBtn.disabled = true;
+      adaptModelBtn.textContent = "Adapting...";
+      adapterStatus.textContent = "Preparing model-ready prompt...";
+      adapterReady.className = "adapter-ready";
+      adapterOutput.className = "adapter-output";
+      copyAdapterBtn.className = "secondary adapter-copy";
+
+      try {
+        const res = await fetch("/api/model-adapter", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            source_prompt: lastSourcePrompt,
+            approved_prompt: lastFinalPrompt,
+            mode: activeMode,
+            aspect_ratio: aspectRatio.value,
+            profile: adapterProfile.value
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          const detail =
+            typeof data.detail === "string"
+              ? data.detail
+              : (data.detail && data.detail.message) || "Model adaptation failed.";
+          throw new Error(detail);
+        }
+
+        adapterStatus.textContent = data.profile || "Model ready";
+        adapterReady.className = "adapter-ready visible";
+        adapterOutput.textContent = data.prompt || "";
+        adapterOutput.className = "adapter-output visible";
+        copyAdapterBtn.className = "secondary adapter-copy visible";
+        statusEl.textContent = "Model-ready prompt created.";
+        statusEl.className = "status";
+      } catch (err) {
+        adapterStatus.textContent = "Adapter failed";
+        adapterOutput.textContent = err.message;
+        adapterOutput.className = "adapter-output visible";
+        statusEl.textContent = err.message;
+        statusEl.className = "status error";
+      } finally {
+        adaptModelBtn.disabled = false;
+        adaptModelBtn.textContent = "Adapt for Model";
+      }
+    }
+
+    function resetProofFrame() {
+      proofPanel.className = "proof-panel";
+      proofStage.className = "proof-stage";
+      proofGenerateBtn.hidden = false;
+      proofGenerateBtn.disabled = false;
+      proofGenerateBtn.textContent = "Generate Proof Frame";
+      proofImage.hidden = true;
+      proofImage.removeAttribute("src");
+      proofLoading.hidden = false;
+      proofLoading.textContent = "Preparing proof frame...";
+      proofCaption.textContent = "";
+      proofMeta.textContent = "Fast Proof · 768×768";
+      proofApproved.className = "proof-approved";
+      resetModelAdapter();
+    }
+
+    function updateProofAvailability() {
+      const supportedMode = ["improve", "cinematic", "commercial"].includes(activeMode);
+      const canGenerate =
+        supportedMode &&
+        lastFidelityStatus === "INTENT PROTECTED" &&
+        lastSourcePrompt &&
+        lastFinalPrompt;
+
+      if (canGenerate) {
+        proofPanel.className = "proof-panel visible";
+      } else {
+        resetProofFrame();
+      }
+    }
+
+    async function generateProofFrame(isRegenerate = false) {
+      if (!lastSourcePrompt || !lastFinalPrompt || lastFidelityStatus !== "INTENT PROTECTED") {
+        return;
+      }
+
+      if (isRegenerate) {
+        proofSeed = proofSeed >= 2147483646 ? 42 : proofSeed + 1;
+      } else {
+        proofSeed = 42;
+      }
+
+      proofPanel.className = "proof-panel visible";
+      proofStage.className = "proof-stage visible";
+      proofGenerateBtn.hidden = true;
+      proofImage.hidden = true;
+      proofImage.removeAttribute("src");
+      proofLoading.hidden = false;
+      proofLoading.textContent = "Generating Visual Proof Frame...";
+      proofCaption.textContent = "";
+      proofApproved.className = "proof-approved";
+      resetModelAdapter();
+      approveProofBtn.disabled = true;
+      regenerateProofBtn.disabled = true;
+
+      try {
+        const res = await fetch("/api/proof-frame", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            source_prompt: lastSourcePrompt,
+            final_prompt: lastFinalPrompt,
+            mode: activeMode,
+            aspect_ratio: aspectRatio.value,
+            quality: "fast",
+            rng_seed: proofSeed
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          const detail =
+            typeof data.detail === "string"
+              ? data.detail
+              : (data.detail && data.detail.message) || "Proof Frame generation failed.";
+          throw new Error(detail);
+        }
+
+        proofImage.src = "data:image/png;base64," + data.image_b64;
+        proofImage.hidden = false;
+        proofLoading.hidden = true;
+        proofMeta.textContent = "Fast Proof · " + (data.size || "768×768").replace("x", "×");
+        proofCaption.textContent = data.single_frame_prompt || "";
+        statusEl.textContent = "Proof Frame ready.";
+        statusEl.className = "status";
+      } catch (err) {
+        proofImage.hidden = true;
+        proofLoading.hidden = false;
+        proofLoading.textContent = "Proof Frame failed: " + err.message;
+        statusEl.textContent = err.message;
+        statusEl.className = "status error";
+      } finally {
+        approveProofBtn.disabled = false;
+        regenerateProofBtn.disabled = false;
+      }
+    }
+
+    chips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        chips.forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
+        activeMode = chip.dataset.mode;
+        updateProofAvailability();
+      });
+    });
+
+    async function loadHealth() {
+      try {
+        const res = await fetch("/health");
+        const data = await res.json();
+        modelStatus.textContent = "Model: " + data.model.replace("ai/", "");
+      } catch {
+        modelStatus.textContent = "Model: unavailable";
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const userInput = input.value.trim();
+
+      if (!userInput) {
+        statusEl.textContent = "Enter an idea or weak prompt first.";
+        statusEl.className = "status error";
+        return;
+      }
+
+      statusEl.textContent = "Generating...";
+      statusEl.className = "status";
+      result.textContent = "Working...";
+      result.classList.remove("empty");
+      hideFidelity();
+      resetProofFrame();
+      lastSourcePrompt = "";
+      lastFinalPrompt = "";
+      lastFidelityStatus = "";
+
+      try {
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            user_input: userInput,
+            mode: activeMode,
+            aspect_ratio: aspectRatio.value,
+            language: language.value
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || "Generation failed.");
+        }
+
+        result.textContent = data.result;
+        showFidelity(data.fidelity);
+
+        lastSourcePrompt = userInput;
+        lastFinalPrompt = data.result;
+        lastFidelityStatus = data.fidelity && data.fidelity.status ? data.fidelity.status : "";
+        updateProofAvailability();
+
+        statusEl.textContent = "Done.";
+      } catch (err) {
+        result.textContent = "Generation failed.";
+        hideFidelity();
+        statusEl.textContent = err.message;
+        statusEl.className = "status error";
+      }
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      const text = result.textContent.trim();
+
+      if (!text || text === "Your improved prompt will appear here.") {
+        return;
+      }
+
+      await navigator.clipboard.writeText(text);
+      statusEl.textContent = "Copied.";
+      statusEl.className = "status";
+    });
+
+    clearBtn.addEventListener("click", () => {
+      input.value = "";
+      result.textContent = "Your improved prompt will appear here.";
+      result.classList.add("empty");
+      hideFidelity();
+      lastSourcePrompt = "";
+      lastFinalPrompt = "";
+      lastFidelityStatus = "";
+      resetProofFrame();
+      statusEl.textContent = "Ready.";
+      statusEl.className = "status";
+    });
+
+    proofGenerateBtn.addEventListener("click", () => generateProofFrame(false));
+
+    regenerateProofBtn.addEventListener("click", () => generateProofFrame(true));
+
+    approveProofBtn.addEventListener("click", () => {
+      if (proofImage.hidden || !proofImage.src) {
+        return;
+      }
+      proofApproved.className = "proof-approved visible";
+      showModelAdapter();
+      statusEl.textContent = "Scene approved.";
+      statusEl.className = "status";
+    });
+
+    adaptModelBtn.addEventListener("click", adaptForModel);
+
+    adapterProfile.addEventListener("change", () => {
+      adapterReady.className = "adapter-ready";
+      adapterOutput.className = "adapter-output";
+      adapterOutput.textContent = "";
+      copyAdapterBtn.className = "secondary adapter-copy";
+      adapterStatus.textContent = "Ready to adapt for selected model";
+    });
+
+    copyAdapterBtn.addEventListener("click", async () => {
+      const text = adapterOutput.textContent.trim();
+      if (!text) {
+        return;
+      }
+      await navigator.clipboard.writeText(text);
+      statusEl.textContent = "Model prompt copied.";
+      statusEl.className = "status";
+    });
+
+    resetProofFrame();
+    loadHealth();
+  </script>
+</body>
+</html>

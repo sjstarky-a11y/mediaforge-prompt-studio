@@ -1,0 +1,39 @@
+MEDIAFORGE PROMPT STUDIO EVALUATION LICENSE
+
+Copyright (c) 2026 Siniša Josip Starčević. All rights reserved.
+
+MediaForge Prompt Studio, including its original source code, user interface,
+prompt-processing logic, documentation, branding, and associated project files
+(collectively, the "Software"), is proprietary and is not open-source software.
+
+Permission is granted to individuals to:
+
+1. view the source code in this repository; and
+2. download and run an unmodified copy of the Software solely for personal,
+   non-commercial evaluation, testing, and feedback.
+
+No other rights are granted. Without prior written permission from the
+copyright owner, you may not:
+
+- copy source code or substantial portions into another project;
+- modify, adapt, translate, reverse engineer, or create derivative works;
+- redistribute, publish, sublicense, sell, rent, or commercially exploit the
+  Software or any part of it;
+- provide the Software as a hosted or managed service;
+- remove or alter copyright, attribution, trademark, or license notices; or
+- use the MediaForge Prompt Studio or Director's Cut AI Pro names, logos, or
+  branding except to identify the unmodified Software accurately.
+
+Third-party software, models, runtimes, and other materials are not licensed
+under this document. They remain subject to their respective terms and
+licenses, as identified in LICENSES/THIRD_PARTY.md and at their download
+sources.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. TO THE MAXIMUM EXTENT
+PERMITTED BY LAW, THE COPYRIGHT OWNER SHALL NOT BE LIABLE FOR ANY CLAIM,
+DAMAGES, OR OTHER LIABILITY ARISING FROM THE SOFTWARE OR ITS USE.
+
+For permissions beyond personal evaluation, contact the copyright owner
+through the repository owner's official GitHub profile.

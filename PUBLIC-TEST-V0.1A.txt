@@ -1,0 +1,28 @@
+MEDIAFORGE PROMPT STUDIO
+PUBLIC TEST PACKAGE v0.1a CPU
+
+Purpose:
+Validate that a new Windows user can install and run the complete MediaForge workflow from a clean folder.
+
+Runtime:
+- Prompt Doctor: Docker Model Runner + Qwen 2.5 3B Q4_K_M
+- Visual Proof Frame: OpenVINO Model Server + SDXL INT8
+- Execution profile: CPU / Compatible
+
+Important:
+- GPU hardware is detected and recorded, but GPU acceleration is intentionally not enabled in v0.1a.
+- Models are downloaded separately and are not stored in this Git package.
+- .env, model caches and hardware-profile.json are excluded from Git.
+
+Packaging polish in v0.1a:
+- Docker Model Runner uses --tcp=12434 syntax.
+- First-run SDXL download status is explicit and no longer looks like an install failure.
+- App and OVMS host ports are consistently read from .env.
+- The release ZIP extracts directly into one destination folder without a duplicate nested directory.
+
+License:
+- MediaForge original code is proprietary and source-available for personal,
+  non-commercial evaluation only.
+- Modification, redistribution, hosted services and commercial use require
+  prior written permission.
+- Third-party software and models retain their own licenses.

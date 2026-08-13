@@ -1,0 +1,70 @@
+name: Bug report
+description: Report a reproducible MediaForge Public Test problem
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include secrets, private prompts, personal data, or full unrelated logs.
+  - type: input
+    id: version
+    attributes:
+      label: MediaForge version
+      placeholder: Public Test v0.1a CPU
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      options:
+        - Installer or startup
+        - Prompt Doctor
+        - Fidelity Guard / Intent Lock
+        - Visual Proof Frame
+        - Model Adapter
+        - Hardware detection
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the expected and observed behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Run ...
+        2. Select ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: Windows 11, Docker Desktop version, CPU, RAM, GPU if present
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant sanitized output
+      description: Paste only the minimum output needed, with secrets and personal data removed.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: I removed secrets, personal data, and private prompts.
+          required: true
+        - label: I checked for an existing issue.
+          required: true

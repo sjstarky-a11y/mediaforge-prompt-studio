@@ -1,0 +1,12 @@
+.env
+data/
+runtime/hardware-profile.json
+runtime/install-log.txt
+*.zip
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
