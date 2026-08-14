@@ -17,6 +17,15 @@ $appPort = Get-EnvValue "MEDIAFORGE_APP_PORT" "18888"
 $ovmsPort = Get-EnvValue "MEDIAFORGE_OVMS_PORT" "8010"
 
 Write-Host ""
+Write-Host "Hardware detection"
+Write-Host "------------------"
+try {
+    & (Join-Path $PSScriptRoot "detect-hardware.ps1")
+} catch {
+    Write-Host "Hardware detection failed:" $_.Exception.Message
+}
+
+Write-Host ""
 Write-Host "MediaForge containers"
 Write-Host "---------------------"
 docker compose ps
@@ -25,6 +34,15 @@ Write-Host ""
 Write-Host "Docker Model Runner"
 Write-Host "-------------------"
 docker model status
+
+Write-Host ""
+Write-Host "Adaptive runtime detection"
+Write-Host "--------------------------"
+try {
+    & (Join-Path $PSScriptRoot "detect-runtime.ps1")
+} catch {
+    Write-Host "Runtime detection failed:" $_.Exception.Message
+}
 
 Write-Host ""
 Write-Host "MediaForge health"
@@ -60,4 +78,14 @@ if (Test-Path $profile) {
     Get-Content $profile
 } else {
     Write-Host "No hardware profile yet. Run .\detect-hardware.ps1"
+}
+
+Write-Host ""
+Write-Host "Runtime profile"
+Write-Host "---------------"
+$runtimeProfile = Join-Path $PSScriptRoot "runtime\runtime-profile.json"
+if (Test-Path $runtimeProfile) {
+    Get-Content $runtimeProfile
+} else {
+    Write-Host "No runtime profile yet. Run .\detect-runtime.ps1"
 }

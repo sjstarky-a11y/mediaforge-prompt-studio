@@ -688,7 +688,7 @@
           <p>Local AI prompt tool for cinematic video creation</p>
         </div>
       </div>
-      <div class="badge">LOCAL AI · PRIVATE · DOCKER MODEL RUNNER</div>
+      <div class="badge" id="runtimeBadge">LOCAL AI · RUNTIME DETECTION PENDING</div>
     </header>
 
     <section class="workspace">
@@ -833,6 +833,7 @@
     const result = document.getElementById("result");
     const statusEl = document.getElementById("status");
     const modelStatus = document.getElementById("modelStatus");
+    const runtimeBadge = document.getElementById("runtimeBadge");
     const copyBtn = document.getElementById("copyBtn");
     const clearBtn = document.getElementById("clearBtn");
     const fidelityStatus = document.getElementById("fidelityStatus");
@@ -1081,8 +1082,15 @@
         const res = await fetch("/health");
         const data = await res.json();
         modelStatus.textContent = "Model: " + data.model.replace("ai/", "");
+        const runtime = data.runtime || {};
+        const runtimeSummary = (runtime.summary || "RUNTIME DETECTION PENDING").replace(/\s*\|\s*/g, " · ");
+        runtimeBadge.textContent = "LOCAL AI · " + runtimeSummary;
+        const llmRuntime = runtime.llm && runtime.llm.runtime ? runtime.llm.runtime : "Unknown";
+        const imageRuntime = runtime.image && runtime.image.runtime ? runtime.image.runtime : "Unknown";
+        runtimeBadge.title = "Prompt Doctor: " + llmRuntime + " | Visual Proof Frame: " + imageRuntime;
       } catch {
         modelStatus.textContent = "Model: unavailable";
+        runtimeBadge.textContent = "LOCAL AI · RUNTIME UNAVAILABLE";
       }
     }
 

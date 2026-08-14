@@ -1,6 +1,7 @@
 .env
 data/
 runtime/hardware-profile.json
+runtime/runtime-profile.json
 runtime/install-log.txt
 *.zip
 __pycache__/

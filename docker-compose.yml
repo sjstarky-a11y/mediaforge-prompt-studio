@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: mediaforge-prompt-studio:public-v0.1a-cpu
+    image: mediaforge-prompt-studio:v0.2-dev
     container_name: mediaforge-prompt-studio
     restart: unless-stopped
     ports:
@@ -17,7 +17,11 @@ services:
       MEDIAFORGE_OVMS_IMAGE_URL: ${MEDIAFORGE_OVMS_IMAGE_URL:-http://ovms-sdxl:8000/v3}
       MEDIAFORGE_OVMS_IMAGE_MODEL: ${MEDIAFORGE_OVMS_IMAGE_MODEL:-OpenVINO/stable-diffusion-xl-base-1.0-int8-ov}
       MEDIAFORGE_DEFAULT_LANGUAGE: English
-      MEDIAFORGE_RUNTIME: ${MEDIAFORGE_RUNTIME:-cpu}
+      MEDIAFORGE_RUNTIME_MODE: ${MEDIAFORGE_RUNTIME_MODE:-auto}
+      MEDIAFORGE_RUNTIME_PROFILE_PATH: /runtime/runtime-profile.json
+      MEDIAFORGE_IMAGE_DEVICE: ${MEDIAFORGE_IMAGE_DEVICE:-CPU}
+    volumes:
+      - ./runtime:/runtime:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -41,4 +45,4 @@ services:
       - --source_model
       - OpenVINO/stable-diffusion-xl-base-1.0-int8-ov
       - --target_device
-      - CPU
+      - ${MEDIAFORGE_IMAGE_DEVICE:-CPU}

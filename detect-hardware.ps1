@@ -27,16 +27,16 @@ try {
 }
 
 $profile = [PSCustomObject]@{
-    package_version       = "0.1a-cpu"
+    schema_version        = 1
+    profile_type          = "hardware_inventory"
+    package_version       = "0.2-dev"
     detected_at           = (Get-Date).ToString("s")
     operating_system      = (Get-CimInstance Win32_OperatingSystem).Caption
     cpu                   = $cpu.Name
     logical_processors    = $cpu.NumberOfLogicalProcessors
     ram_gb                = $ramGB
     gpus                  = @($gpuList)
-    runtime_selected      = "CPU / Compatible"
-    gpu_acceleration      = $false
-    note                  = "Public Test v0.1a records GPU hardware now, but intentionally runs inference on CPU. GPU backends are added in later public-test milestones."
+    note                  = "This file records hardware only. Runtime selection is written separately to runtime/runtime-profile.json."
 }
 
 $profile | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $runtimeDir "hardware-profile.json") -Encoding UTF8
@@ -56,5 +56,5 @@ if ($gpuList.Count -gt 0) {
 }
 
 Write-Host ""
-Write-Host "Runtime selected for Public Test v0.1a: CPU / Compatible"
+Write-Host "Runtime selection: run .\detect-runtime.ps1 after Docker Model Runner is ready"
 Write-Host "Hardware report:" (Join-Path $runtimeDir "hardware-profile.json")

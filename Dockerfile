@@ -9,6 +9,7 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 COPY app/main.py /app/main.py
+COPY app/runtime_status.py /app/runtime_status.py
 COPY app/index.html /app/index.html
 COPY app/assets /app/assets
 

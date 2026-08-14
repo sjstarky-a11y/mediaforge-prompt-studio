@@ -6,6 +6,7 @@ Security fixes currently target the latest public-test release only.
 
 | Version | Supported |
 | --- | --- |
+| develop / 0.2-dev | Development testing only |
 | 0.1a | Yes |
 | Earlier public tests | No |
 

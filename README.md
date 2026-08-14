@@ -1,9 +1,10 @@
-# MediaForge Prompt Studio — Public Test v0.1a CPU
+# MediaForge Prompt Studio — v0.2-dev Adaptive Runtime
 
 **Fix the prompt → protect the intent → see it before you generate.**
 
-This repository contains the first standalone public-test package for
-MediaForge Prompt Studio.
+The `develop` branch contains the Adaptive Runtime foundation built from the
+validated Public Test v0.1a baseline. The published v0.1a release remains the
+recommended package for external testers; v0.2-dev is active development code.
 
 > **License:** Source available for personal, non-commercial evaluation only.
 > This is not an open-source project. See [`LICENSE`](LICENSE).
@@ -22,11 +23,23 @@ MediaForge Prompt Studio.
 - Veo 3.1
 - Kling VIDEO 3.0
 
-## Public Test v0.1a scope
+## v0.2-dev runtime scope
 
-This first package intentionally runs inference on **CPU / Compatible mode**.
+MediaForge now records hardware and active inference backends separately:
 
-The installer already records the detected NVIDIA / AMD / Intel GPU hardware in `runtime/hardware-profile.json`, but GPU acceleration is not enabled in v0.1a. GPU backends will be added as separate public-test milestones without changing the MediaForge UI workflow.
+- `runtime/hardware-profile.json` contains the Windows hardware inventory.
+- `runtime/runtime-profile.json` contains the active LLM and image runtimes.
+- Prompt Doctor follows the Docker Model Runner backend selected by Docker Desktop.
+- Visual Proof Frame remains on **OpenVINO SDXL INT8 / CPU** in this milestone.
+
+For example, a Windows laptop with GPU-backed Model Runner enabled is reported as:
+
+```text
+HYBRID · NVIDIA LLM · CPU IMAGE
+```
+
+CPU-only Model Runner remains the compatibility fallback. Runtime detection is
+informational and never prevents the application from returning a health response.
 
 ## Requirements
 
@@ -56,11 +69,12 @@ The installer will:
 1. detect CPU/RAM/GPU hardware,
 2. verify Docker,
 3. enable Docker Model Runner,
-4. pull `ai/qwen2.5:3B-Q4_K_M`,
-5. build MediaForge,
-6. start OpenVINO Model Server,
-7. download/cache the SDXL INT8 model on first use,
-8. open the configured app URL (`http://127.0.0.1:18888/` by default).
+4. detect the active Model Runner backend,
+5. pull `ai/qwen2.5:3B-Q4_K_M`,
+6. build MediaForge,
+7. start OpenVINO Model Server,
+8. download/cache the SDXL INT8 model on first use,
+9. open the configured app URL (`http://127.0.0.1:18888/` by default).
 
 ### First SDXL download
 
@@ -130,14 +144,16 @@ The Public Test package is designed to run locally. Prompt Doctor requests go to
 
 ## Current limitation
 
-This is a **Windows / CPU public-test milestone**, not the final universal installer.
+This is an Adaptive Runtime development milestone, not a final universal installer.
+It detects a CUDA-backed Docker Model Runner on Windows, but image generation
+continues to use the validated CPU/OpenVINO service.
 
 Planned runtime milestones:
 
-- NVIDIA acceleration
-- Intel acceleration
+- validated NVIDIA auto-selection and fallback
+- Intel/OpenVINO GPU image profile
 - AMD acceleration
-- AUTO hardware/backend selection
+- expanded AUTO hardware/backend selection
 
 CPU remains the compatibility fallback.
 
@@ -180,6 +196,6 @@ See [`LICENSES/THIRD_PARTY.md`](LICENSES/THIRD_PARTY.md).
 
 ## Project status
 
-**Public Test v0.1a CPU**
+**v0.2-dev Adaptive Runtime — develop branch**
 
-This package is for testing and feedback before wider release.
+The stable public test remains `v0.1a`. Development builds require local validation before release.

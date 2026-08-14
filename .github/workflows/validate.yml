@@ -20,7 +20,35 @@ jobs:
           python-version: "3.12"
 
       - name: Validate Python syntax
-        run: python -m py_compile app/main.py
+        run: python -m py_compile app/main.py app/runtime_status.py
+
+      - name: Run runtime profile tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Validate PowerShell syntax
+        shell: pwsh
+        run: |
+          $files = @(
+            "detect-hardware.ps1",
+            "detect-runtime.ps1",
+            "install.ps1",
+            "start.ps1",
+            "status.ps1",
+            "stop.ps1"
+          )
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $file),
+              [ref]$tokens,
+              [ref]$errors
+            )
+            if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error $_ }
+              exit 1
+            }
+          }
 
       - name: Validate Docker Compose
         run: docker compose config --quiet
@@ -30,5 +58,6 @@ jobs:
         run: |
           test ! -f .env
           test ! -f runtime/hardware-profile.json
+          test ! -f runtime/runtime-profile.json
           test ! -f runtime/install-log.txt
           test ! -d data

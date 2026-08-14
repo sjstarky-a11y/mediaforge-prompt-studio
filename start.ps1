@@ -17,6 +17,9 @@ if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     throw "Docker CLI not found."
 }
 
+& (Join-Path $PSScriptRoot "detect-hardware.ps1")
+& (Join-Path $PSScriptRoot "detect-runtime.ps1")
+
 docker compose up -d
 if ($LASTEXITCODE -ne 0) {
     throw "Could not start MediaForge."

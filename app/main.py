@@ -8,6 +8,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from runtime_status import load_runtime_profile
+
 
 APP_NAME = "MediaForge Prompt Studio"
 
@@ -389,12 +391,23 @@ Do not output any explanation before or after the two required sections.
 
 @app.get("/health")
 def health():
+    runtime = load_runtime_profile()
     return {
         "status": "ok",
         "app": APP_NAME,
         "model": MODEL_NAME,
         "dmr_url": DMR_URL,
+        "runtime_profile": runtime["profile"],
+        "gpu_acceleration": runtime["gpu_acceleration"],
+        "llm_runtime": runtime["llm"]["runtime"],
+        "image_runtime": runtime["image"]["runtime"],
+        "runtime": runtime,
     }
+
+
+@app.get("/runtime")
+def runtime():
+    return load_runtime_profile()
 
 
 def build_canonical_meaning(user_input: str, language: str) -> str:

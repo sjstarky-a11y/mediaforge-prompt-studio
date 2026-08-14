@@ -73,14 +73,23 @@ try {
 } catch {
     Write-Host "Automatic Model Runner enable did not complete."
     Write-Host "Open Docker Desktop > Settings > AI and enable Docker Model Runner + host-side TCP on port 12434."
-    Fail "Docker Model Runner is required for Public Test v0.1a."
+    Fail "Docker Model Runner is required for MediaForge v0.2-dev."
 }
 
 Step "Checking Docker Model Runner"
 try {
     docker model status | Tee-Object -FilePath $logFile -Append
+    if ($LASTEXITCODE -ne 0) {
+        throw "Docker Model Runner status returned exit code $LASTEXITCODE."
+    }
 } catch {
     Fail "Docker Model Runner is not ready."
+}
+
+Step "Detecting adaptive runtime profile"
+& (Join-Path $PSScriptRoot "detect-runtime.ps1") | Tee-Object -FilePath $logFile -Append
+if ($LASTEXITCODE -ne 0) {
+    Fail "Could not detect the active Model Runner backend."
 }
 
 $model = "ai/qwen2.5:3B-Q4_K_M"
@@ -93,7 +102,7 @@ if ($LASTEXITCODE -ne 0) {
 Step "Creating local model cache"
 New-Item -ItemType Directory -Force -Path (Join-Path $PSScriptRoot "data\ovms-models") | Out-Null
 
-Step "Building and starting MediaForge + SDXL CPU service"
+Step "Building and starting MediaForge + OpenVINO SDXL CPU service"
 docker compose up -d --build | Tee-Object -FilePath $logFile -Append
 if ($LASTEXITCODE -ne 0) {
     Fail "docker compose up failed."
@@ -153,9 +162,15 @@ if (-not $sdxlReady) {
 
 Write-Host ""
 Write-Host "=============================================="
-Write-Host "MediaForge Prompt Studio Public Test v0.1a CPU"
+Write-Host "MediaForge Prompt Studio v0.2-dev Adaptive Runtime"
 Write-Host "APP:  $appUrl"
 Write-Host "LLM:  $model"
 Write-Host "IMAGE: OpenVINO SDXL INT8 / CPU"
 Write-Host "SDXL READY: $sdxlReady"
+try {
+    $runtimeProfile = Get-Content (Join-Path $PSScriptRoot "runtime\runtime-profile.json") -Raw | ConvertFrom-Json
+    Write-Host "RUNTIME PROFILE: $($runtimeProfile.summary)"
+} catch {
+    Write-Host "RUNTIME PROFILE: unavailable (run .\detect-runtime.ps1)"
+}
 Write-Host "=============================================="
