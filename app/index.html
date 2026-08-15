@@ -492,6 +492,22 @@
       background: rgba(157,108,255,0.20);
     }
 
+    .proof-readiness {
+      display: none;
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.45;
+    }
+
+    .proof-readiness.visible {
+      display: block;
+    }
+
+    .proof-readiness.ready {
+      color: var(--accent2);
+    }
+
     .proof-stage {
       display: none;
       margin-top: 12px;
@@ -898,6 +914,7 @@
             </div>
 
             <button class="proof-generate" type="button" id="proofGenerateBtn">Generate Proof Frame</button>
+            <div class="proof-readiness" id="proofReadiness" aria-live="polite"></div>
 
             <div class="proof-stage" id="proofStage">
               <div class="proof-image-wrap" id="proofImageWrap">
@@ -981,6 +998,7 @@
     const fidelityCopy = document.getElementById("fidelityCopy");
     const proofPanel = document.getElementById("proofPanel");
     const proofGenerateBtn = document.getElementById("proofGenerateBtn");
+    const proofReadiness = document.getElementById("proofReadiness");
     const proofStage = document.getElementById("proofStage");
     const proofLoading = document.getElementById("proofLoading");
     const proofImage = document.getElementById("proofImage");
@@ -1004,6 +1022,11 @@
     let lastFidelityStatus = "";
     let proofSeed = 42;
     let modelMetadata = new Map();
+    let imageReady = false;
+    let imageReadinessTimer = null;
+
+    const imagePreparingMessage =
+      "Visual Proof model is being prepared. The first download is several gigabytes and may take some time. Prompt Doctor remains available.";
 
     function hideFidelity() {
       fidelityStatus.className = "fidelity-status";
@@ -1129,11 +1152,18 @@
     }
 
     function resetProofFrame() {
+      if (imageReadinessTimer) {
+        clearTimeout(imageReadinessTimer);
+        imageReadinessTimer = null;
+      }
+      imageReady = false;
       proofPanel.className = "proof-panel";
       proofStage.className = "proof-stage";
       proofGenerateBtn.hidden = false;
       proofGenerateBtn.disabled = false;
       proofGenerateBtn.textContent = "Generate Proof Frame";
+      proofReadiness.className = "proof-readiness";
+      proofReadiness.textContent = "";
       proofImage.hidden = true;
       proofImage.removeAttribute("src");
       proofLoading.hidden = false;
@@ -1142,6 +1172,46 @@
       proofMeta.textContent = "Fast Proof · 768×768";
       proofApproved.className = "proof-approved";
       resetModelAdapter();
+    }
+
+    function scheduleImageReadinessCheck() {
+      if (imageReadinessTimer) {
+        clearTimeout(imageReadinessTimer);
+      }
+      imageReadinessTimer = setTimeout(refreshImageReadiness, 5000);
+    }
+
+    function showImageReadiness(ready, message) {
+      imageReady = ready;
+      proofGenerateBtn.disabled = !ready;
+      proofGenerateBtn.textContent = ready
+        ? "Generate Proof Frame"
+        : "Preparing Visual Proof model...";
+      proofReadiness.textContent = message || (ready
+        ? "Visual Proof model is ready."
+        : imagePreparingMessage);
+      proofReadiness.className = ready
+        ? "proof-readiness visible ready"
+        : "proof-readiness visible";
+    }
+
+    async function refreshImageReadiness() {
+      if (!proofPanel.classList.contains("visible")) {
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/image-status", {cache: "no-store"});
+        const data = await res.json();
+        const ready = res.ok && data.ready === true;
+        showImageReadiness(ready, data.message);
+        if (!ready) {
+          scheduleImageReadinessCheck();
+        }
+      } catch {
+        showImageReadiness(false, imagePreparingMessage);
+        scheduleImageReadinessCheck();
+      }
     }
 
     function updateProofAvailability() {
@@ -1154,6 +1224,8 @@
 
       if (canGenerate) {
         proofPanel.className = "proof-panel visible";
+        showImageReadiness(false, "Checking Visual Proof model...");
+        refreshImageReadiness();
       } else {
         resetProofFrame();
       }
@@ -1161,6 +1233,12 @@
 
     async function generateProofFrame(isRegenerate = false) {
       if (!lastSourcePrompt || !lastFinalPrompt || lastFidelityStatus !== "INTENT PROTECTED") {
+        return;
+      }
+
+      if (!imageReady) {
+        showImageReadiness(false, imagePreparingMessage);
+        refreshImageReadiness();
         return;
       }
 
@@ -1200,10 +1278,21 @@
         const data = await res.json();
 
         if (!res.ok) {
-          const detail =
-            typeof data.detail === "string"
-              ? data.detail
-              : (data.detail && data.detail.message) || "Proof Frame generation failed.";
+          const detailObject = data.detail && typeof data.detail === "object"
+            ? data.detail
+            : null;
+          if (detailObject && detailObject.state === "preparing") {
+            proofStage.className = "proof-stage";
+            proofGenerateBtn.hidden = false;
+            showImageReadiness(false, detailObject.message || imagePreparingMessage);
+            statusEl.textContent = "Prompt Doctor is ready. Visual Proof is still being prepared.";
+            statusEl.className = "status";
+            scheduleImageReadinessCheck();
+            return;
+          }
+          const detail = typeof data.detail === "string"
+            ? data.detail
+            : (detailObject && detailObject.message) || "Proof Frame generation failed.";
           throw new Error(detail);
         }
 
@@ -1221,8 +1310,8 @@
         statusEl.textContent = err.message;
         statusEl.className = "status error";
       } finally {
-        approveProofBtn.disabled = false;
-        regenerateProofBtn.disabled = false;
+        approveProofBtn.disabled = proofImage.hidden;
+        regenerateProofBtn.disabled = !imageReady;
       }
     }
 

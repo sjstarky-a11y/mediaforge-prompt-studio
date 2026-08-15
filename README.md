@@ -87,11 +87,16 @@ opens the application automatically when the local services are ready. CPU or
 NVIDIA execution is selected automatically; users do not choose CUDA,
 OpenVINO, Compose files, or memory profiles.
 
-Developers can still run the PowerShell scripts directly:
+Advanced users of the generated package can still run the internal PowerShell
+scripts directly:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\install.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\MediaForge-System\install.ps1"
 ```
+
+In the source repository these scripts remain at repository root, so developers
+use `.\install.ps1`. Generated user packages group technical files inside
+`MediaForge-System/`.
 
 The installer will:
 
@@ -114,12 +119,12 @@ Download and extract the complete **Linux x86_64** release archive, open a
 Terminal in the extracted folder, and run:
 
 ```bash
-./install.sh
+./MediaForge-Linux.sh
 ```
 
 The official `.tar.gz` release preserves executable Shell permissions. If the
-files were copied through a filesystem that removed those permissions, repair
-them once with `chmod +x *.sh scripts/*.sh` and run `./install.sh` again.
+files were copied through a filesystem that removed those permissions, run
+`chmod +x MediaForge-Linux.sh` once and start it again.
 
 The Linux installer performs the same automatic CPU/NVIDIA selection as the
 Windows installer. Average users do not select CUDA, OpenVINO, offload modes,
@@ -131,7 +136,7 @@ On native Ubuntu/Debian, Docker Model Runner is supplied by Docker's official
 For an isolated WSL2 development run alongside an existing Windows install:
 
 ```bash
-./install.sh --test-mode
+./MediaForge-Linux.sh install --test-mode
 ```
 
 Test mode uses:
@@ -143,7 +148,7 @@ Project:      mediaforge-prompt-studio-linux-test
 ```
 
 If an existing Windows MediaForge container is visible through Docker Desktop,
-`install.sh` enables test mode automatically rather than replacing it.
+the internal installer enables test mode automatically rather than replacing it.
 
 ### First SDXL download
 
@@ -157,8 +162,12 @@ While SDXL downloads:
 - Prompt Doctor can already be used.
 - The installer reports elapsed time and the current local cache size.
 - The installer window may be closed without stopping the containers.
-- Run `.\status.ps1` on Windows or `./status.sh` on Linux later to confirm
+- Run `MediaForge-Windows.cmd status` on Windows or
+  `./MediaForge-Linux.sh status` on Linux later to confirm
   `Image service ready: True`.
+
+The application also displays **Preparing Visual Proof model** until the large
+image model is ready. This state does not prevent Prompt Doctor use.
 
 The SDXL files are cached under `data/ovms-models/` and are reused on later starts.
 
@@ -364,11 +373,15 @@ scripts intended for another operating system:
 | Platform | Release artifact | User entry point |
 | --- | --- | --- |
 | Windows 11 x64 | `MediaForge-Prompt-Studio-<version>-Windows-x64.zip` | Double-click `MediaForge-Windows.cmd` |
-| Ubuntu/Linux x86_64 | `MediaForge-Prompt-Studio-<version>-Linux-x86_64.tar.gz` | Run `./install.sh` |
+| Ubuntu/Linux x86_64 | `MediaForge-Prompt-Studio-<version>-Linux-x86_64.tar.gz` | Run `./MediaForge-Linux.sh` |
 
 AI models are downloaded locally during installation and are not bundled in
 either archive. Every package contains a generated file manifest, and every
 release build produces a `SHA256SUMS-<version>.txt` integrity file.
+
+The extracted package root contains only the `START-HERE` guide, one platform
+launcher, `README.md`, `LICENSE`, and `MediaForge-System/`. Ordinary users do
+not need to open or modify the technical folder.
 
 Maintainers can build both packages from one source checkpoint:
 

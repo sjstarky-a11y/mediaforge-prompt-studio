@@ -18,7 +18,8 @@ from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXED_ZIP_TIME = (2020, 1, 1, 0, 0, 0)
-PACKAGE_MANIFEST = PurePosixPath("runtime/PACKAGE-MANIFEST.json")
+SYSTEM_DIRECTORY = PurePosixPath("MediaForge-System")
+PACKAGE_MANIFEST = SYSTEM_DIRECTORY / "runtime/PACKAGE-MANIFEST.json"
 
 COMMON_FILES = (
     Path(".dockerignore"),
@@ -52,6 +53,7 @@ WINDOWS_FILES = (
     Path("stop.ps1"),
 )
 LINUX_FILES = (
+    Path("MediaForge-Linux.sh"),
     Path("START-HERE-LINUX.txt"),
     Path("detect-hardware.sh"),
     Path("detect-runtime.sh"),
@@ -98,6 +100,21 @@ LINUX = PlatformSpec(
     files=LINUX_FILES,
 )
 PLATFORMS = (WINDOWS, LINUX)
+
+USER_ROOT_FILES = {
+    "windows": {
+        PurePosixPath("LICENSE"),
+        PurePosixPath("MediaForge-Windows.cmd"),
+        PurePosixPath("README.md"),
+        PurePosixPath("START-HERE-WINDOWS.txt"),
+    },
+    "linux": {
+        PurePosixPath("LICENSE"),
+        PurePosixPath("MediaForge-Linux.sh"),
+        PurePosixPath("README.md"),
+        PurePosixPath("START-HERE-LINUX.txt"),
+    },
+}
 
 
 def sha256_bytes(content: bytes) -> str:
@@ -151,6 +168,14 @@ def collect_source_files(source_root: Path, spec: PlatformSpec) -> tuple[Path, .
     return tuple(sorted(selected, key=lambda path: path.as_posix()))
 
 
+def release_destination(relative: Path, spec: PlatformSpec) -> Path:
+    """Map a source file to its intentionally simple release location."""
+    posix_relative = PurePosixPath(relative.as_posix())
+    if posix_relative in USER_ROOT_FILES[spec.key]:
+        return relative
+    return Path(SYSTEM_DIRECTORY.as_posix()) / relative
+
+
 def _normalized_content(source: Path, relative: Path, spec: PlatformSpec) -> bytes:
     content = source.read_bytes()
     if spec.key == "windows" and relative.suffix.lower() in {".cmd", ".txt"}:
@@ -200,14 +225,17 @@ def create_release_tree(
     release_root.mkdir(parents=True, exist_ok=False)
 
     for relative in collect_source_files(source_root, spec):
-        destination = release_root / relative
+        release_relative = release_destination(relative, spec)
+        destination = release_root / release_relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(_normalized_content(source_root / relative, relative, spec))
-        mode = 0o755 if spec.key == "linux" and relative.suffix == ".sh" else 0o644
+        mode = 0o755 if spec.key == "linux" and release_relative.suffix == ".sh" else 0o644
         destination.chmod(mode)
 
-    (release_root / "RELEASE-INFO.json").write_bytes(_release_info(version, spec))
-    runtime_directory = release_root / "runtime"
+    system_directory = release_root / Path(SYSTEM_DIRECTORY.as_posix())
+    system_directory.mkdir(parents=True, exist_ok=True)
+    (system_directory / "RELEASE-INFO.json").write_bytes(_release_info(version, spec))
+    runtime_directory = system_directory / "runtime"
     runtime_directory.mkdir(parents=True, exist_ok=True)
     manifest = _manifest_entries(release_root)
     (runtime_directory / "PACKAGE-MANIFEST.json").write_text(
@@ -239,10 +267,19 @@ def verify_release_tree(release_root: Path, spec: PlatformSpec) -> None:
         raise ValueError(f"Private files found in release: {forbidden}")
 
     if spec.key == "windows":
-        required = {"MediaForge-Windows.cmd", "START-HERE-WINDOWS.txt", "install.ps1"}
+        required = {
+            "MediaForge-Windows.cmd",
+            "START-HERE-WINDOWS.txt",
+            "MediaForge-System/install.ps1",
+        }
         prohibited_suffix = ".sh"
     else:
-        required = {"START-HERE-LINUX.txt", "install.sh", "scripts/mediaforge-common.sh"}
+        required = {
+            "MediaForge-Linux.sh",
+            "START-HERE-LINUX.txt",
+            "MediaForge-System/install.sh",
+            "MediaForge-System/scripts/mediaforge-common.sh",
+        }
         prohibited_suffix = ".ps1"
     missing = required - paths
     if missing:
@@ -340,11 +377,21 @@ def verify_archive(archive_path: Path, spec: PlatformSpec) -> None:
                 if not all(_safe_member_path(member.name) for member in members):
                     raise ValueError("Unsafe path detected in Linux release archive.")
                 install_member = next(
-                    (member for member in members if member.name.endswith("/install.sh")),
+                    (
+                        member
+                        for member in members
+                        if member.name.endswith("/MediaForge-System/install.sh")
+                    ),
                     None,
                 )
                 if install_member is None or install_member.mode & 0o111 == 0:
                     raise ValueError("Linux install.sh is not executable in the archive.")
+                launcher_member = next(
+                    (member for member in members if member.name.endswith("/MediaForge-Linux.sh")),
+                    None,
+                )
+                if launcher_member is None or launcher_member.mode & 0o111 == 0:
+                    raise ValueError("MediaForge-Linux.sh is not executable in the archive.")
                 archive.extractall(extract_root, filter="data")
 
         roots = [path for path in extract_root.iterdir() if path.is_dir()]

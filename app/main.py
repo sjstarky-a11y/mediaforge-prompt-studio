@@ -65,6 +65,26 @@ IMAGE_MODEL = os.getenv(
 IMAGE_BACKEND = os.getenv("MEDIAFORGE_IMAGE_BACKEND", "OpenVINO CPU")
 
 
+def derive_image_readiness_url(image_api_url: str) -> str:
+    """Return the standard readiness endpoint for an image API base URL."""
+    base = image_api_url.rstrip("/")
+    for suffix in ("/v3", "/v1"):
+        if base.endswith(suffix):
+            base = base[: -len(suffix)]
+            break
+    return f"{base}/v2/health/ready"
+
+
+IMAGE_READY_URL = os.getenv(
+    "MEDIAFORGE_IMAGE_READY_URL",
+    derive_image_readiness_url(IMAGE_API_URL),
+).rstrip("/")
+IMAGE_PREPARING_MESSAGE = (
+    "Visual Proof model is being prepared. The first download is several "
+    "gigabytes and may take some time. Prompt Doctor remains available."
+)
+
+
 app = FastAPI(title=APP_NAME)
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
@@ -441,6 +461,29 @@ def health():
 @app.get("/runtime")
 def runtime():
     return load_runtime_profile()
+
+
+@app.get("/api/image-status")
+async def image_status():
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            response = await client.get(IMAGE_READY_URL)
+        if response.status_code == 200:
+            return {
+                "ready": True,
+                "state": "ready",
+                "message": "Visual Proof model is ready.",
+                "backend": IMAGE_BACKEND,
+            }
+    except Exception:
+        pass
+
+    return {
+        "ready": False,
+        "state": "preparing",
+        "message": IMAGE_PREPARING_MESSAGE,
+        "backend": IMAGE_BACKEND,
+    }
 
 
 @app.get("/api/models")
@@ -2847,6 +2890,15 @@ async def generate_proof_frame(req: ProofFrameRequest):
             ),
         )
 
+    except (httpx.ConnectError, httpx.ConnectTimeout):
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "state": "preparing",
+                "message": IMAGE_PREPARING_MESSAGE,
+            },
+        )
+
     except Exception as exc:
         raise HTTPException(
             status_code=502,
@@ -2883,4 +2935,3 @@ def index():
             return HTMLResponse(file.read())
     except FileNotFoundError:
         return HTMLResponse("<h1>index.html not found</h1>", status_code=500)
-

@@ -71,7 +71,7 @@ jobs:
       - name: Validate Linux shell syntax
         shell: bash
         run: |
-          bash -n build-release.sh install.sh start.sh stop.sh status.sh doctor.sh manage-models.sh
+          bash -n MediaForge-Linux.sh build-release.sh install.sh start.sh stop.sh status.sh doctor.sh manage-models.sh
           bash -n detect-hardware.sh detect-runtime.sh runtime-policy.sh
           bash -n scripts/mediaforge-common.sh tests/test-linux-runtime-policy.sh
 

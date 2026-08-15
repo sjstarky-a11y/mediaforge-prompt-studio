@@ -1,6 +1,8 @@
 @echo off
 setlocal
-cd /d "%~dp0"
+set "MEDIAFORGE_HOME=%~dp0"
+if exist "%~dp0MediaForge-System\install.ps1" set "MEDIAFORGE_HOME=%~dp0MediaForge-System\"
+cd /d "%MEDIAFORGE_HOME%"
 title MediaForge Prompt Studio
 
 echo.
@@ -12,25 +14,25 @@ if /I "%~1"=="start" goto start
 if /I "%~1"=="status" goto status
 if /I "%~1"=="stop" goto stop
 
-if not exist ".env" goto install
+if not exist "%MEDIAFORGE_HOME%.env" goto install
 goto start
 
 :install
 echo Preparing MediaForge for first use...
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0install.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%MEDIAFORGE_HOME%install.ps1"
 goto result
 
 :start
 echo Starting MediaForge...
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0start.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%MEDIAFORGE_HOME%start.ps1"
 goto result
 
 :status
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0status.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%MEDIAFORGE_HOME%status.ps1"
 goto result
 
 :stop
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0stop.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%MEDIAFORGE_HOME%stop.ps1"
 goto result
 
 :result

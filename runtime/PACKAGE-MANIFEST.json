@@ -31,8 +31,8 @@
   },
   {
     "file": ".github/workflows/validate.yml",
-    "bytes": 3168,
-    "sha256": "48b88c604ef007dcbd407456faa03d7224c23da9bd5ae660a05ac8470c89137d"
+    "bytes": 3188,
+    "sha256": "c669ab2fb55c5b9e8eb2b3bf53edf1274cc9aaa02f872afc2deb720f4e914163"
   },
   {
     "file": ".gitignore",
@@ -41,8 +41,8 @@
   },
   {
     "file": "CHANGELOG.md",
-    "bytes": 5314,
-    "sha256": "fb77534790cdd224a848fbb1478e64c57479ecbced344182db55023bfb60a988"
+    "bytes": 5565,
+    "sha256": "41597f6eada93e9855d0fa8c723f1631bf53ef9a631d8ccb9a58e1327aa73dde"
   },
   {
     "file": "CONTRIBUTING.md",
@@ -75,14 +75,19 @@
     "sha256": "9721f9c3d3d86cd84163cc45e96d4b8f6c1d97335bcf063d7b7d013f21b1b9c5"
   },
   {
+    "file": "MediaForge-Linux.sh",
+    "bytes": 866,
+    "sha256": "794ee1b7396158b517015420bb56c2ab72520e3dbec795d9de679a22ab9b5a2b"
+  },
+  {
     "file": "MediaForge-Windows.cmd",
-    "bytes": 958,
-    "sha256": "218e9a614a2d928fbe3d65ba7d900c49251a047a5ef1e9bb0fe0c76eb76adbe9"
+    "bytes": 1155,
+    "sha256": "8d8967594c8e9199216b999770e80c45a2bf1476e2874fc264a82efd6c4e4d77"
   },
   {
     "file": "PACKAGING-V0.2.md",
-    "bytes": 2601,
-    "sha256": "3b94474ae243e6bbc4aaec4796d852aa6484b1437363e5b5fc06c57783c24580"
+    "bytes": 2924,
+    "sha256": "c105adae7c09d004d64f88a904ef124136bd50e7d87e7cf2bd088dfaa3f53e09"
   },
   {
     "file": "PUBLIC-TEST-V0.1A.txt",
@@ -91,8 +96,8 @@
   },
   {
     "file": "README.md",
-    "bytes": 14303,
-    "sha256": "a8a6a4560e96ddce955ae10130f56bdaf8e06eaf875678a81a64a7c51764c05b"
+    "bytes": 14951,
+    "sha256": "ce283a29029556077317a91e7911ca9ffe68e65ee918e84071e6414d5a8e5fb0"
   },
   {
     "file": "SECURITY.md",
@@ -101,13 +106,13 @@
   },
   {
     "file": "START-HERE-LINUX.txt",
-    "bytes": 847,
-    "sha256": "25564f6d261546d6dcbd19ca0fa4fbf0e89dbaf987511b107d9e154de56c0b39"
+    "bytes": 1138,
+    "sha256": "0a836b0e45a8d1ccb39f2ae49ec28f16c543911b178b4f81bb3b7dd35cffbfae"
   },
   {
     "file": "START-HERE-WINDOWS.txt",
-    "bytes": 836,
-    "sha256": "165b97ffb16e65af06cc37b867abd641aeaff660b177f5ce9b5606c740283938"
+    "bytes": 1050,
+    "sha256": "a678072cc91132c496a0d8977d2549f6233beda8b6aa0f9bafa97572c5b2075d"
   },
   {
     "file": "app/assets/mediaforge-logo.png",
@@ -121,13 +126,13 @@
   },
   {
     "file": "app/index.html",
-    "bytes": 41228,
-    "sha256": "bf303650a40beaca5500e8250df510756ea883570fbef79a5b848849da41e97f"
+    "bytes": 44230,
+    "sha256": "6244f6db9b163f8fe4d49b2c00d0f504e968d7e81e1fb42b53b7fba8f8f5ee24"
   },
   {
     "file": "app/main.py",
-    "bytes": 101246,
-    "sha256": "20422848c404dbd1afab6e7562085301a6a7a61dafb1a3a85a6292c29881e229"
+    "bytes": 102749,
+    "sha256": "f31edd70e2e5fa815001e0f1f55751f56970414c761b6871591b79a71d81bf9f"
   },
   {
     "file": "app/model_catalog.py",
@@ -256,8 +261,8 @@
   },
   {
     "file": "scripts/build_release.py",
-    "bytes": 14598,
-    "sha256": "acba35bc7c6d1826ee63f0d419828380cb6bc9e9bc811639b13bbb04ef163b16"
+    "bytes": 16291,
+    "sha256": "2e9757251f9a1f5d4d2774d63bec97413940ea26f518b64eba4feb05a79c0651"
   },
   {
     "file": "scripts/linux_profile.py",
@@ -325,6 +330,11 @@
     "sha256": "69fcd3dc3f58b930c54bf9bb709cc7b98e3dc4a42e4b825f380556a923b98fff"
   },
   {
+    "file": "tests/test_image_readiness.py",
+    "bytes": 1617,
+    "sha256": "39d5408142b6e9829536dd860abde68835772e4478935f1613f9d6a7add0fdde"
+  },
+  {
     "file": "tests/test_linux_profile.py",
     "bytes": 1997,
     "sha256": "37ff64447c394f104a5be91b465ec6aad5b4449bde542674a7124dc8c1c257a2"
@@ -356,8 +366,8 @@
   },
   {
     "file": "tests/test_release_builder.py",
-    "bytes": 3661,
-    "sha256": "34246823c256c21a58d7b13395fa3caa7b5fbbc2c7b82aa7cc56aa7288aa0f7b"
+    "bytes": 6057,
+    "sha256": "c87ccded5b19e4e1b7793e4e5a9c04b7496b1c366a5885cc13be4495a5653180"
   },
   {
     "file": "tests/test_runtime_status.py",

@@ -10,7 +10,9 @@ from scripts.build_release import (
     _deterministic_gzip,
     build_releases,
     collect_source_files,
+    create_release_tree,
     package_name,
+    release_destination,
     sha256_file,
 )
 
@@ -37,9 +39,67 @@ class ReleaseBuilderTests(unittest.TestCase):
         self.assertIn("install.ps1", windows)
         self.assertNotIn("install.sh", windows)
         self.assertIn("install.sh", linux)
+        self.assertIn("MediaForge-Linux.sh", linux)
         self.assertIn("PACKAGING-V0.2.md", linux)
         self.assertIn("scripts/mediaforge-common.sh", linux)
         self.assertNotIn("install.ps1", linux)
+
+    def test_release_mapping_keeps_only_user_entry_files_at_root(self):
+        self.assertEqual(
+            release_destination(Path("MediaForge-Windows.cmd"), WINDOWS),
+            Path("MediaForge-Windows.cmd"),
+        )
+        self.assertEqual(
+            release_destination(Path("install.ps1"), WINDOWS),
+            Path("MediaForge-System/install.ps1"),
+        )
+        self.assertEqual(
+            release_destination(Path("MediaForge-Linux.sh"), LINUX),
+            Path("MediaForge-Linux.sh"),
+        )
+        self.assertEqual(
+            release_destination(Path("app/main.py"), LINUX),
+            Path("MediaForge-System/app/main.py"),
+        )
+
+    def test_release_tree_has_a_simple_user_facing_root(self):
+        expected = {
+            "LICENSE",
+            "MediaForge-System",
+            "MediaForge-Windows.cmd",
+            "README.md",
+            "START-HERE-WINDOWS.txt",
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            release_root = create_release_tree(
+                ROOT,
+                Path(temporary),
+                "v0.2-test",
+                WINDOWS,
+            )
+            self.assertEqual({path.name for path in release_root.iterdir()}, expected)
+            self.assertTrue((release_root / "MediaForge-System/install.ps1").is_file())
+            self.assertTrue((release_root / "MediaForge-System/app/main.py").is_file())
+            self.assertFalse((release_root / "install.ps1").exists())
+
+    def test_linux_release_tree_has_one_user_launcher(self):
+        expected = {
+            "LICENSE",
+            "MediaForge-Linux.sh",
+            "MediaForge-System",
+            "README.md",
+            "START-HERE-LINUX.txt",
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            release_root = create_release_tree(
+                ROOT,
+                Path(temporary),
+                "v0.2-test",
+                LINUX,
+            )
+            self.assertEqual({path.name for path in release_root.iterdir()}, expected)
+            self.assertTrue((release_root / "MediaForge-System/install.sh").is_file())
+            self.assertFalse((release_root / "install.sh").exists())
 
     def test_release_names_are_platform_specific(self):
         self.assertEqual(
@@ -82,7 +142,11 @@ class ReleaseBuilderTests(unittest.TestCase):
             import zipfile
 
             with zipfile.ZipFile(windows_zip) as archive:
-                info_name = next(name for name in archive.namelist() if name.endswith("/RELEASE-INFO.json"))
+                info_name = next(
+                    name
+                    for name in archive.namelist()
+                    if name.endswith("/MediaForge-System/RELEASE-INFO.json")
+                )
                 info = json.loads(archive.read(info_name))
                 self.assertTrue(
                     all(member.compress_type == zipfile.ZIP_STORED for member in archive.infolist())

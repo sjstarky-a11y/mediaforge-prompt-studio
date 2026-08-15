@@ -42,6 +42,9 @@ All notable public-test changes are documented here.
 - release packaging tests that verify reproducibility, private-file exclusion, and Linux executable permissions
 - platform-neutral Windows ZIP and Linux gzip output that remains byte-identical across supported build environments
 - platform-neutral source manifest hashing for Windows CRLF and Linux LF checkouts
+- friendly Visual Proof model download/loading status with automatic readiness checks
+- simplified release roots with technical runtime files grouped under `MediaForge-System/`
+- one-command `MediaForge-Linux.sh` launcher for generated Linux packages
 
 ### Changed
 

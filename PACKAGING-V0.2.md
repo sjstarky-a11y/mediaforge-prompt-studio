@@ -9,12 +9,17 @@ while preserving verifiable package contents.
 | Platform | Artifact | First action |
 | --- | --- | --- |
 | Windows 11 x64 | `MediaForge-Prompt-Studio-<version>-Windows-x64.zip` | Extract, then double-click `MediaForge-Windows.cmd` |
-| Ubuntu/Linux x86_64 | `MediaForge-Prompt-Studio-<version>-Linux-x86_64.tar.gz` | Extract, then run `./install.sh` |
+| Ubuntu/Linux x86_64 | `MediaForge-Prompt-Studio-<version>-Linux-x86_64.tar.gz` | Extract, then run `./MediaForge-Linux.sh` |
 
 The builder also writes `SHA256SUMS-<version>.txt` beside the archives.
 
 Models and runtime caches are never bundled. The installers download the
 selected local models after automatic CPU/NVIDIA detection.
+
+Each extracted package has a deliberately small user-facing root: the
+`START-HERE` guide, one launcher, `README.md`, `LICENSE`, and the
+`MediaForge-System/` folder. Installation scripts, Compose definitions, app
+code, and runtime metadata stay inside `MediaForge-System/`.
 
 ## Build both packages
 
@@ -44,7 +49,7 @@ following checks before accepting an archive:
 - writes `RELEASE-INFO.json` and a per-file
   `runtime/PACKAGE-MANIFEST.json` with sizes and SHA-256 hashes;
 - extracts and verifies each completed archive;
-- confirms that Linux `install.sh` is executable;
+- confirms that Linux `MediaForge-Linux.sh` and the internal `install.sh` are executable;
 - fixes archive timestamps, ownership, ordering, and permissions so identical
   source checkpoints produce byte-identical packages.
 

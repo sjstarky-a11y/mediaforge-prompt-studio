@@ -12,19 +12,23 @@ Install MediaForge:
 2. Open a terminal in the extracted MediaForge folder.
 3. Run:
 
-   ./install.sh
+   ./MediaForge-Linux.sh
 
 MediaForge automatically detects CPU or NVIDIA GPU support, selects the
 compatible runtime, downloads the required local models, and opens
 http://127.0.0.1:18888 when Prompt Doctor is ready.
 
 Useful commands:
-  ./start.sh
-  ./status.sh
-  ./doctor.sh
-  ./stop.sh
+  ./MediaForge-Linux.sh start
+  ./MediaForge-Linux.sh status
+  ./MediaForge-Linux.sh doctor
+  ./MediaForge-Linux.sh stop
 
-The first Visual Proof Frame model download is several gigabytes. Prompt
-Doctor can be used while the image model is downloading.
+The first Visual Proof Frame model download is several gigabytes. MediaForge
+shows "Preparing Visual Proof model" until it is ready. Prompt Doctor can be
+used while the image model is downloading.
+
+The MediaForge-System folder contains the technical runtime files. Ordinary
+use does not require opening or changing anything inside that folder.
 
 Privacy: inference runs through local services on your computer.
