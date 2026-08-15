@@ -22,9 +22,20 @@ All notable public-test changes are documented here.
 - Improve-mode structure validation for 1–4 diagnosis bullets, allowing concise one-bullet diagnoses without weakening intent protection
 - automatic NVIDIA Low Memory, Balanced, and Full image profiles
 - GTX 1050 4 GB CUDA/Diffusers Fast Proof validation
-- source-grounded Visual Proof constraints for unmistakable cinema locations and exactly one camera bag
+- controlled Visual Proof prompt, step, guidance, resolution, and seed validation
 - simple user-facing `CPU`, `GPU + CPU`, and `GPU` execution labels
 - automatic correction of lighting-only Improve reviews before final fidelity approval
+- Ubuntu 24.04/WSL2 Shell entry points for install, start, stop, status, diagnostics, and model management
+- Linux hardware and adaptive runtime profile generation with the existing JSON schema
+- isolated WSL2 test mode using ports 18889/8011 and independent container names
+- Linux NVIDIA eligibility policy matching the validated Windows low-memory tiers
+- Linux runtime unit tests and Shell syntax validation in GitHub Actions
+- Linux model-cache permissions prepared for non-matching container user IDs
+- experimental Proof prompt expansions were reverted to the validated checkpoint before controlled parameter testing
+- WSL runtime reporting now counts installed models through the Docker CLI
+- Ubuntu 24.04 WSL2 CPU/OpenVINO end-to-end validation, including a ready-state 768x768 Fast Proof completed in under one minute on the Ryzen 9 9950X workstation
+- transparent Model Adapter v2 status for prompts that are already compatible with the selected video service
+- deterministic profile tests for Runway Gen-4.5, Veo 3.1, and Kling VIDEO 3.0
 
 ### Changed
 
@@ -34,6 +45,10 @@ All notable public-test changes are documented here.
 - `install.ps1`, `start.ps1`, and `status.ps1` refresh the active runtime profile
 - Visual Proof Frame automatically uses NVIDIA CUDA on compatible compute 6.0+, 4 GB+ hardware and otherwise uses OpenVINO SDXL INT8 CPU
 - Qwen 2.5 3B remains the default but is no longer hardcoded per request
+- Compose project and container names are configurable without changing Windows defaults
+- Visual Proof Frame now sends the original concise single-frame extraction directly to SDXL; the experimental constraint-expansion layer is no longer active
+- Fast Proof is frozen at 768x768, 16 steps, server-default guidance, and initial seed 42 after controlled WSL/OpenVINO testing
+- Model Adapter now reports `changed` and `adaptation_notes`, applying target-specific formatting only to explicit camera, audio, dialogue, or shot cues
 
 ## [0.1a] - 2026-08-13
 

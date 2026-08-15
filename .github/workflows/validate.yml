@@ -20,10 +20,13 @@ jobs:
           python-version: "3.12"
 
       - name: Validate Python syntax
-        run: python -m py_compile app/main.py app/fidelity_concepts.py app/model_catalog.py app/proof_constraints.py app/runtime_status.py image_cuda/server.py
+        run: python -m py_compile app/main.py app/fidelity_concepts.py app/model_catalog.py app/proof_constraints.py app/runtime_status.py image_cuda/server.py scripts/linux_profile.py
 
       - name: Validate model catalog
         run: python -m json.tool models/model-catalog.json > /dev/null
+
+      - name: Validate package manifest
+        run: python scripts/build_manifest.py --check
 
       - name: Validate browser JavaScript syntax
         run: |
@@ -63,6 +66,17 @@ jobs:
         shell: pwsh
         run: |
           & ./tests/test-runtime-policy.ps1
+
+      - name: Validate Linux shell syntax
+        shell: bash
+        run: |
+          bash -n install.sh start.sh stop.sh status.sh doctor.sh manage-models.sh
+          bash -n detect-hardware.sh detect-runtime.sh runtime-policy.sh
+          bash -n scripts/mediaforge-common.sh tests/test-linux-runtime-policy.sh
+
+      - name: Validate Linux NVIDIA runtime policy
+        shell: bash
+        run: ./tests/test-linux-runtime-policy.sh
 
       - name: Validate Docker Compose
         run: |

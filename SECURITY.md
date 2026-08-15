@@ -19,7 +19,7 @@ Report a suspected vulnerability privately through the repository owner's
 GitHub profile. Include:
 
 - affected version;
-- Windows and Docker Desktop versions;
+- operating system and Docker Desktop/Engine versions;
 - clear reproduction steps;
 - expected and observed behavior; and
 - the minimum logs needed to reproduce the problem, with secrets removed.
@@ -35,3 +35,9 @@ application port to untrusted networks.
 
 Optional and custom models execute under their respective local inference
 runtimes. Review model licenses and provenance before installing them.
+
+Linux `doctor.sh --save` does not copy the `.env` file or include prompt and
+model-response bodies. It does include selected non-secret runtime settings and
+recent service logs, so review the generated report before attaching it to an
+issue. MediaForge does not request `sudo` unless the official Docker Model Runner
+package must be installed on a supported native Linux system.

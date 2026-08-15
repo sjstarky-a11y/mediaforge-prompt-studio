@@ -21,7 +21,6 @@ from model_catalog import (
     parse_dmr_model_ids,
 )
 from runtime_status import load_runtime_profile
-from proof_constraints import apply_visual_proof_constraints
 
 
 APP_NAME = "MediaForge Prompt Studio"
@@ -131,6 +130,8 @@ class ModelAdapterResponse(BaseModel):
     status: Literal["MODEL READY"]
     profile: str
     prompt: str
+    changed: bool
+    adaptation_notes: list[str] = Field(default_factory=list)
     fidelity: FidelityObserverResult
 
 
@@ -2441,18 +2442,12 @@ def build_visual_proof_prompt(
         "surreal architecture, warped furniture, duplicate objects, text, watermark"
     )
 
-    single_frame_prompt, negative_prompt = apply_visual_proof_constraints(
-        source_text=source_prompt,
-        prompt=single_frame_prompt,
-        negative_prompt=negative_prompt,
-    )
-
     return single_frame_prompt, selection_reason, negative_prompt
 
 
 
 # ---------------------------------------------------------------------------
-# V1.3.4 MODEL ADAPTER CORE — GENERIC VIDEO + RUNWAY GEN-4.5 + VEO 3.1 + KLING VIDEO 3.0
+# MODEL ADAPTER V2 — GENERIC VIDEO + RUNWAY GEN-4.5 + VEO 3.1 + KLING VIDEO 3.0
 #
 # Core principle:
 #   Adapt the format, never rewrite the idea.
@@ -2479,11 +2474,55 @@ def _adapter_clean_prompt_text(approved_prompt: str, mode: str) -> str:
     return target.strip()
 
 
-def _build_generic_video_prompt(approved_prompt: str, mode: str) -> str:
-    return _adapter_clean_prompt_text(approved_prompt, mode)
+def _adapter_section_breaks(target: str, labels: tuple[str, ...]) -> str:
+    """Put already-explicit model cues on their own lines without rewriting them."""
+    if not labels:
+        return target
+
+    label_pattern = "|".join(re.escape(label) for label in labels)
+    return re.sub(
+        rf"[ \t]+(?=(?:{label_pattern})\s*:)",
+        "\n",
+        target,
+        flags=re.IGNORECASE,
+    )
 
 
-def _build_runway_gen4_5_prompt(approved_prompt: str, mode: str) -> str:
+def _adapter_result(
+    profile_name: str,
+    original: str,
+    adapted: str,
+    changed_notes: list[str],
+    unchanged_note: str,
+) -> tuple[str, bool, list[str]]:
+    adapted = adapted.strip()
+    changed = adapted != original
+    if changed:
+        return adapted, True, changed_notes
+    return adapted, False, [
+        f"{profile_name}: approved prompt is compatible as-is.",
+        unchanged_note,
+    ]
+
+
+def _build_generic_video_prompt(
+    approved_prompt: str,
+    mode: str,
+) -> tuple[str, bool, list[str]]:
+    target = _adapter_clean_prompt_text(approved_prompt, mode)
+    return _adapter_result(
+        profile_name="Generic Video",
+        original=target,
+        adapted=target,
+        changed_notes=[],
+        unchanged_note="No model-specific rewrite was requested or required.",
+    )
+
+
+def _build_runway_gen4_5_prompt(
+    approved_prompt: str,
+    mode: str,
+) -> tuple[str, bool, list[str]]:
     """
     Runway Gen-4.5 profile, intentionally minimal.
 
@@ -2495,24 +2534,37 @@ def _build_runway_gen4_5_prompt(approved_prompt: str, mode: str) -> str:
     - no invented creative details
     - one clean copy/paste prompt
     """
-    target = _adapter_clean_prompt_text(approved_prompt, mode)
+    original = _adapter_clean_prompt_text(approved_prompt, mode)
+    target = original
+    notes: list[str] = []
 
     # Keep sentence content intact. We only normalize a few generic wrapper
     # phrases so the output reads as a direct video-generation prompt.
-    target = re.sub(
-        r"(?i)\bthe camera maintains a steady,\s*",
-        "The camera remains steady in a ",
+    target, camera_changes = re.subn(
+        r"(?i)\bthe camera maintains a steady,\s*([a-z-]+(?:\s+[a-z-]+)?) shot,\s*",
+        r"A steady \1 camera shot, ",
         target,
     )
+    if camera_changes:
+        notes.append("Normalized the existing camera direction for Runway Gen-4.5.")
 
     # Avoid duplicate whitespace introduced by normalization.
     target = re.sub(r"[ \t]{2,}", " ", target)
     target = re.sub(r"\s+([,.;:])", r"\1", target)
-    return target.strip()
+    return _adapter_result(
+        profile_name="Runway Gen-4.5",
+        original=original,
+        adapted=target,
+        changed_notes=notes,
+        unchanged_note="No motion or camera direction was invented.",
+    )
 
 
 
-def _build_veo_3_1_prompt(approved_prompt: str, mode: str) -> str:
+def _build_veo_3_1_prompt(
+    approved_prompt: str,
+    mode: str,
+) -> tuple[str, bool, list[str]]:
     """
     Veo 3.1 profile, intentionally minimal.
 
@@ -2524,23 +2576,44 @@ def _build_veo_3_1_prompt(approved_prompt: str, mode: str) -> str:
     - do not invent new creative details
     - one clean copy/paste prompt
     """
-    target = _adapter_clean_prompt_text(approved_prompt, mode)
+    original = _adapter_clean_prompt_text(approved_prompt, mode)
+    target = original
+    notes: list[str] = []
 
     # Small formatting adaptation only:
     # make an existing camera instruction slightly more direct for video prompting.
-    target = re.sub(
+    target, camera_changes = re.subn(
         r"(?i)\bthe camera maintains a steady,\s*([a-z-]+(?:\s+[a-z-]+)?) shot,\s*",
         r"The camera remains steady in a \1 shot, ",
         target,
     )
+    if camera_changes:
+        notes.append("Normalized the existing camera direction for Veo 3.1.")
+
+    sectioned = _adapter_section_breaks(
+        target,
+        ("Audio", "Ambient sound", "Sound effects", "Dialogue"),
+    )
+    if sectioned != target:
+        target = sectioned
+        notes.append("Separated existing audio or dialogue cues for Veo 3.1.")
 
     target = re.sub(r"[ \t]{2,}", " ", target)
     target = re.sub(r"\s+([,.;:])", r"\1", target)
-    return target.strip()
+    return _adapter_result(
+        profile_name="Veo 3.1",
+        original=original,
+        adapted=target,
+        changed_notes=notes,
+        unchanged_note="No audio, dialogue, motion, or camera detail was invented.",
+    )
 
 
 
-def _build_kling_video_3_0_prompt(approved_prompt: str, mode: str) -> str:
+def _build_kling_video_3_0_prompt(
+    approved_prompt: str,
+    mode: str,
+) -> tuple[str, bool, list[str]]:
     """
     Kling VIDEO 3.0 profile, intentionally minimal.
 
@@ -2552,38 +2625,64 @@ def _build_kling_video_3_0_prompt(approved_prompt: str, mode: str) -> str:
     - do not invent shots, dialogue, audio, characters, or scene details
     - one clean copy/paste prompt
     """
-    target = _adapter_clean_prompt_text(approved_prompt, mode)
+    original = _adapter_clean_prompt_text(approved_prompt, mode)
+    target = original
+    notes: list[str] = []
 
     # Kling 3.0 accepts natural narrative prompting, so keep the approved
     # sequence intact and apply only a small camera-phrase normalization.
-    target = re.sub(
+    target, camera_changes = re.subn(
         r"(?i)\bthe camera maintains a steady,\s*([a-z-]+(?:\s+[a-z-]+)?) shot,\s*",
         r"Steady \1 camera shot, ",
         target,
     )
+    if camera_changes:
+        notes.append("Normalized the existing camera direction for Kling VIDEO 3.0.")
+
+    sectioned = _adapter_section_breaks(
+        target,
+        ("Shot 1", "Shot 2", "Shot 3", "Shot 4", "Shot 5", "Shot 6", "Audio", "Dialogue"),
+    )
+    if sectioned != target:
+        target = sectioned
+        notes.append("Separated existing shot, audio, or dialogue cues for Kling VIDEO 3.0.")
 
     target = re.sub(r"[ \t]{2,}", " ", target)
     target = re.sub(r"\s+([,.;:])", r"\1", target)
-    return target.strip()
+    return _adapter_result(
+        profile_name="Kling VIDEO 3.0",
+        original=original,
+        adapted=target,
+        changed_notes=notes,
+        unchanged_note="No multi-shot structure, audio, dialogue, or camera detail was invented.",
+    )
 
 
-def _build_model_ready_prompt(profile: str, approved_prompt: str, mode: str) -> tuple[str, str]:
+def _build_model_ready_prompt(
+    profile: str,
+    approved_prompt: str,
+    mode: str,
+) -> tuple[str, str, bool, list[str]]:
     if profile == "kling_video_3_0":
-        return "Kling VIDEO 3.0", _build_kling_video_3_0_prompt(approved_prompt, mode)
+        prompt, changed, notes = _build_kling_video_3_0_prompt(approved_prompt, mode)
+        return "Kling VIDEO 3.0", prompt, changed, notes
 
     if profile == "veo_3_1":
-        return "Veo 3.1", _build_veo_3_1_prompt(approved_prompt, mode)
+        prompt, changed, notes = _build_veo_3_1_prompt(approved_prompt, mode)
+        return "Veo 3.1", prompt, changed, notes
 
     if profile == "runway_gen4_5":
-        return "Runway Gen-4.5", _build_runway_gen4_5_prompt(approved_prompt, mode)
+        prompt, changed, notes = _build_runway_gen4_5_prompt(approved_prompt, mode)
+        return "Runway Gen-4.5", prompt, changed, notes
 
-    return "Generic Video", _build_generic_video_prompt(approved_prompt, mode)
+    prompt, changed, notes = _build_generic_video_prompt(approved_prompt, mode)
+    return "Generic Video", prompt, changed, notes
 
 
 @app.post("/api/model-adapter", response_model=ModelAdapterResponse)
 async def model_adapter(req: ModelAdapterRequest):
     """
-    V1.3.4 model adapter endpoint.
+    Transparent Model Adapter v2 endpoint.
 
     Supported profiles:
     - generic_video
@@ -2593,6 +2692,8 @@ async def model_adapter(req: ModelAdapterRequest):
 
     The approved creative prompt is treated as locked. The adapter performs
     deterministic format adaptation only and must remain INTENT PROTECTED.
+    The response states whether the prompt changed instead of implying that a
+    compatible-as-is prompt was rewritten.
     """
     approved_fidelity = observe_output_fidelity_safe(
         user_input=req.source_prompt,
@@ -2610,7 +2711,7 @@ async def model_adapter(req: ModelAdapterRequest):
             },
         )
 
-    profile_name, adapted_prompt = _build_model_ready_prompt(
+    profile_name, adapted_prompt, changed, adaptation_notes = _build_model_ready_prompt(
         profile=req.profile,
         approved_prompt=req.approved_prompt,
         mode=req.mode,
@@ -2637,6 +2738,8 @@ async def model_adapter(req: ModelAdapterRequest):
         status="MODEL READY",
         profile=profile_name,
         prompt=adapted_prompt,
+        changed=changed,
+        adaptation_notes=adaptation_notes,
         fidelity=adapted_fidelity,
     )
 
@@ -2780,11 +2883,4 @@ def index():
             return HTMLResponse(file.read())
     except FileNotFoundError:
         return HTMLResponse("<h1>index.html not found</h1>", status_code=500)
-
-
-
-
-
-
-
 

@@ -640,6 +640,18 @@
       display: block;
     }
 
+    .adapter-summary {
+      display: none;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .adapter-summary.visible {
+      display: block;
+    }
+
     .adapter-copy {
       display: none;
       margin-top: 9px;
@@ -925,6 +937,7 @@
             </div>
 
             <div class="adapter-ready" id="adapterReady">✓ MODEL READY</div>
+            <div class="adapter-summary" id="adapterSummary"></div>
             <div class="adapter-output" id="adapterOutput"></div>
             <button class="secondary adapter-copy" type="button" id="copyAdapterBtn">Copy Model Prompt</button>
           </div>
@@ -981,6 +994,7 @@
     const adaptModelBtn = document.getElementById("adaptModelBtn");
     const adapterStatus = document.getElementById("adapterStatus");
     const adapterReady = document.getElementById("adapterReady");
+    const adapterSummary = document.getElementById("adapterSummary");
     const adapterOutput = document.getElementById("adapterOutput");
     const copyAdapterBtn = document.getElementById("copyAdapterBtn");
 
@@ -1032,6 +1046,9 @@
       adapterPanel.className = "adapter-panel";
       adapterStatus.textContent = "Choose target model";
       adapterReady.className = "adapter-ready";
+      adapterReady.textContent = "✓ MODEL READY";
+      adapterSummary.className = "adapter-summary";
+      adapterSummary.textContent = "";
       adapterOutput.className = "adapter-output";
       adapterOutput.textContent = "";
       copyAdapterBtn.className = "secondary adapter-copy";
@@ -1053,6 +1070,8 @@
       adaptModelBtn.textContent = "Adapting...";
       adapterStatus.textContent = "Preparing model-ready prompt...";
       adapterReady.className = "adapter-ready";
+      adapterSummary.className = "adapter-summary";
+      adapterSummary.textContent = "";
       adapterOutput.className = "adapter-output";
       copyAdapterBtn.className = "secondary adapter-copy";
 
@@ -1080,7 +1099,16 @@
         }
 
         adapterStatus.textContent = data.profile || "Model ready";
+        adapterReady.textContent = data.changed
+          ? "✓ MODEL-ADAPTED PROMPT"
+          : "✓ COMPATIBLE AS-IS";
         adapterReady.className = "adapter-ready visible";
+        adapterSummary.textContent = Array.isArray(data.adaptation_notes)
+          ? data.adaptation_notes.join(" ")
+          : "";
+        adapterSummary.className = adapterSummary.textContent
+          ? "adapter-summary visible"
+          : "adapter-summary";
         adapterOutput.textContent = data.prompt || "";
         adapterOutput.className = "adapter-output visible";
         copyAdapterBtn.className = "secondary adapter-copy visible";
@@ -1088,6 +1116,8 @@
         statusEl.className = "status";
       } catch (err) {
         adapterStatus.textContent = "Adapter failed";
+        adapterSummary.className = "adapter-summary";
+        adapterSummary.textContent = "";
         adapterOutput.textContent = err.message;
         adapterOutput.className = "adapter-output visible";
         statusEl.textContent = err.message;
@@ -1393,6 +1423,9 @@
 
     adapterProfile.addEventListener("change", () => {
       adapterReady.className = "adapter-ready";
+      adapterReady.textContent = "✓ MODEL READY";
+      adapterSummary.className = "adapter-summary";
+      adapterSummary.textContent = "";
       adapterOutput.className = "adapter-output";
       adapterOutput.textContent = "";
       copyAdapterBtn.className = "secondary adapter-copy";

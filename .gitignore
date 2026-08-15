@@ -3,6 +3,8 @@ data/
 runtime/hardware-profile.json
 runtime/runtime-profile.json
 runtime/install-log.txt
+runtime/install-linux.log
+runtime/doctor-report.txt
 *.zip
 __pycache__/
 *.pyc

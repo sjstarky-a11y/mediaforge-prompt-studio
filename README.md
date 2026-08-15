@@ -23,11 +23,26 @@ recommended package for external testers; v0.2-dev is active development code.
 - Veo 3.1
 - Kling VIDEO 3.0
 
+## Model Adapter behavior
+
+Model Adapter v2 is deliberately transparent:
+
+- a concise prompt that already works across services is marked **Compatible as-is**;
+- Runway, Veo, and Kling formatting is applied only to explicit camera, motion,
+  audio, dialogue, or shot cues already present in the approved prompt;
+- the adapter never invents missing creative direction merely to make outputs
+  look different;
+- the interface reports whether the prompt changed and briefly explains any
+  model-specific formatting that was applied.
+
+This keeps the normal workflow simple while preserving truthful model-specific
+behavior for richer prompts.
+
 ## v0.2-dev runtime scope
 
 MediaForge now records hardware and active inference backends separately:
 
-- `runtime/hardware-profile.json` contains the Windows hardware inventory.
+- `runtime/hardware-profile.json` contains the Windows or Linux hardware inventory.
 - `runtime/runtime-profile.json` contains the active LLM and image runtimes.
 - Prompt Doctor follows the Docker Model Runner backend selected by Docker Desktop.
 - Prompt Doctor discovers locally installed Docker Model Runner models and allows per-request selection.
@@ -50,16 +65,18 @@ informational and never prevents the application from returning a health respons
 
 ## Requirements
 
-- Windows 11 x64
-- Docker Desktop
+- Windows 11 x64, or Ubuntu 24.04 x86_64 / compatible Linux
+- Docker Desktop on Windows/WSL2, or Docker Engine on native Linux
 - Docker Compose
 - Docker Model Runner
 - Internet connection for the first model downloads
 - Enough free RAM and disk space for local AI models
 
-Docker Model Runner must expose host-side TCP access on port `12434`. `install.ps1` attempts to configure this automatically with Docker Desktop's current `--tcp=12434` syntax.
+Docker Model Runner must expose host-side TCP access on port `12434`. `install.ps1`
+configures Docker Desktop; Docker Engine enables this port by default when the
+official `docker-model-plugin` package is installed.
 
-## Install
+## Windows install
 
 1. Install and start Docker Desktop.
 2. Extract or clone this repository.
@@ -83,6 +100,40 @@ The installer will:
 8. download/cache the selected SDXL model on first use,
 9. open the configured app URL (`http://127.0.0.1:18888/` by default).
 
+## Linux install
+
+The initial Linux development target is Ubuntu 24.04 x86_64. Docker Desktop
+WSL2 integration and native Docker Engine are both recognized.
+
+```bash
+chmod +x *.sh scripts/*.sh
+./install.sh
+```
+
+The Linux installer performs the same automatic CPU/NVIDIA selection as the
+Windows installer. Average users do not select CUDA, OpenVINO, offload modes,
+or Compose files.
+
+On native Ubuntu/Debian, Docker Model Runner is supplied by Docker's official
+`docker-model-plugin` package. On WSL2 it is managed by Docker Desktop.
+
+For an isolated WSL2 development run alongside an existing Windows install:
+
+```bash
+./install.sh --test-mode
+```
+
+Test mode uses:
+
+```text
+App:          http://127.0.0.1:18889
+Image API:    http://127.0.0.1:8011
+Project:      mediaforge-prompt-studio-linux-test
+```
+
+If an existing Windows MediaForge container is visible through Docker Desktop,
+`install.sh` enables test mode automatically rather than replacing it.
+
 ### First SDXL download
 
 MediaForge Prompt Doctor becomes available as soon as the web app and selected
@@ -95,7 +146,8 @@ While SDXL downloads:
 - Prompt Doctor can already be used.
 - The installer reports elapsed time and the current local cache size.
 - The installer window may be closed without stopping the containers.
-- Run `.\status.ps1` later to confirm `Image service ready: True`.
+- Run `.\status.ps1` on Windows or `./status.sh` on Linux later to confirm
+  `Image service ready: True`.
 
 The SDXL files are cached under `data/ovms-models/` and are reused on later starts.
 
@@ -111,6 +163,12 @@ List the curated compatibility catalog:
 
 ```powershell
 .\manage-models.ps1 -Action list
+```
+
+Linux equivalent:
+
+```bash
+./manage-models.sh list
 ```
 
 Show a recommendation based on detected NVIDIA VRAM without downloading anything:
@@ -192,12 +250,18 @@ MEDIAFORGE_APP_PORT=18888
 MEDIAFORGE_IMAGE_PORT=8010
 ```
 
-Edit these values before starting the stack if either port is already occupied. `install.ps1`, `start.ps1`, `status.ps1`, and Docker Compose all use the configured values.
+Edit these values before starting the stack if either port is already occupied.
+The Windows PowerShell scripts, Linux Shell scripts, and Docker Compose all use
+the configured values.
 
 ## Start later
 
 ```powershell
 .\start.ps1
+```
+
+```bash
+./start.sh
 ```
 
 ## Stop
@@ -206,10 +270,25 @@ Edit these values before starting the stack if either port is already occupied. 
 .\stop.ps1
 ```
 
+```bash
+./stop.sh
+```
+
 ## Status / troubleshooting
 
 ```powershell
 .\status.ps1
+```
+
+```bash
+./status.sh
+```
+
+Create a Linux diagnostic report that does not copy the `.env` file or include
+prompt and model-response bodies:
+
+```bash
+./doctor.sh --save
 ```
 
 Useful logs:
@@ -246,9 +325,14 @@ selected local OpenVINO or NVIDIA/Diffusers image service.
 ## Current limitation
 
 This is an Adaptive Runtime development milestone, not a final universal installer.
-The CPU/OpenVINO path remains the published compatibility baseline. The NVIDIA
-CUDA image service is development code. Its Low Memory path is validated on a
-GTX 1050 4 GB, while additional NVIDIA generations and VRAM tiers still require
+The CPU/OpenVINO path remains the published compatibility baseline. Windows CPU
+and GTX 1050 CUDA paths are validated. The Linux Shell layer and its isolated
+CPU/OpenVINO workflow have been validated end to end under Ubuntu 24.04 on WSL2,
+including Prompt Doctor and Fast Proof. A ready-state 768x768 Fast Proof completed
+in under one minute on the Ryzen 9 9950X test workstation. Native Linux host
+validation remains pending. The NVIDIA CUDA
+image service is development code. Its Low Memory path is validated on a GTX
+1050 4 GB, while additional NVIDIA generations and VRAM tiers still require
 hardware validation before public release.
 
 Planned runtime milestones:
@@ -257,6 +341,7 @@ Planned runtime milestones:
 - Intel/OpenVINO GPU image profile
 - AMD acceleration
 - expanded AUTO hardware/backend selection
+- native Ubuntu CPU/NVIDIA validation
 
 CPU remains the compatibility fallback.
 

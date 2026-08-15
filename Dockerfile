@@ -12,7 +12,6 @@ COPY app/main.py /app/main.py
 COPY app/fidelity_concepts.py /app/fidelity_concepts.py
 COPY app/model_catalog.py /app/model_catalog.py
 COPY app/runtime_status.py /app/runtime_status.py
-COPY app/proof_constraints.py /app/proof_constraints.py
 COPY app/index.html /app/index.html
 COPY app/assets /app/assets
 COPY models /models
