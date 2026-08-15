@@ -5,5 +5,7 @@ runtime/
 data/
 release-checkpoints/
 *.zip
+*.tar.gz
+dist/
 __pycache__/
 *.pyc

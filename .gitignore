@@ -6,6 +6,9 @@ runtime/install-log.txt
 runtime/install-linux.log
 runtime/doctor-report.txt
 *.zip
+*.tar.gz
+dist/
+SHA256SUMS*.txt
 __pycache__/
 *.pyc
 .DS_Store

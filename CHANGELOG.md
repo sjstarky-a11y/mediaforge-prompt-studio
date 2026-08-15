@@ -36,6 +36,11 @@ All notable public-test changes are documented here.
 - Ubuntu 24.04 WSL2 CPU/OpenVINO end-to-end validation, including a ready-state 768x768 Fast Proof completed in under one minute on the Ryzen 9 9950X workstation
 - transparent Model Adapter v2 status for prompts that are already compatible with the selected video service
 - deterministic profile tests for Runway Gen-4.5, Veo 3.1, and Kling VIDEO 3.0
+- one-click `MediaForge-Windows.cmd` launcher that installs on first use and starts on later use
+- deterministic Windows x64 ZIP and Linux x86_64 tar.gz release packaging
+- platform-specific package contents, embedded file manifests, and SHA256SUMS output
+- release packaging tests that verify reproducibility, private-file exclusion, and Linux executable permissions
+- platform-neutral Windows ZIP and Linux gzip output that remains byte-identical across supported build environments
 
 ### Changed
 
@@ -49,6 +54,8 @@ All notable public-test changes are documented here.
 - Visual Proof Frame now sends the original concise single-frame extraction directly to SDXL; the experimental constraint-expansion layer is no longer active
 - Fast Proof is frozen at 768x768, 16 steps, server-default guidance, and initial seed 42 after controlled WSL/OpenVINO testing
 - Model Adapter now reports `changed` and `adaptation_notes`, applying target-specific formatting only to explicit camera, audio, dialogue, or shot cues
+- average Windows users no longer need to type PowerShell execution-policy commands
+- the Linux release archive preserves `./install.sh` executable permissions
 
 ## [0.1a] - 2026-08-13
 

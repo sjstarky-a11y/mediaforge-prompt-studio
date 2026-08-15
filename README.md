@@ -79,13 +79,18 @@ official `docker-model-plugin` package is installed.
 ## Windows install
 
 1. Install and start Docker Desktop.
-2. Extract or clone this repository.
-3. Open PowerShell in the repository folder.
-4. Run:
+2. Download and extract the complete **Windows x64** release ZIP.
+3. Double-click `MediaForge-Windows.cmd`.
+
+The launcher installs MediaForge on first use and starts it on later use. It
+opens the application automatically when the local services are ready. CPU or
+NVIDIA execution is selected automatically; users do not choose CUDA,
+OpenVINO, Compose files, or memory profiles.
+
+Developers can still run the PowerShell scripts directly:
 
 ```powershell
-Set-ExecutionPolicy -Scope Process Bypass
-.\install.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\install.ps1"
 ```
 
 The installer will:
@@ -105,10 +110,16 @@ The installer will:
 The initial Linux development target is Ubuntu 24.04 x86_64. Docker Desktop
 WSL2 integration and native Docker Engine are both recognized.
 
+Download and extract the complete **Linux x86_64** release archive, open a
+Terminal in the extracted folder, and run:
+
 ```bash
-chmod +x *.sh scripts/*.sh
 ./install.sh
 ```
+
+The official `.tar.gz` release preserves executable Shell permissions. If the
+files were copied through a filesystem that removed those permissions, repair
+them once with `chmod +x *.sh scripts/*.sh` and run `./install.sh` again.
 
 The Linux installer performs the same automatic CPU/NVIDIA selection as the
 Windows installer. Average users do not select CUDA, OpenVINO, offload modes,
@@ -344,6 +355,33 @@ Planned runtime milestones:
 - native Ubuntu CPU/NVIDIA validation
 
 CPU remains the compatibility fallback.
+
+## Release packages
+
+MediaForge uses platform-specific release packages so average users do not see
+scripts intended for another operating system:
+
+| Platform | Release artifact | User entry point |
+| --- | --- | --- |
+| Windows 11 x64 | `MediaForge-Prompt-Studio-<version>-Windows-x64.zip` | Double-click `MediaForge-Windows.cmd` |
+| Ubuntu/Linux x86_64 | `MediaForge-Prompt-Studio-<version>-Linux-x86_64.tar.gz` | Run `./install.sh` |
+
+AI models are downloaded locally during installation and are not bundled in
+either archive. Every package contains a generated file manifest, and every
+release build produces a `SHA256SUMS-<version>.txt` integrity file.
+
+Maintainers can build both packages from one source checkpoint:
+
+```powershell
+.\build-release.ps1 -Version "v0.2-dev"
+```
+
+```bash
+./build-release.sh v0.2-dev
+```
+
+Generated artifacts are written to `dist/`. See
+[`PACKAGING-V0.2.md`](PACKAGING-V0.2.md) for the release verification workflow.
 
 ## Distribution architecture
 

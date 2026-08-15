@@ -1,0 +1,24 @@
+MEDIAFORGE PROMPT STUDIO - WINDOWS
+==================================
+
+Before you begin:
+1. Install and start Docker Desktop.
+2. Make sure Docker Desktop uses Linux containers.
+
+Install or start MediaForge:
+1. Extract the complete ZIP into a new folder.
+2. Double-click MediaForge-Windows.cmd.
+
+That is all. MediaForge automatically detects CPU or NVIDIA GPU support,
+selects the compatible runtime, downloads the required local models, and
+opens http://127.0.0.1:18888 when the Prompt Doctor is ready.
+
+The first Visual Proof Frame model download is several gigabytes and may take
+some time. Prompt Doctor can be used while the image model is downloading.
+
+Advanced commands:
+  MediaForge-Windows.cmd start
+  MediaForge-Windows.cmd status
+  MediaForge-Windows.cmd stop
+
+Privacy: inference runs through local services on your computer.

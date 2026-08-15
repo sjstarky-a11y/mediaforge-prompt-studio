@@ -20,7 +20,7 @@ EXCLUDED_FILES = {
     Path("runtime/doctor-report.txt"),
     Path("runtime/PACKAGE-MANIFEST.json"),
 }
-EXCLUDED_PARTS = {".git", "data", "__pycache__", ".pytest_cache"}
+EXCLUDED_PARTS = {".git", "data", "dist", "__pycache__", ".pytest_cache"}
 
 
 def build_manifest() -> list[dict[str, object]]:

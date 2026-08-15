@@ -1,0 +1,30 @@
+MEDIAFORGE PROMPT STUDIO - LINUX
+================================
+
+Supported development target: Ubuntu 24.04 x86_64 or compatible Linux.
+
+Before you begin:
+1. Install Docker Engine and Docker Compose.
+2. Install the Docker Model Runner plugin.
+
+Install MediaForge:
+1. Extract the complete .tar.gz archive.
+2. Open a terminal in the extracted MediaForge folder.
+3. Run:
+
+   ./install.sh
+
+MediaForge automatically detects CPU or NVIDIA GPU support, selects the
+compatible runtime, downloads the required local models, and opens
+http://127.0.0.1:18888 when Prompt Doctor is ready.
+
+Useful commands:
+  ./start.sh
+  ./status.sh
+  ./doctor.sh
+  ./stop.sh
+
+The first Visual Proof Frame model download is several gigabytes. Prompt
+Doctor can be used while the image model is downloading.
+
+Privacy: inference runs through local services on your computer.
