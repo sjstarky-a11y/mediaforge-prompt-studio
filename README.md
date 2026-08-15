@@ -1,4 +1,4 @@
-# MediaForge Prompt Studio — v0.2-dev Adaptive Runtime
+# MediaForge Prompt Studio — v0.2-dev NVIDIA + Multi-Model
 
 **Fix the prompt → protect the intent → see it before you generate.**
 
@@ -30,13 +30,20 @@ MediaForge now records hardware and active inference backends separately:
 - `runtime/hardware-profile.json` contains the Windows hardware inventory.
 - `runtime/runtime-profile.json` contains the active LLM and image runtimes.
 - Prompt Doctor follows the Docker Model Runner backend selected by Docker Desktop.
-- Visual Proof Frame remains on **OpenVINO SDXL INT8 / CPU** in this milestone.
+- Prompt Doctor discovers locally installed Docker Model Runner models and allows per-request selection.
+- Visual Proof Frame uses **OpenVINO SDXL INT8 / CPU** as the compatibility path.
+- Eligible NVIDIA GPUs can use the experimental **CUDA / Diffusers SDXL** image path.
 
-For example, a Windows laptop with GPU-backed Model Runner enabled is reported as:
+The primary interface intentionally reports only the execution mode users need:
 
 ```text
-HYBRID · NVIDIA LLM · CPU IMAGE
+LOCAL AI · CPU
+LOCAL AI · GPU + CPU
+LOCAL AI · GPU
 ```
+
+Detailed Prompt Doctor and Visual Proof Frame backends remain available in
+Developer settings and `runtime/runtime-profile.json`.
 
 CPU-only Model Runner remains the compatibility fallback. Runtime detection is
 informational and never prevents the application from returning a health response.
@@ -70,15 +77,17 @@ The installer will:
 2. verify Docker,
 3. enable Docker Model Runner,
 4. detect the active Model Runner backend,
-5. pull `ai/qwen2.5:3B-Q4_K_M`,
-6. build MediaForge,
-7. start OpenVINO Model Server,
-8. download/cache the SDXL INT8 model on first use,
+5. select the compatible CPU/OpenVINO or NVIDIA/CUDA image profile,
+6. pull the default model configured by `MEDIAFORGE_MODEL`,
+7. build MediaForge and the selected image service,
+8. download/cache the selected SDXL model on first use,
 9. open the configured app URL (`http://127.0.0.1:18888/` by default).
 
 ### First SDXL download
 
-MediaForge Prompt Doctor becomes available as soon as the web app and Qwen are ready. Visual Proof Frame requires a separate, large SDXL INT8 download on the first install. On a slower connection this can take up to an hour.
+MediaForge Prompt Doctor becomes available as soon as the web app and selected
+local LLM are ready. Visual Proof Frame requires a separate, large SDXL download
+on the first install. On a slower connection this can take up to an hour.
 
 While SDXL downloads:
 
@@ -86,9 +95,93 @@ While SDXL downloads:
 - Prompt Doctor can already be used.
 - The installer reports elapsed time and the current local cache size.
 - The installer window may be closed without stopping the containers.
-- Run `.\status.ps1` later to confirm `OVMS ready: True`.
+- Run `.\status.ps1` later to confirm `Image service ready: True`.
 
 The SDXL files are cached under `data/ovms-models/` and are reused on later starts.
+
+For the NVIDIA image profile, model files are cached under `data/huggingface/`.
+
+## Multi-model Prompt Doctor
+
+Qwen 2.5 3B remains the small validated default, but the application is no
+longer tied to it. MediaForge reads the local Docker Model Runner model list and
+shows installed models in the **Prompt Doctor Model** selector.
+
+List the curated compatibility catalog:
+
+```powershell
+.\manage-models.ps1 -Action list
+```
+
+Show a recommendation based on detected NVIDIA VRAM without downloading anything:
+
+```powershell
+.\manage-models.ps1 -Action recommend
+```
+
+Install and select an additional Apache-2.0 model:
+
+```powershell
+.\manage-models.ps1 -Action install -Model "ai/qwen2.5:7B-Q4_K_M" -SetDefault
+```
+
+Models governed by separate terms require explicit acknowledgement with
+`-AcceptModelLicense`. Custom locally installed DMR models are visible as
+**unverified** until they pass MediaForge fidelity tests.
+
+Curated development profiles:
+
+| Profile | Model | Recommended VRAM | Status |
+| --- | --- | ---: | --- |
+| Light | Qwen 2.5 3B | 4 GB | validated default |
+| Light | Gemma 3 QAT 4B | 6 GB | candidate |
+| Balanced | Qwen 2.5 7B | 6 GB | candidate |
+| Balanced | Qwen 3 8B | 8 GB | candidate |
+| Creator | Gemma 3 QAT 12B | 12 GB | candidate |
+| Pro | Qwen 3 30B-A3B | 24 GB | candidate |
+| Pro | Gemma 3 QAT 27B | 24 GB | candidate |
+
+VRAM values are conservative selection guidance, not hard execution limits.
+Docker Model Runner may use system RAM or a different backend depending on the
+machine and Docker Desktop configuration.
+
+## NVIDIA image profile
+
+With `MEDIAFORGE_IMAGE_RUNTIME=auto`, the installer selects CUDA image
+generation when it detects all of the following:
+
+- NVIDIA GPU available to Windows and Docker;
+- compute capability 6.0 or newer;
+- at least 4 GB VRAM.
+
+MediaForge does not use a card-name allowlist. It selects an internal profile
+from detected capability and memory:
+
+| NVIDIA VRAM | Internal profile | Execution |
+| ---: | --- | --- |
+| 4 to <6 GB | Low Memory | CUDA with sequential CPU offload |
+| 6 to <8 GB | Balanced | CUDA with model CPU offload |
+| 8 GB+ | Full | CUDA without model offload |
+
+The internal profile is automatic. Average users see only `CPU`, `GPU + CPU`,
+or `GPU`. Unsupported hardware or failed Docker GPU validation safely selects
+the CPU/OpenVINO compatibility path.
+
+### GTX 1050 validation
+
+A controlled practical test was completed on a Lenovo 81FV with an Intel
+Core i5-8300H, 31.9 GB RAM, and a GeForce GTX 1050 4 GB (compute 6.1).
+Both runs used Fast Proof 768×768, 16 steps, seed 42 and the same source prompt.
+
+| Runtime | Total time | Relative result |
+| --- | ---: | ---: |
+| GTX 1050 / CUDA FP16 Low Memory | 146.50 s | 4.38× faster |
+| CPU / OpenVINO SDXL INT8 | 641.87 s | baseline |
+
+The test reduced elapsed time by 77.2%, saving approximately 8 minutes 15
+seconds per image. Peak PyTorch VRAM allocation was approximately 1737.5 MB.
+This comparison measures practical MediaForge execution; the CUDA FP16 and
+OpenVINO INT8 backends are not mathematically identical.
 
 ## Ports
 
@@ -96,7 +189,7 @@ Default host ports are configured in `.env`:
 
 ```dotenv
 MEDIAFORGE_APP_PORT=18888
-MEDIAFORGE_OVMS_PORT=8010
+MEDIAFORGE_IMAGE_PORT=8010
 ```
 
 Edit these values before starting the stack if either port is already occupied. `install.ps1`, `start.ps1`, `status.ps1`, and Docker Compose all use the configured values.
@@ -124,33 +217,43 @@ Useful logs:
 ```powershell
 docker logs mediaforge-prompt-studio
 docker logs mediaforge-ovms-sdxl-cpu
+docker logs mediaforge-image-cuda
 ```
 
 ## Local models
 
-Prompt Doctor:
+Prompt Doctor default:
 
 `ai/qwen2.5:3B-Q4_K_M`
 
-Visual Proof Frame:
+Additional installed Docker Model Runner models are discovered automatically.
+The curated catalog currently covers Light, Balanced, Creator, and Pro profiles.
+
+Visual Proof Frame compatibility model:
 
 `OpenVINO/stable-diffusion-xl-base-1.0-int8-ov`
 
-Downloaded models are cached locally. The OVMS model cache is stored under `data/ovms-models/` and is excluded from Git.
+Downloaded models are cached locally. The OVMS model cache is stored under
+`data/ovms-models/`; the NVIDIA Diffusers cache is stored under
+`data/huggingface/`. Both are excluded from Git.
 
 ## Privacy
 
-The Public Test package is designed to run locally. Prompt Doctor requests go to the local Docker Model Runner endpoint, and Proof Frame requests go to the local OpenVINO Model Server service.
+The development package is designed to run locally. Prompt Doctor requests go
+to the local Docker Model Runner endpoint, and Proof Frame requests go to the
+selected local OpenVINO or NVIDIA/Diffusers image service.
 
 ## Current limitation
 
 This is an Adaptive Runtime development milestone, not a final universal installer.
-It detects a CUDA-backed Docker Model Runner on Windows, but image generation
-continues to use the validated CPU/OpenVINO service.
+The CPU/OpenVINO path remains the published compatibility baseline. The NVIDIA
+CUDA image service is development code. Its Low Memory path is validated on a
+GTX 1050 4 GB, while additional NVIDIA generations and VRAM tiers still require
+hardware validation before public release.
 
 Planned runtime milestones:
 
-- validated NVIDIA auto-selection and fallback
+- validation of NVIDIA CUDA image generation across additional GPU generations and VRAM tiers
 - Intel/OpenVINO GPU image profile
 - AMD acceleration
 - expanded AUTO hardware/backend selection
@@ -196,6 +299,6 @@ See [`LICENSES/THIRD_PARTY.md`](LICENSES/THIRD_PARTY.md).
 
 ## Project status
 
-**v0.2-dev Adaptive Runtime — develop branch**
+**v0.2-dev NVIDIA + Multi-Model Runtime — develop branch**
 
 The stable public test remains `v0.1a`. Development builds require local validation before release.

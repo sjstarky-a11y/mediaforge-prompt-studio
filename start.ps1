@@ -20,7 +20,9 @@ if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
 & (Join-Path $PSScriptRoot "detect-hardware.ps1")
 & (Join-Path $PSScriptRoot "detect-runtime.ps1")
 
-docker compose up -d
+$composeFile = Get-EnvValue "MEDIAFORGE_COMPOSE_FILE" "docker-compose.yml"
+$composePath = Join-Path $PSScriptRoot $composeFile
+docker compose -f $composePath up -d
 if ($LASTEXITCODE -ne 0) {
     throw "Could not start MediaForge."
 }

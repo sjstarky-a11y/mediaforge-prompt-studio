@@ -168,6 +168,27 @@
       outline: none;
     }
 
+    select {
+      color-scheme: dark;
+    }
+
+    select option {
+      color: #f5f1ff;
+      background: #15141c;
+    }
+
+    select optgroup {
+      color: #d9d0ec;
+      background: #111017;
+      font-style: normal;
+      font-weight: 800;
+    }
+
+    select option:disabled {
+      color: #aaa3b8;
+      background: #1b1922;
+    }
+
     textarea {
       min-height: 118px;
       max-height: 190px;
@@ -212,6 +233,83 @@
       grid-template-columns: 1fr 1fr 150px;
       gap: 10px;
       align-items: end;
+    }
+
+    .model-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(180px, 0.72fr);
+      gap: 10px;
+      align-items: end;
+    }
+
+    .engine-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .engine-status {
+      color: var(--accent2);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .engine-status::before {
+      content: "●";
+      margin-right: 7px;
+      font-size: 9px;
+    }
+
+    .developer-toggle {
+      padding: 8px 11px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: rgba(255,255,255,0.035);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .developer-toggle[aria-expanded="true"] {
+      border-color: rgba(157,108,255,0.55);
+      color: var(--text);
+      background: rgba(157,108,255,0.10);
+    }
+
+    .developer-panel {
+      padding: 12px;
+      border: 1px solid rgba(157,108,255,0.28);
+      border-radius: 16px;
+      background: rgba(157,108,255,0.055);
+    }
+
+    .developer-title {
+      margin-bottom: 10px;
+      color: #e7def7;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .developer-runtime {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .model-help {
+      min-height: 45px;
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.025);
+      font-size: 11px;
+      line-height: 1.35;
     }
 
     button {
@@ -671,6 +769,10 @@
         grid-template-columns: 1fr;
       }
 
+      .model-row {
+        grid-template-columns: 1fr;
+      }
+
       .result {
         min-height: 160px;
       }
@@ -716,6 +818,25 @@
               </div>
             </div>
 
+            <div class="engine-row">
+              <div class="engine-status" id="engineStatus">Detecting local AI engine...</div>
+              <button class="developer-toggle" type="button" id="developerToggle" aria-expanded="false" aria-controls="developerPanel">Developer</button>
+            </div>
+
+            <div class="developer-panel" id="developerPanel" hidden>
+              <div class="developer-title">Developer settings</div>
+              <div class="model-row">
+                <div>
+                  <label for="llmModel">Installed Prompt Doctor model</label>
+                  <select id="llmModel" disabled>
+                    <option value="">Loading local models...</option>
+                  </select>
+                </div>
+                <div class="model-help" id="modelHelp">Detecting locally installed Docker Model Runner models.</div>
+              </div>
+              <div class="developer-runtime" id="developerRuntime">Runtime details are loading...</div>
+            </div>
+
             <div class="bottom-row">
               <div>
                 <label for="aspectRatio">Format</label>
@@ -748,7 +869,7 @@
         <div class="card-inner">
           <div class="result-head">
             <label>Result</label>
-            <div class="status" id="modelStatus">Model: loading...</div>
+            <div class="status" id="modelStatus" hidden>Model: loading...</div>
           </div>
 
           <div class="result empty" id="result">Your improved prompt will appear here.</div>
@@ -830,6 +951,12 @@
     const input = document.getElementById("userInput");
     const aspectRatio = document.getElementById("aspectRatio");
     const language = document.getElementById("language");
+    const llmModel = document.getElementById("llmModel");
+    const modelHelp = document.getElementById("modelHelp");
+    const engineStatus = document.getElementById("engineStatus");
+    const developerToggle = document.getElementById("developerToggle");
+    const developerPanel = document.getElementById("developerPanel");
+    const developerRuntime = document.getElementById("developerRuntime");
     const result = document.getElementById("result");
     const statusEl = document.getElementById("status");
     const modelStatus = document.getElementById("modelStatus");
@@ -862,6 +989,7 @@
     let lastFinalPrompt = "";
     let lastFidelityStatus = "";
     let proofSeed = 42;
+    let modelMetadata = new Map();
 
     function hideFidelity() {
       fidelityStatus.className = "fidelity-status";
@@ -1083,14 +1211,84 @@
         const data = await res.json();
         modelStatus.textContent = "Model: " + data.model.replace("ai/", "");
         const runtime = data.runtime || {};
-        const runtimeSummary = (runtime.summary || "RUNTIME DETECTION PENDING").replace(/\s*\|\s*/g, " · ");
-        runtimeBadge.textContent = "LOCAL AI · " + runtimeSummary;
+        const gpuEnabled = runtime.gpu_acceleration === true || data.gpu_acceleration === true;
+        const runtimeLabel = runtime.display_mode || (gpuEnabled ? "GPU + CPU" : "CPU");
+        runtimeBadge.textContent = "LOCAL AI · " + runtimeLabel;
         const llmRuntime = runtime.llm && runtime.llm.runtime ? runtime.llm.runtime : "Unknown";
         const imageRuntime = runtime.image && runtime.image.runtime ? runtime.image.runtime : "Unknown";
         runtimeBadge.title = "Prompt Doctor: " + llmRuntime + " | Visual Proof Frame: " + imageRuntime;
+        developerRuntime.textContent = "Prompt Doctor: " + llmRuntime + " · Visual Proof Frame: " + imageRuntime;
       } catch {
         modelStatus.textContent = "Model: unavailable";
         runtimeBadge.textContent = "LOCAL AI · RUNTIME UNAVAILABLE";
+        developerRuntime.textContent = "Runtime details are unavailable.";
+      }
+    }
+
+    function updateSelectedModelStatus() {
+      const modelId = llmModel.value;
+      const metadata = modelMetadata.get(modelId);
+
+      if (!modelId) {
+        modelStatus.textContent = "Model: unavailable";
+        modelHelp.textContent = "No local Docker Model Runner model is available.";
+        engineStatus.textContent = "Local AI engine unavailable";
+        return;
+      }
+
+      engineStatus.textContent = "Local AI engine ready";
+      modelStatus.textContent = "Model: " + (metadata ? metadata.display_name : modelId.replace("ai/", ""));
+      if (!metadata) {
+        modelHelp.textContent = "Installed local model · compatibility not yet validated";
+        return;
+      }
+
+      const validationLabels = {
+        validated: "Validated",
+        candidate: "Compatibility candidate",
+        unverified: "Unverified local model"
+      };
+      const validation = validationLabels[metadata.validation] || "Unverified local model";
+      const vram = metadata.recommended_vram_gb ? " · recommended " + metadata.recommended_vram_gb + " GB VRAM" : "";
+      modelHelp.textContent = metadata.profile + " profile · " + validation + vram;
+    }
+
+    async function loadModels() {
+      try {
+        const res = await fetch("/api/models");
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || "Model discovery failed.");
+        }
+
+        const installed = Array.isArray(data.installed) ? data.installed : [];
+        modelMetadata = new Map(installed.map(item => [item.id, item]));
+        llmModel.innerHTML = "";
+
+        installed.forEach(item => {
+          const option = document.createElement("option");
+          option.value = item.id;
+          const validationLabels = {
+            validated: "Validated",
+            candidate: "Candidate",
+            unverified: "Unverified"
+          };
+          option.textContent = item.display_name + " · " + (validationLabels[item.validation] || "Unverified");
+          llmModel.appendChild(option);
+        });
+
+        const savedModel = localStorage.getItem("mediaforgePromptModel");
+        const installedIds = new Set(installed.map(item => item.id));
+        llmModel.value = installedIds.has(savedModel) ? savedModel : data.default_model;
+        if (!llmModel.value && installed.length) {
+          llmModel.value = installed[0].id;
+        }
+        llmModel.disabled = installed.length === 0;
+        updateSelectedModelStatus();
+      } catch (err) {
+        llmModel.disabled = true;
+        modelHelp.textContent = "Model discovery unavailable: " + err.message;
+        engineStatus.textContent = "Local AI engine unavailable";
       }
     }
 
@@ -1121,6 +1319,7 @@
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({
             user_input: userInput,
+            model: llmModel.value || null,
             mode: activeMode,
             aspect_ratio: aspectRatio.value,
             language: language.value
@@ -1134,6 +1333,7 @@
         }
 
         result.textContent = data.result;
+        modelStatus.textContent = "Model: " + data.model.replace("ai/", "");
         showFidelity(data.fidelity);
 
         lastSourcePrompt = userInput;
@@ -1209,8 +1409,22 @@
       statusEl.className = "status";
     });
 
+    llmModel.addEventListener("change", () => {
+      localStorage.setItem("mediaforgePromptModel", llmModel.value);
+      updateSelectedModelStatus();
+    });
+
+    developerToggle.addEventListener("click", () => {
+      const enabled = developerPanel.hidden;
+      developerPanel.hidden = !enabled;
+      modelStatus.hidden = !enabled;
+      developerToggle.setAttribute("aria-expanded", String(enabled));
+      developerToggle.textContent = enabled ? "Close Developer" : "Developer";
+    });
+
     resetProofFrame();
     loadHealth();
+    loadModels();
   </script>
 </body>
 </html>

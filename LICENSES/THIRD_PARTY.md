@@ -21,6 +21,34 @@ terms at the model's download source before use.
 Model page:
 https://hub.docker.com/r/ai/qwen2.5
 
+## Optional Prompt Doctor models
+
+The v0.2 development catalog can reference additional Qwen and Gemma variants.
+No optional model weights are included in this repository. Qwen model pages
+identify Apache 2.0 licensing; Gemma variants are governed by the separate
+Gemma Terms. `manage-models.ps1` requires explicit acknowledgement before it
+downloads a catalog entry with non-Apache terms.
+
+Model pages:
+
+- https://hub.docker.com/r/ai/qwen3
+- https://hub.docker.com/r/ai/gemma3-qat
+
+## NVIDIA image runtime
+
+The optional NVIDIA profile uses PyTorch and Hugging Face Diffusers in a
+separate CUDA-enabled container. It downloads the configured Stable Diffusion
+model on first use; weights are not stored in this repository.
+
+- PyTorch: BSD-style license — https://github.com/pytorch/pytorch/blob/main/LICENSE
+- Diffusers: Apache 2.0 — https://github.com/huggingface/diffusers/blob/main/LICENSE
+- Transformers: Apache 2.0 — https://github.com/huggingface/transformers/blob/main/LICENSE
+
+The default CUDA image model is `stabilityai/stable-diffusion-xl-base-1.0`.
+Its model card identifies the CreativeML Open RAIL++-M license. Users must
+review and accept the model terms at the download source:
+https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0
+
 ## OpenVINO Model Server
 
 Used to serve the Visual Proof Frame image model locally.

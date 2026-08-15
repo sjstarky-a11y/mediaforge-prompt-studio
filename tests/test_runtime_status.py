@@ -25,6 +25,7 @@ class RuntimeStatusTests(unittest.TestCase):
             "schema_version": 1,
             "profile": "Hybrid",
             "summary": "HYBRID · NVIDIA LLM · CPU IMAGE",
+            "display_mode": "GPU + CPU",
             "gpu_acceleration": True,
             "gpu_acceleration_scope": "llm",
             "llm": {
@@ -43,6 +44,7 @@ class RuntimeStatusTests(unittest.TestCase):
 
         self.assertEqual(profile["profile"], "Hybrid")
         self.assertTrue(profile["gpu_acceleration"])
+        self.assertEqual(profile["display_mode"], "GPU + CPU")
         self.assertEqual(profile["llm"]["backend"], "CUDA")
         self.assertEqual(profile["image"]["runtime"], "CPU / OpenVINO SDXL INT8")
 
@@ -53,6 +55,7 @@ class RuntimeStatusTests(unittest.TestCase):
             profile = load_runtime_profile(path)
 
         self.assertEqual(profile["summary"], "RUNTIME DETECTION PENDING")
+        self.assertEqual(profile["display_mode"], "CPU")
 
 
 if __name__ == "__main__":

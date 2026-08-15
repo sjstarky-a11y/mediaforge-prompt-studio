@@ -27,3 +27,11 @@ GitHub profile. Include:
 The project runs local AI services and exposes them only on `127.0.0.1` by
 default. Do not change bindings to `0.0.0.0` unless you understand and accept
 the network exposure.
+
+Docker Model Runner's local API is unauthenticated by design. MediaForge binds
+its own services to `127.0.0.1` and lists only models reported by the local DMR
+instance. Do not expose port `12434`, the image-service port, or the MediaForge
+application port to untrusted networks.
+
+Optional and custom models execute under their respective local inference
+runtimes. Review model licenses and provenance before installing them.

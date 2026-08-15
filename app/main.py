@@ -8,7 +8,20 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from fidelity_concepts import (
+    auto_correct_narrow_lighting_review,
+    detect_unrequested_creative_issues,
+    output_structure_issues,
+)
+from model_catalog import (
+    build_model_inventory,
+    is_valid_model_id,
+    load_model_catalog,
+    model_prompt_prefix,
+    parse_dmr_model_ids,
+)
 from runtime_status import load_runtime_profile
+from proof_constraints import apply_visual_proof_constraints
 
 
 APP_NAME = "MediaForge Prompt Studio"
@@ -19,21 +32,38 @@ DMR_URL = os.getenv(
 ).rstrip("/")
 
 DMR_API_KEY = os.getenv("MEDIAFORGE_DMR_API_KEY", "docker-model-runner")
+DMR_MANAGEMENT_URL = os.getenv(
+    "MEDIAFORGE_DMR_MANAGEMENT_URL",
+    DMR_URL.split("/engines/", 1)[0],
+).rstrip("/")
 MODEL_NAME = os.getenv("MEDIAFORGE_MODEL", "ai/qwen2.5:3B-Q4_K_M")
+MODEL_CATALOG_PATH = os.getenv(
+    "MEDIAFORGE_MODEL_CATALOG_PATH",
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "models",
+        "model-catalog.json",
+    ),
+)
+MODEL_CATALOG = load_model_catalog(MODEL_CATALOG_PATH)
 DEFAULT_LANGUAGE = os.getenv("MEDIAFORGE_DEFAULT_LANGUAGE", "English")
 MAX_TOKENS = int(os.getenv("MEDIAFORGE_MAX_TOKENS", "700"))
 TEMPERATURE = float(os.getenv("MEDIAFORGE_TEMPERATURE", "0.55"))
 
-# V1.2 Visual Proof Frame test service.
-# This points to the completely separate OVMS container running on the host.
-OVMS_IMAGE_URL = os.getenv(
-    "MEDIAFORGE_OVMS_IMAGE_URL",
-    "http://host.docker.internal:8010/v3",
+# Visual Proof Frame uses an OpenAI-compatible image generation endpoint.
+# Legacy OVMS variable names remain supported for v0.1a configuration files.
+IMAGE_API_URL = os.getenv(
+    "MEDIAFORGE_IMAGE_API_URL",
+    os.getenv("MEDIAFORGE_OVMS_IMAGE_URL", "http://host.docker.internal:8010/v3"),
 ).rstrip("/")
-OVMS_IMAGE_MODEL = os.getenv(
-    "MEDIAFORGE_OVMS_IMAGE_MODEL",
-    "OpenVINO/stable-diffusion-xl-base-1.0-int8-ov",
+IMAGE_MODEL = os.getenv(
+    "MEDIAFORGE_IMAGE_MODEL",
+    os.getenv(
+        "MEDIAFORGE_OVMS_IMAGE_MODEL",
+        "OpenVINO/stable-diffusion-xl-base-1.0-int8-ov",
+    ),
 )
+IMAGE_BACKEND = os.getenv("MEDIAFORGE_IMAGE_BACKEND", "OpenVINO CPU")
 
 
 app = FastAPI(title=APP_NAME)
@@ -42,6 +72,7 @@ app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 class GenerateRequest(BaseModel):
     user_input: str = Field(..., min_length=3, max_length=6000)
+    model: str | None = Field(default=None, min_length=3, max_length=200)
     mode: Literal[
         "improve",
         "diagnose",
@@ -398,6 +429,7 @@ def health():
         "model": MODEL_NAME,
         "dmr_url": DMR_URL,
         "runtime_profile": runtime["profile"],
+        "runtime_mode": runtime["display_mode"],
         "gpu_acceleration": runtime["gpu_acceleration"],
         "llm_runtime": runtime["llm"]["runtime"],
         "image_runtime": runtime["image"]["runtime"],
@@ -408,6 +440,52 @@ def health():
 @app.get("/runtime")
 def runtime():
     return load_runtime_profile()
+
+
+@app.get("/api/models")
+async def models():
+    headers = {
+        "Authorization": f"Bearer {DMR_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    source = "dmr"
+    warning = None
+    installed_ids = []
+    errors = []
+    model_urls = list(
+        dict.fromkeys(
+            [
+                f"{DMR_URL}/models",
+                f"{DMR_MANAGEMENT_URL}/models",
+            ]
+        )
+    )
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        for model_url in model_urls:
+            try:
+                response = await client.get(model_url, headers=headers)
+                response.raise_for_status()
+                installed_ids = parse_dmr_model_ids(response.json())
+                if installed_ids:
+                    source = model_url
+                    break
+            except Exception as exc:
+                errors.append(f"{model_url}: {exc}")
+
+    if not installed_ids and len(errors) == len(model_urls):
+        source = "fallback"
+        warning = "Could not list Docker Model Runner models: " + "; ".join(errors)
+
+    inventory = build_model_inventory(
+        installed_ids=installed_ids,
+        default_model=MODEL_NAME,
+        catalog=MODEL_CATALOG,
+        assume_default_installed=source == "fallback",
+    )
+    inventory["source"] = source
+    inventory["warning"] = warning
+    return inventory
 
 
 def build_canonical_meaning(user_input: str, language: str) -> str:
@@ -1663,6 +1741,7 @@ def observe_output_fidelity(
     result: str,
     mode: str,
     aspect_ratio: str,
+    require_mode_structure: bool = True,
 ) -> FidelityObserverResult:
     """
     V1.1 observer-only validation.
@@ -1696,6 +1775,20 @@ def observe_output_fidelity(
     _observer_check_spatial(user_input, target, issues)
     _observer_check_unrequested_human_details(user_input, target, issues)
     _observer_check_product_and_constraints(user_input, target, issues)
+    issues.extend(
+        detect_unrequested_creative_issues(
+            source=user_input,
+            target=target,
+            mode=mode,
+        )
+    )
+    issues.extend(
+        output_structure_issues(
+            result=result,
+            mode=mode,
+            require_mode_structure=require_mode_structure,
+        )
+    )
 
     if aspect_ratio == "9:16":
         if not _observer_has_any(target, ["9:16", "vertical"]):
@@ -1714,6 +1807,7 @@ def observe_output_fidelity_safe(
     result: str,
     mode: str,
     aspect_ratio: str,
+    require_mode_structure: bool = True,
 ) -> FidelityObserverResult:
     """
     Never allow the observer layer to break a successful V1.0 generation.
@@ -1725,6 +1819,7 @@ def observe_output_fidelity_safe(
             result=result,
             mode=mode,
             aspect_ratio=aspect_ratio,
+            require_mode_structure=require_mode_structure,
         )
     except Exception:
         return FidelityObserverResult(
@@ -1769,6 +1864,10 @@ def build_commercial_deterministic(user_input: str) -> str:
 
 @app.post("/api/generate", response_model=GenerateResponse)
 async def generate(req: GenerateRequest):
+    active_model = (req.model or MODEL_NAME).strip()
+    if not is_valid_model_id(active_model):
+        raise HTTPException(status_code=400, detail="Invalid Docker Model Runner model identifier.")
+
     if req.mode == "commercial":
         result = build_commercial_deterministic(req.user_input)
         fidelity = observe_output_fidelity_safe(
@@ -1779,7 +1878,7 @@ async def generate(req: GenerateRequest):
         )
         return GenerateResponse(
             result=result,
-            model=MODEL_NAME,
+            model=active_model,
             mode=req.mode,
             fidelity=fidelity,
         )
@@ -1799,13 +1898,14 @@ async def generate(req: GenerateRequest):
         "commercial": 0.20,
     }.get(req.mode, TEMPERATURE)
     payload = {
-        "model": MODEL_NAME,
+        "model": active_model,
         "messages": [
             {"role": "system", "content": system_prompt},
             {
                 "role": "user",
                 "content": (
-                    guarded_user_input
+                    model_prompt_prefix(active_model, MODEL_CATALOG)
+                    + guarded_user_input
                     + "\n\n"
                     + canonical_meaning
                     + "\n\n"
@@ -1897,9 +1997,27 @@ async def generate(req: GenerateRequest):
         aspect_ratio=req.aspect_ratio,
     )
 
+    if fidelity.status == "REVIEW":
+        corrected_result, corrections = auto_correct_narrow_lighting_review(
+            source=req.user_input,
+            target=result,
+            mode=req.mode,
+            issues=fidelity.issues,
+        )
+        if corrections:
+            corrected_fidelity = observe_output_fidelity_safe(
+                user_input=req.user_input,
+                result=corrected_result,
+                mode=req.mode,
+                aspect_ratio=req.aspect_ratio,
+            )
+            if corrected_fidelity.status == "INTENT PROTECTED":
+                result = corrected_result
+                fidelity = corrected_fidelity
+
     return GenerateResponse(
         result=result,
-        model=MODEL_NAME,
+        model=active_model,
         mode=req.mode,
         fidelity=fidelity,
     )
@@ -2175,6 +2293,9 @@ def _proof_clean_selected_clause(clause: str) -> str:
 
     # Observation/action phrasing for a still image.
     verb_map = [
+        (r"(?i)^enters\b", "entering"),
+        (r"(?i)^walks\b", "walking"),
+        (r"(?i)^carries\b", "carrying"),
         (r"(?i)^looks back\b", "looking back"),
         (r"(?i)^looks outside\b", "looking outside"),
         (r"(?i)^looks out\b", "looking out"),
@@ -2194,7 +2315,8 @@ def _proof_choose_single_frame_clause(source_text: str) -> tuple[str, str]:
     clauses = _proof_extract_action_clauses(source_text)
 
     if len(clauses) <= 1:
-        return (clauses[0] if clauses else source_text.strip(), "single_moment")
+        selected = clauses[0] if clauses else source_text.strip()
+        return (_proof_clean_selected_clause(selected), "single_moment")
 
     # V1.2.4a: stable position + observation is the strongest single-frame pair.
     # Example: "stops beneath the screen" + "looks back toward the empty seats".
@@ -2269,10 +2391,17 @@ def _proof_build_single_frame(source_text: str) -> tuple[str, str]:
     selected = selected_clause.rstrip(".")
     selected_text = selected[0].lower() + selected[1:] if selected else "in the final visible state"
 
+    if "cinema" in s:
+        selected_text = re.sub(
+            r"(?i)^(?:entering|walking into)\s+(?:an?\s+)?(?:old\s+)?(?:abandoned\s+)?cinema\b",
+            "walking into the auditorium",
+            selected_text,
+        )
+
     frame = f"Photorealistic cinematic still of {subject} in {environment}, {selected_text}."
 
     explicit_details = []
-    if "camera bag" in s:
+    if "camera bag" in s and "camera bag" not in _observer_normalize(selected_text):
         explicit_details.append("a small camera bag visible over the shoulder")
     if "worn red seats" in s:
         explicit_details.append("rows of worn red seats")
@@ -2310,6 +2439,12 @@ def build_visual_proof_prompt(
     negative_prompt = (
         "extra people, duplicate person, distorted human anatomy, deformed hands, "
         "surreal architecture, warped furniture, duplicate objects, text, watermark"
+    )
+
+    single_frame_prompt, negative_prompt = apply_visual_proof_constraints(
+        source_text=source_prompt,
+        prompt=single_frame_prompt,
+        negative_prompt=negative_prompt,
     )
 
     return single_frame_prompt, selection_reason, negative_prompt
@@ -2486,6 +2621,7 @@ async def model_adapter(req: ModelAdapterRequest):
         result=adapted_prompt,
         mode=req.mode,
         aspect_ratio=req.aspect_ratio,
+        require_mode_structure=False,
     )
 
     if adapted_fidelity.status != "INTENT PROTECTED":
@@ -2580,7 +2716,7 @@ async def generate_proof_frame(req: ProofFrameRequest):
     proof_size, proof_steps = _proof_quality_config(req.quality)
 
     payload = {
-        "model": OVMS_IMAGE_MODEL,
+        "model": IMAGE_MODEL,
         "prompt": single_frame_prompt,
         "negative_prompt": negative_prompt,
         "size": proof_size,
@@ -2592,7 +2728,7 @@ async def generate_proof_frame(req: ProofFrameRequest):
     try:
         async with httpx.AsyncClient(timeout=900.0) as client:
             response = await client.post(
-                f"{OVMS_IMAGE_URL}/images/generations",
+                f"{IMAGE_API_URL}/images/generations",
                 headers={"Content-Type": "application/json"},
                 json=payload,
             )
@@ -2603,7 +2739,7 @@ async def generate_proof_frame(req: ProofFrameRequest):
         raise HTTPException(
             status_code=502,
             detail=(
-                f"OVMS returned HTTP {exc.response.status_code}: "
+                f"{IMAGE_BACKEND} returned HTTP {exc.response.status_code}: "
                 f"{exc.response.text}"
             ),
         )
@@ -2611,7 +2747,7 @@ async def generate_proof_frame(req: ProofFrameRequest):
     except Exception as exc:
         raise HTTPException(
             status_code=502,
-            detail=f"Could not connect to the separate OVMS image service: {exc}",
+            detail=f"Could not connect to the {IMAGE_BACKEND} image service: {exc}",
         )
 
     try:
@@ -2619,12 +2755,12 @@ async def generate_proof_frame(req: ProofFrameRequest):
     except Exception:
         raise HTTPException(
             status_code=502,
-            detail=f"Unexpected response from OVMS image service: {data}",
+            detail=f"Unexpected response from {IMAGE_BACKEND} image service: {data}",
         )
 
     return ProofFrameResponse(
         image_b64=image_b64,
-        model=OVMS_IMAGE_MODEL,
+        model=IMAGE_MODEL,
         quality=req.quality,
         size=proof_size,
         proof_prompt=single_frame_prompt,

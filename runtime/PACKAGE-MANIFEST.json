@@ -6,8 +6,8 @@
   },
   {
     "file": ".env.example",
-    "bytes": 620,
-    "sha256": "f325ce789c4a1043cc1af1d81c738eb86a6ad440d62a5bcc91b64b530c5b8027"
+    "bytes": 1430,
+    "sha256": "b461061eac1b8f8a20be250d99db64d0d7829be0a40083fc9eb2d190d197ecc7"
   },
   {
     "file": ".github/CODEOWNERS",
@@ -26,8 +26,8 @@
   },
   {
     "file": ".github/workflows/validate.yml",
-    "bytes": 1626,
-    "sha256": "425b78b9a80b700bc7914249b6aa76c348d713c25d44992a6cc46ca578e34236"
+    "bytes": 2413,
+    "sha256": "85a91bc979f68821d7048112e0b8c671f456786fd7dade0eba1b8c128d14c542"
   },
   {
     "file": ".gitignore",
@@ -36,8 +36,8 @@
   },
   {
     "file": "CHANGELOG.md",
-    "bytes": 1888,
-    "sha256": "ee9e0581d9c63ea0086dc61c5e7c94a30f5a136e17f8895297eeffc6f43f6c05"
+    "bytes": 3061,
+    "sha256": "7adbb38a9f02bbf090044b8857980eb723372ab86018aea9d3306a0c461db82d"
   },
   {
     "file": "CONTRIBUTING.md",
@@ -46,13 +46,13 @@
   },
   {
     "file": "DEVELOPMENT-V0.2.md",
-    "bytes": 1566,
-    "sha256": "d6ad24b7ffd1e26ac06279e32863e7812b0ad0af78ab31ba310fc52c228dcd51"
+    "bytes": 3775,
+    "sha256": "93b35f230c6e551392c4466a1d1984c0bec26d5726f0371f057e06007436db5b"
   },
   {
     "file": "Dockerfile",
-    "bytes": 434,
-    "sha256": "2eea9fe03fda94d55953d0002b23baf67f8dd30fd164c473346a38b9b5e1f4f1"
+    "bytes": 613,
+    "sha256": "52e05f0acd521b5e73ce4f47f90c9084647b2f19a7b7dd6c8f32d1e4724f43c8"
   },
   {
     "file": "LICENSE",
@@ -61,8 +61,8 @@
   },
   {
     "file": "LICENSES/THIRD_PARTY.md",
-    "bytes": 1835,
-    "sha256": "648a1e647f32bd77276784cea75c877072577797366c39b286264f040286e95b"
+    "bytes": 3097,
+    "sha256": "73ee38a708d4386a313ec284bd01aefdb729eddc68f522e8a766d55d7887fe12"
   },
   {
     "file": "PUBLIC-TEST-V0.1A.txt",
@@ -71,13 +71,13 @@
   },
   {
     "file": "README.md",
-    "bytes": 6315,
-    "sha256": "b192d319563509b6176f7d4cafd4470daa569d553b6ac105c9816dd5fddd6a0c"
+    "bytes": 10341,
+    "sha256": "77c38e2b3fce79497c9f4826f77a98dae23f65ee7bc01985f12de2c938f302f2"
   },
   {
     "file": "SECURITY.md",
-    "bytes": 902,
-    "sha256": "10bec2a880bcf3a83cce9786d1461e27fa9aac283047b79cffa8430b41fa5473"
+    "bytes": 1326,
+    "sha256": "443a1b96651e731814d359633fa546a473fb664c78989bb93e2b8e429b5ac4ea"
   },
   {
     "file": "app/assets/mediaforge-logo.png",
@@ -85,19 +85,34 @@
     "sha256": "8442ebecca7b9b1ca51022540688d5e5fa7dbefdda3d6df453f1a2ae22c3185b"
   },
   {
+    "file": "app/fidelity_concepts.py",
+    "bytes": 5668,
+    "sha256": "64a54bc056f3ab48d2aa07189be3a674ed32fe3a7b4fd1ea6691e51e5a9aeb42"
+  },
+  {
     "file": "app/index.html",
-    "bytes": 34126,
-    "sha256": "08257428fb61ecfff3f88b3b6174342cc880e9793cdffb68eed8bf363268a5da"
+    "bytes": 41184,
+    "sha256": "c2724b3dd45d9fd1c8849dec6d9a29c2e4134879cbd9f386bb7273696456bdf0"
   },
   {
     "file": "app/main.py",
-    "bytes": 96094,
-    "sha256": "42e98aef7ef6e7b0a363003a14dce4efaad5f6d483d579c22dd5c5f6551a6d01"
+    "bytes": 100580,
+    "sha256": "58a03dc5f19ab9b0ad694c09777be2f3e94035be6b4ca47b96ad823f0902e505"
+  },
+  {
+    "file": "app/model_catalog.py",
+    "bytes": 4523,
+    "sha256": "f8e1dac60c8080960b61e982403894ade4c1851817e1cb31574f031c9dcb3702"
+  },
+  {
+    "file": "app/proof_constraints.py",
+    "bytes": 2919,
+    "sha256": "d43b1c38b38adc93067d50702d79b79d250c3dc3f165b0a7de135ee0136520ae"
   },
   {
     "file": "app/runtime_status.py",
-    "bytes": 2184,
-    "sha256": "6c755a7e0c2cabdc23299aebe6b044557e2322903f96d9900374c6658f0e161a"
+    "bytes": 2247,
+    "sha256": "722dd490299480b49b009aa456545d596ae6d998528806b3655e940d41291697"
   },
   {
     "file": "detect-hardware.ps1",
@@ -106,18 +121,48 @@
   },
   {
     "file": "detect-runtime.ps1",
-    "bytes": 6364,
-    "sha256": "65eb87f178576f0eba7dff9ef17931853313d44ef826ae899fa8aca90d491804"
+    "bytes": 8698,
+    "sha256": "fdfcf2dfd071e6cdc6090674b7fb4e7264cf034abcec83a9ffcb9f13d6a58805"
+  },
+  {
+    "file": "docker-compose.nvidia.yml",
+    "bytes": 2087,
+    "sha256": "13ef70212cd21bef73cbbf5aa9b72f0f1a9323169f85238acd751f20fbfa3e6f"
   },
   {
     "file": "docker-compose.yml",
-    "bytes": 1702,
-    "sha256": "8c6d8c4fc6fdff2881078965fcc1a28e5b9d2891c7943f783133ef202984ffb7"
+    "bytes": 2066,
+    "sha256": "3ae52789ad1f074a06c54a42df2fb1e0df34a21f946553353a82a4ec576712e2"
+  },
+  {
+    "file": "image_cuda/Dockerfile",
+    "bytes": 378,
+    "sha256": "896b3e74a09e7161acec068247f6d30d8fe6d2ca2c7eb89af7212257d764555b"
+  },
+  {
+    "file": "image_cuda/requirements.txt",
+    "bytes": 134,
+    "sha256": "720667e6f70075417f51b333b085952aacbc2c5f2d9a451baf5f5fe961f73e3e"
+  },
+  {
+    "file": "image_cuda/server.py",
+    "bytes": 6144,
+    "sha256": "ad207e5969773f1d0140f8558fa84d25f55e45d7e941d0d771a5b818c7612b04"
   },
   {
     "file": "install.ps1",
-    "bytes": 6207,
-    "sha256": "2ad7340c24124d11284e27195c6fe9eca81c284a970666e5810e766cdf96794e"
+    "bytes": 11290,
+    "sha256": "ae0a228566a44a9ecde6bc3f7a9eb8c1d3f2085006143a10285280a1eee72adf"
+  },
+  {
+    "file": "manage-models.ps1",
+    "bytes": 6535,
+    "sha256": "16e70ad9aec765c3d7c5ce7bf374cf2dc060b9b187ff195954852c87026908f0"
+  },
+  {
+    "file": "models/model-catalog.json",
+    "bytes": 2187,
+    "sha256": "a3d8fa9dfb3abe36e29fe9ce99b013406f1ec9487dd35b231730ad63a032d370"
   },
   {
     "file": "requirements.txt",
@@ -125,23 +170,48 @@
     "sha256": "634eba615a0a73fe80c6396076c477771bc4fc1c0159fb059d1e08eebd4650e4"
   },
   {
+    "file": "runtime-policy.ps1",
+    "bytes": 1687,
+    "sha256": "e5aef885f24fff6d0d79bf3335df200455092cf0dc5d33a69e2e9a27531c6184"
+  },
+  {
     "file": "start.ps1",
-    "bytes": 934,
-    "sha256": "8c2e600c38125e765332362d8796e0d573e948888f883c2837f001ed8fcc7951"
+    "bytes": 1077,
+    "sha256": "d5715f5a8a73d5606de570cec51cb5369cde49bc769a4310a9c80b62e9a1eb37"
   },
   {
     "file": "status.ps1",
-    "bytes": 2780,
-    "sha256": "b511d1d09686f4890fa01389e60ad579695345c71e81a3a4c2a116c87f36aac8"
+    "bytes": 3925,
+    "sha256": "85cdd85823388bac3b626d8c1b3bbb382bf313529b80daec5082d47084561f38"
   },
   {
     "file": "stop.ps1",
-    "bytes": 82,
-    "sha256": "e3479d676c20af3fbbaa91d724c2a8a05eee63266853a53d475e56b8ad874892"
+    "bytes": 638,
+    "sha256": "4d88758cd728019c67c2b7503cffa91883ba99ac8b650003799e8d43e74a6dac"
+  },
+  {
+    "file": "tests/test-runtime-policy.ps1",
+    "bytes": 1538,
+    "sha256": "af5aa103b2dd84941cded2fc77c991460d593d7d475bd540c5ed664bc23645bb"
+  },
+  {
+    "file": "tests/test_fidelity_concepts.py",
+    "bytes": 5579,
+    "sha256": "69fcd3dc3f58b930c54bf9bb709cc7b98e3dc4a42e4b825f380556a923b98fff"
+  },
+  {
+    "file": "tests/test_model_catalog.py",
+    "bytes": 3878,
+    "sha256": "97e466632c6ea6bbeeba9ba2bd50cd8b7fb84090444a76bad420b1787ce50288"
+  },
+  {
+    "file": "tests/test_proof_constraints.py",
+    "bytes": 1751,
+    "sha256": "9c773f476f629cbedeb13691fc99c673a1ad91a0fa683070aad63cf541826c73"
   },
   {
     "file": "tests/test_runtime_status.py",
-    "bytes": 2079,
-    "sha256": "7ea27132cb91f9b8bea12ec68650b6c21b6a7860cef8a048e8fe146e7f8f9f57"
+    "bytes": 2240,
+    "sha256": "94d6cf229c2e8197f82f9a0f47cb342aeb07927420415041d0f00e29efa79034"
   }
 ]

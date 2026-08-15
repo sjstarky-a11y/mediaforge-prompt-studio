@@ -15,38 +15,41 @@ services:
       MEDIAFORGE_DMR_MANAGEMENT_URL: ${MEDIAFORGE_DMR_MANAGEMENT_URL:-http://host.docker.internal:12434}
       MEDIAFORGE_DMR_API_KEY: ${MEDIAFORGE_DMR_API_KEY:-docker-model-runner}
       MEDIAFORGE_MODEL: ${MEDIAFORGE_MODEL:-ai/qwen2.5:3B-Q4_K_M}
-      MEDIAFORGE_IMAGE_API_URL: ${MEDIAFORGE_IMAGE_API_URL:-http://ovms-sdxl:8000/v3}
-      MEDIAFORGE_IMAGE_MODEL: ${MEDIAFORGE_IMAGE_MODEL:-OpenVINO/stable-diffusion-xl-base-1.0-int8-ov}
-      MEDIAFORGE_IMAGE_BACKEND: ${MEDIAFORGE_IMAGE_BACKEND:-OpenVINO CPU}
-      MEDIAFORGE_OVMS_IMAGE_URL: ${MEDIAFORGE_OVMS_IMAGE_URL:-http://ovms-sdxl:8000/v3}
-      MEDIAFORGE_OVMS_IMAGE_MODEL: ${MEDIAFORGE_OVMS_IMAGE_MODEL:-OpenVINO/stable-diffusion-xl-base-1.0-int8-ov}
+      MEDIAFORGE_IMAGE_API_URL: http://image-cuda:8000/v3
+      MEDIAFORGE_IMAGE_MODEL: ${MEDIAFORGE_NVIDIA_IMAGE_MODEL:-stabilityai/stable-diffusion-xl-base-1.0}
+      MEDIAFORGE_IMAGE_BACKEND: NVIDIA CUDA / Diffusers
       MEDIAFORGE_DEFAULT_LANGUAGE: English
       MEDIAFORGE_RUNTIME_MODE: ${MEDIAFORGE_RUNTIME_MODE:-auto}
       MEDIAFORGE_RUNTIME_PROFILE_PATH: /runtime/runtime-profile.json
-      MEDIAFORGE_IMAGE_DEVICE: ${MEDIAFORGE_IMAGE_DEVICE:-CPU}
+      MEDIAFORGE_IMAGE_DEVICE: CUDA
     volumes:
       - ./runtime:/runtime:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
-      - ovms-sdxl
+      - image-cuda
 
-  ovms-sdxl:
-    image: openvino/model_server:latest
-    container_name: mediaforge-ovms-sdxl-cpu
+  image-cuda:
+    build:
+      context: ./image_cuda
+      dockerfile: Dockerfile
+    image: mediaforge-image-cuda:v0.2-dev
+    container_name: mediaforge-image-cuda
     restart: unless-stopped
     ports:
       - "127.0.0.1:${MEDIAFORGE_IMAGE_PORT:-8010}:8000"
+    environment:
+      MEDIAFORGE_NVIDIA_IMAGE_MODEL: ${MEDIAFORGE_NVIDIA_IMAGE_MODEL:-stabilityai/stable-diffusion-xl-base-1.0}
+      MEDIAFORGE_NVIDIA_PROFILE: ${MEDIAFORGE_NVIDIA_PROFILE:-auto}
+      MEDIAFORGE_NVIDIA_OFFLOAD_MODE: ${MEDIAFORGE_NVIDIA_OFFLOAD_MODE:-auto}
+      PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+      HF_HOME: /models/huggingface
     volumes:
-      - ./data/ovms-models:/models
-    command:
-      - --rest_port
-      - "8000"
-      - --model_repository_path
-      - /models
-      - --task
-      - image_generation
-      - --source_model
-      - OpenVINO/stable-diffusion-xl-base-1.0-int8-ov
-      - --target_device
-      - ${MEDIAFORGE_IMAGE_DEVICE:-CPU}
+      - ./data/huggingface:/models/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

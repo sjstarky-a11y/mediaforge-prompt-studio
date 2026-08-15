@@ -42,6 +42,8 @@ $llmAccelerator = "Unknown"
 $llmVariant = $null
 $gpuAcceleration = $false
 $gpuVendor = $null
+$activeModel = Get-EnvValue "MEDIAFORGE_MODEL" "ai/qwen2.5:3B-Q4_K_M"
+$installedModelCount = 0
 
 if (Get-Command docker -ErrorAction SilentlyContinue) {
     $statusLines = @(& docker model status 2>&1)
@@ -95,31 +97,84 @@ if (Get-Command docker -ErrorAction SilentlyContinue) {
     }
 }
 
-$imageDevice = (Get-EnvValue "MEDIAFORGE_IMAGE_DEVICE" "CPU").ToUpperInvariant()
-$imageBackend = if ($imageDevice -eq "CPU") { "CPU" } else { $imageDevice }
-$imageRuntime = if ($imageDevice -eq "CPU") {
-    "CPU / OpenVINO SDXL INT8"
-} else {
-    "$imageDevice / OpenVINO SDXL INT8"
+try {
+    $modelResponse = Invoke-RestMethod "http://127.0.0.1:12434/models" -TimeoutSec 10
+    if ($modelResponse -is [array]) { $installedModelCount = @($modelResponse).Count }
+    elseif ($modelResponse.data) { $installedModelCount = @($modelResponse.data).Count }
+    elseif ($modelResponse.models) { $installedModelCount = @($modelResponse.models).Count }
+} catch {
+    $installedModelCount = 0
 }
+
+$imageMode = (Get-EnvValue "MEDIAFORGE_ACTIVE_IMAGE_RUNTIME" (Get-EnvValue "MEDIAFORGE_IMAGE_RUNTIME" "cpu")).ToLowerInvariant()
+if ($imageMode -eq "auto") { $imageMode = "cpu" }
+$imageGpuAcceleration = $imageMode -eq "nvidia"
+$imageMemoryProfile = if ($imageGpuAcceleration) {
+    (Get-EnvValue "MEDIAFORGE_NVIDIA_PROFILE" "auto").ToLowerInvariant()
+} else {
+    "cpu"
+}
+$imageOffloadMode = if ($imageGpuAcceleration) {
+    (Get-EnvValue "MEDIAFORGE_NVIDIA_OFFLOAD_MODE" "auto").ToLowerInvariant()
+} else {
+    "none"
+}
+$imageUsesCpuOffload = $imageGpuAcceleration -and $imageOffloadMode -in @("sequential", "model")
+$imageDevice = if ($imageGpuAcceleration) { "CUDA" } else { "CPU" }
+$imageBackend = $imageDevice
+$imageNvidiaGpu = $gpuList | Where-Object { $_.Vendor -eq "NVIDIA" } | Select-Object -First 1
+$imageAccelerator = if ($imageGpuAcceleration -and $imageNvidiaGpu) {
+    $imageNvidiaGpu.Name
+} elseif ($imageGpuAcceleration) {
+    "NVIDIA GPU"
+} else {
+    $cpuName
+}
+$imageRuntime = if ($imageGpuAcceleration) {
+    "NVIDIA CUDA / Diffusers SDXL"
+} else {
+    "CPU / OpenVINO SDXL INT8"
+}
+$imageEngine = if ($imageGpuAcceleration) { "Hugging Face Diffusers" } else { "OpenVINO Model Server" }
+$imageModel = if ($imageGpuAcceleration) {
+    Get-EnvValue "MEDIAFORGE_NVIDIA_IMAGE_MODEL" "stabilityai/stable-diffusion-xl-base-1.0"
+} else {
+    "OpenVINO/stable-diffusion-xl-base-1.0-int8-ov"
+}
+$overallGpuAcceleration = $gpuAcceleration -or $imageGpuAcceleration
 
 $profileName = "Unknown"
 if ($dmrStatus -ne "Running") {
     $profileName = "Degraded"
-} elseif ($gpuAcceleration -and $imageDevice -eq "CPU") {
-    $profileName = "Hybrid"
-} elseif ($gpuAcceleration -and $imageDevice -ne "CPU") {
+} elseif ($gpuAcceleration -and $imageGpuAcceleration) {
     $profileName = "GPU Accelerated"
+} elseif ($gpuAcceleration -or $imageGpuAcceleration) {
+    $profileName = "Hybrid"
 } elseif ($llmBackend -eq "CPU" -and $imageDevice -eq "CPU") {
     $profileName = "CPU / Compatible"
 }
 
 $summary = switch ($profileName) {
-    "Hybrid" { "HYBRID | $gpuVendor LLM | CPU IMAGE" }
-    "GPU Accelerated" { "GPU ACCELERATED | $gpuVendor LLM | $imageDevice IMAGE" }
+    "Hybrid" {
+        if ($gpuAcceleration) { "HYBRID | $gpuVendor LLM | CPU IMAGE" }
+        else { "HYBRID | CPU LLM | NVIDIA IMAGE" }
+    }
+    "GPU Accelerated" { "GPU ACCELERATED | $gpuVendor LLM | NVIDIA IMAGE" }
     "CPU / Compatible" { "CPU | LLM + IMAGE" }
     "Degraded" { "DEGRADED | MODEL RUNNER UNAVAILABLE" }
     default { "RUNTIME BACKEND UNKNOWN" }
+}
+
+$displayMode = if (-not $overallGpuAcceleration) {
+    "CPU"
+} elseif (
+    $gpuAcceleration -and
+    $imageGpuAcceleration -and
+    -not $imageUsesCpuOffload
+) {
+    "GPU"
+} else {
+    "GPU + CPU"
 }
 
 $profile = [ordered]@{
@@ -128,8 +183,9 @@ $profile = [ordered]@{
     detected_at             = (Get-Date).ToString("s")
     profile                 = $profileName
     summary                 = $summary
-    gpu_acceleration        = $gpuAcceleration
-    gpu_acceleration_scope  = if ($gpuAcceleration -and $imageDevice -eq "CPU") { "llm" } elseif ($gpuAcceleration) { "llm,image" } else { "none" }
+    display_mode            = $displayMode
+    gpu_acceleration        = $overallGpuAcceleration
+    gpu_acceleration_scope  = if ($gpuAcceleration -and $imageGpuAcceleration) { "llm,image" } elseif ($gpuAcceleration) { "llm" } elseif ($imageGpuAcceleration) { "image" } else { "none" }
     llm                     = [ordered]@{
         status       = $dmrStatus
         engine       = $llmEngine
@@ -137,14 +193,19 @@ $profile = [ordered]@{
         runtime      = $llmRuntime
         accelerator  = $llmAccelerator
         variant      = $llmVariant
+        default_model = $activeModel
+        installed_models = $installedModelCount
     }
     image                   = [ordered]@{
         status       = "Configured"
-        engine       = "OpenVINO Model Server"
+        engine       = $imageEngine
         backend      = $imageBackend
         runtime      = $imageRuntime
-        accelerator  = if ($imageDevice -eq "CPU") { $cpuName } else { "$imageDevice device" }
-        model         = "OpenVINO/stable-diffusion-xl-base-1.0-int8-ov"
+        accelerator  = $imageAccelerator
+        model         = $imageModel
+        memory_profile = $imageMemoryProfile
+        offload_mode  = $imageOffloadMode
+        uses_cpu_offload = $imageUsesCpuOffload
     }
     note                    = "LLM and image runtimes are detected and reported independently. CPU remains the image fallback in v0.2-dev."
 }
@@ -155,7 +216,9 @@ Write-Host ""
 Write-Host "MediaForge adaptive runtime detection"
 Write-Host "-------------------------------------"
 Write-Host "Profile:" $profile.profile
+Write-Host "User mode:" $profile.display_mode
 Write-Host "LLM:" $profile.llm.runtime "[$($profile.llm.accelerator)]"
+Write-Host "Default model:" $profile.llm.default_model "(installed models: $($profile.llm.installed_models))"
 Write-Host "Image:" $profile.image.runtime
 Write-Host "GPU acceleration:" $profile.gpu_acceleration "(scope: $($profile.gpu_acceleration_scope))"
 Write-Host "Runtime report:" $runtimePath

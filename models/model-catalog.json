@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "default_model": "ai/qwen2.5:3B-Q4_K_M",
+  "models": [
+    {
+      "id": "ai/qwen2.5:3B-Q4_K_M",
+      "display_name": "Qwen 2.5 3B",
+      "family": "Qwen 2.5",
+      "parameters": "3B",
+      "recommended_vram_gb": 4,
+      "profile": "Light",
+      "validation": "validated",
+      "license": "Apache-2.0",
+      "prompt_mode": "standard"
+    },
+    {
+      "id": "ai/gemma3-qat:4B-UD-Q4_K_XL",
+      "display_name": "Gemma 3 QAT 4B",
+      "family": "Gemma 3",
+      "parameters": "4B",
+      "recommended_vram_gb": 6,
+      "profile": "Light",
+      "validation": "candidate",
+      "license": "Gemma Terms",
+      "prompt_mode": "standard"
+    },
+    {
+      "id": "ai/qwen2.5:7B-Q4_K_M",
+      "display_name": "Qwen 2.5 7B",
+      "family": "Qwen 2.5",
+      "parameters": "7B",
+      "recommended_vram_gb": 6,
+      "profile": "Balanced",
+      "validation": "candidate",
+      "license": "Apache-2.0",
+      "prompt_mode": "standard"
+    },
+    {
+      "id": "ai/qwen3:8B-Q4_K_M",
+      "display_name": "Qwen 3 8B",
+      "family": "Qwen 3",
+      "parameters": "8B",
+      "recommended_vram_gb": 8,
+      "profile": "Balanced",
+      "validation": "candidate",
+      "license": "Apache-2.0",
+      "prompt_mode": "no_think"
+    },
+    {
+      "id": "ai/gemma3-qat:12B-Q4_K_M",
+      "display_name": "Gemma 3 QAT 12B",
+      "family": "Gemma 3",
+      "parameters": "12B",
+      "recommended_vram_gb": 12,
+      "profile": "Creator",
+      "validation": "candidate",
+      "license": "Gemma Terms",
+      "prompt_mode": "standard"
+    },
+    {
+      "id": "ai/qwen3:30B-A3B-Q4_K_M",
+      "display_name": "Qwen 3 30B-A3B",
+      "family": "Qwen 3",
+      "parameters": "30B-A3B",
+      "recommended_vram_gb": 24,
+      "profile": "Pro",
+      "validation": "candidate",
+      "license": "Apache-2.0",
+      "prompt_mode": "no_think"
+    },
+    {
+      "id": "ai/gemma3-qat:27B-UD-Q4_K_XL",
+      "display_name": "Gemma 3 QAT 27B",
+      "family": "Gemma 3",
+      "parameters": "27B",
+      "recommended_vram_gb": 24,
+      "profile": "Pro",
+      "validation": "candidate",
+      "license": "Gemma Terms",
+      "prompt_mode": "standard"
+    }
+  ]
+}

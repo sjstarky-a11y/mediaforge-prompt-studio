@@ -1,6 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 Set-Location $PSScriptRoot
+. (Join-Path $PSScriptRoot "runtime-policy.ps1")
 $logDir = Join-Path $PSScriptRoot "runtime"
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $logFile = Join-Path $logDir "install-log.txt"
@@ -20,8 +21,56 @@ function Get-EnvValue($name, $defaultValue) {
     return $defaultValue
 }
 
+function Set-EnvValue($name, $value) {
+    $envPath = Join-Path $PSScriptRoot ".env"
+    $lines = @(Get-Content $envPath)
+    $pattern = "^\s*$([regex]::Escape($name))\s*="
+    $updated = $false
+    $result = foreach ($line in $lines) {
+        if ($line -match $pattern) {
+            if (-not $updated) {
+                "$name=$value"
+                $updated = $true
+            }
+        } else {
+            $line
+        }
+    }
+    if (-not $updated) { $result += "$name=$value" }
+    Set-Content -Path $envPath -Value $result -Encoding utf8
+}
+
+function Get-NvidiaImageCapability {
+    if (-not (Get-Command nvidia-smi -ErrorAction SilentlyContinue)) { return $null }
+    try {
+        $profiles = foreach ($line in @(nvidia-smi --query-gpu=name,compute_cap,memory.total --format=csv,noheader,nounits 2>$null)) {
+            $parts = $line -split ","
+            if ($parts.Count -ge 3) {
+                [PSCustomObject]@{
+                    Name = $parts[0].Trim()
+                    ComputeCapability = [double]::Parse($parts[1].Trim(), [Globalization.CultureInfo]::InvariantCulture)
+                    VramGB = [math]::Round(([double]($parts[2].Trim())) / 1024, 1)
+                }
+            }
+        }
+        return $profiles | Sort-Object VramGB -Descending | Select-Object -First 1
+    } catch {
+        return $null
+    }
+}
+
+function Test-DockerNvidiaAccess {
+    try {
+        docker run --rm --gpus all nvidia/cuda:12.6.3-base-ubuntu22.04 nvidia-smi -L | Out-Null
+        return $LASTEXITCODE -eq 0
+    } catch {
+        return $false
+    }
+}
+
 function Get-CacheSizeGB {
-    $cachePath = Join-Path $PSScriptRoot "data\ovms-models"
+    $relativeCache = if ($selectedImageRuntime -eq "nvidia") { "data\huggingface" } else { "data\ovms-models" }
+    $cachePath = Join-Path $PSScriptRoot $relativeCache
     if (-not (Test-Path $cachePath)) { return 0 }
     $bytes = (Get-ChildItem $cachePath -Recurse -File -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum
     if (-not $bytes) { return 0 }
@@ -29,9 +78,9 @@ function Get-CacheSizeGB {
 }
 
 $appPort = Get-EnvValue "MEDIAFORGE_APP_PORT" "18888"
-$ovmsPort = Get-EnvValue "MEDIAFORGE_OVMS_PORT" "8010"
+$imagePort = Get-EnvValue "MEDIAFORGE_IMAGE_PORT" (Get-EnvValue "MEDIAFORGE_OVMS_PORT" "8010")
 $appUrl = "http://127.0.0.1:$appPort"
-$ovmsReady = "http://127.0.0.1:$ovmsPort/v2/health/ready"
+$imageReadyUrl = "http://127.0.0.1:$imagePort/v2/health/ready"
 
 function Step($text) {
     Write-Host ""
@@ -92,18 +141,70 @@ if ($LASTEXITCODE -ne 0) {
     Fail "Could not detect the active Model Runner backend."
 }
 
-$model = "ai/qwen2.5:3B-Q4_K_M"
+Step "Selecting Visual Proof Frame runtime"
+$requestedImageRuntime = (Get-EnvValue "MEDIAFORGE_IMAGE_RUNTIME" "auto").ToLowerInvariant()
+if ($requestedImageRuntime -notin @("auto", "cpu", "nvidia")) {
+    Fail "MEDIAFORGE_IMAGE_RUNTIME must be auto, cpu, or nvidia."
+}
+
+$nvidiaProfile = Get-NvidiaImageCapability
+$nvidiaImageReady = $false
+$nvidiaPolicy = $null
+if ($nvidiaProfile) {
+    $nvidiaPolicy = Get-MediaForgeNvidiaImagePolicy `
+        -ComputeCapability $nvidiaProfile.ComputeCapability `
+        -VramGB $nvidiaProfile.VramGB
+    $nvidiaImageReady = $nvidiaPolicy.Eligible
+    Write-Host "NVIDIA image candidate: $($nvidiaProfile.Name), compute $($nvidiaProfile.ComputeCapability), $($nvidiaProfile.VramGB) GB VRAM"
+    Write-Host "Automatic image profile: $($nvidiaPolicy.Profile) - $($nvidiaPolicy.Reason)"
+}
+
+if ($nvidiaImageReady) {
+    Write-Host "Validating NVIDIA access from Docker containers..."
+    $nvidiaImageReady = Test-DockerNvidiaAccess
+    if (-not $nvidiaImageReady) {
+        Write-Host "Docker GPU validation failed; Visual Proof Frame will use the CPU fallback." -ForegroundColor Yellow
+    }
+}
+
+if ($requestedImageRuntime -eq "nvidia" -and -not $nvidiaImageReady) {
+    Fail "The NVIDIA image profile requires CUDA compute capability 6.0+ and at least 4 GB VRAM, plus working Docker GPU access. Use MEDIAFORGE_IMAGE_RUNTIME=cpu or auto."
+}
+
+$selectedImageRuntime = if ($requestedImageRuntime -eq "nvidia" -or ($requestedImageRuntime -eq "auto" -and $nvidiaImageReady)) { "nvidia" } else { "cpu" }
+$selectedNvidiaProfile = if ($selectedImageRuntime -eq "nvidia") { $nvidiaPolicy.Profile } else { "cpu" }
+$selectedOffloadMode = if ($selectedImageRuntime -eq "nvidia") { $nvidiaPolicy.OffloadMode } else { "none" }
+$composeFileName = if ($selectedImageRuntime -eq "nvidia") { "docker-compose.nvidia.yml" } else { "docker-compose.yml" }
+$composePath = Join-Path $PSScriptRoot $composeFileName
+
+Set-EnvValue "MEDIAFORGE_ACTIVE_IMAGE_RUNTIME" $selectedImageRuntime
+Set-EnvValue "MEDIAFORGE_COMPOSE_FILE" $composeFileName
+Set-EnvValue "MEDIAFORGE_IMAGE_PORT" $imagePort
+Set-EnvValue "MEDIAFORGE_IMAGE_DEVICE" $(if ($selectedImageRuntime -eq "nvidia") { "CUDA" } else { "CPU" })
+Set-EnvValue "MEDIAFORGE_IMAGE_API_URL" $(if ($selectedImageRuntime -eq "nvidia") { "http://image-cuda:8000/v3" } else { "http://ovms-sdxl:8000/v3" })
+Set-EnvValue "MEDIAFORGE_IMAGE_BACKEND" $(if ($selectedImageRuntime -eq "nvidia") { "NVIDIA CUDA / Diffusers" } else { "OpenVINO CPU" })
+Set-EnvValue "MEDIAFORGE_NVIDIA_PROFILE" $selectedNvidiaProfile
+Set-EnvValue "MEDIAFORGE_NVIDIA_OFFLOAD_MODE" $selectedOffloadMode
+
+Write-Host "Selected image runtime: $selectedImageRuntime ($composeFileName)"
+if ($selectedImageRuntime -eq "nvidia") {
+    Write-Host "NVIDIA execution profile: $selectedNvidiaProfile (offload: $selectedOffloadMode)"
+}
+& (Join-Path $PSScriptRoot "detect-runtime.ps1") | Tee-Object -FilePath $logFile -Append
+
+$model = Get-EnvValue "MEDIAFORGE_MODEL" "ai/qwen2.5:3B-Q4_K_M"
 Step "Pulling Prompt Doctor model: $model"
 docker model pull $model | Tee-Object -FilePath $logFile -Append
 if ($LASTEXITCODE -ne 0) {
     Fail "Could not pull $model."
 }
 
-Step "Creating local model cache"
+Step "Creating local model caches"
 New-Item -ItemType Directory -Force -Path (Join-Path $PSScriptRoot "data\ovms-models") | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $PSScriptRoot "data\huggingface") | Out-Null
 
-Step "Building and starting MediaForge + OpenVINO SDXL CPU service"
-docker compose up -d --build | Tee-Object -FilePath $logFile -Append
+Step "Building and starting MediaForge with $selectedImageRuntime image runtime"
+docker compose -f $composePath up -d --build | Tee-Object -FilePath $logFile -Append
 if ($LASTEXITCODE -ne 0) {
     Fail "docker compose up failed."
 }
@@ -136,7 +237,7 @@ Write-Host "or close it and run .\status.ps1 later; the containers will continue
 $sdxlReady = $false
 for ($i = 0; $i -lt 360; $i++) {
     try {
-        $r = Invoke-WebRequest $ovmsReady -UseBasicParsing -TimeoutSec 5
+        $r = Invoke-WebRequest $imageReadyUrl -UseBasicParsing -TimeoutSec 5
         if ($r.StatusCode -eq 200) {
             $sdxlReady = $true
             break
@@ -155,7 +256,8 @@ if (-not $sdxlReady) {
     Write-Host "SETUP COMPLETE: MediaForge is running." -ForegroundColor Green
     Write-Host "Visual Proof Frame is still downloading or loading; this is not a failure." -ForegroundColor Yellow
     Write-Host "Run .\status.ps1 later to check readiness."
-    Write-Host "For detailed progress: docker logs mediaforge-ovms-sdxl-cpu"
+    $imageContainer = if ($selectedImageRuntime -eq "nvidia") { "mediaforge-image-cuda" } else { "mediaforge-ovms-sdxl-cpu" }
+    Write-Host "For detailed progress: docker logs $imageContainer"
 } else {
     Write-Host "Visual Proof Frame / SDXL is ready." -ForegroundColor Green
 }
@@ -165,7 +267,7 @@ Write-Host "=============================================="
 Write-Host "MediaForge Prompt Studio v0.2-dev Adaptive Runtime"
 Write-Host "APP:  $appUrl"
 Write-Host "LLM:  $model"
-Write-Host "IMAGE: OpenVINO SDXL INT8 / CPU"
+Write-Host "IMAGE:" $(if ($selectedImageRuntime -eq "nvidia") { "SDXL / NVIDIA CUDA Diffusers [$selectedNvidiaProfile]" } else { "OpenVINO SDXL INT8 / CPU" })
 Write-Host "SDXL READY: $sdxlReady"
 try {
     $runtimeProfile = Get-Content (Join-Path $PSScriptRoot "runtime\runtime-profile.json") -Raw | ConvertFrom-Json

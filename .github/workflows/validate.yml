@@ -20,7 +20,14 @@ jobs:
           python-version: "3.12"
 
       - name: Validate Python syntax
-        run: python -m py_compile app/main.py app/runtime_status.py
+        run: python -m py_compile app/main.py app/fidelity_concepts.py app/model_catalog.py app/proof_constraints.py app/runtime_status.py image_cuda/server.py
+
+      - name: Validate model catalog
+        run: python -m json.tool models/model-catalog.json > /dev/null
+
+      - name: Validate browser JavaScript syntax
+        run: |
+          node -e 'const fs=require("fs"); const html=fs.readFileSync("app/index.html","utf8"); const script=html.match(/<script>([\s\S]*?)<\/script>/); if(!script) throw new Error("script not found"); new Function(script[1]);'
 
       - name: Run runtime profile tests
         run: python -m unittest discover -s tests -v
@@ -32,6 +39,8 @@ jobs:
             "detect-hardware.ps1",
             "detect-runtime.ps1",
             "install.ps1",
+            "manage-models.ps1",
+            "runtime-policy.ps1",
             "start.ps1",
             "status.ps1",
             "stop.ps1"
@@ -50,8 +59,15 @@ jobs:
             }
           }
 
+      - name: Validate NVIDIA runtime policy
+        shell: pwsh
+        run: |
+          & ./tests/test-runtime-policy.ps1
+
       - name: Validate Docker Compose
-        run: docker compose config --quiet
+        run: |
+          docker compose -f docker-compose.yml config --quiet
+          docker compose -f docker-compose.nvidia.yml config --quiet
 
       - name: Confirm private runtime files are absent
         shell: bash

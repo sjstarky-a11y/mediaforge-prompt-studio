@@ -12,6 +12,19 @@ All notable public-test changes are documented here.
 - hybrid runtime reporting for NVIDIA/CUDA Prompt Doctor plus CPU/OpenVINO Proof Frame
 - dynamic runtime badge in the MediaForge interface
 - runtime profile unit tests
+- dynamic discovery and selection of locally installed Docker Model Runner models
+- curated Light, Balanced, Creator, and Pro model catalog
+- `manage-models.ps1` for model recommendations, installation, and default selection
+- backend-neutral Visual Proof Frame image API configuration
+- experimental NVIDIA CUDA / Diffusers SDXL service and Compose profile
+- automatic NVIDIA image eligibility checks with CPU fallback
+- deterministic detection of unrequested mood, narrative, and lighting inventions from weaker models
+- Improve-mode structure validation for 1–4 diagnosis bullets, allowing concise one-bullet diagnoses without weakening intent protection
+- automatic NVIDIA Low Memory, Balanced, and Full image profiles
+- GTX 1050 4 GB CUDA/Diffusers Fast Proof validation
+- source-grounded Visual Proof constraints for unmistakable cinema locations and exactly one camera bag
+- simple user-facing `CPU`, `GPU + CPU`, and `GPU` execution labels
+- automatic correction of lighting-only Improve reviews before final fidelity approval
 
 ### Changed
 
@@ -19,7 +32,8 @@ All notable public-test changes are documented here.
 - `/health` now returns readable runtime summary fields plus structured runtime information
 - `/runtime` exposes the complete local runtime profile
 - `install.ps1`, `start.ps1`, and `status.ps1` refresh the active runtime profile
-- Visual Proof Frame remains on the validated OpenVINO SDXL INT8 CPU path
+- Visual Proof Frame automatically uses NVIDIA CUDA on compatible compute 6.0+, 4 GB+ hardware and otherwise uses OpenVINO SDXL INT8 CPU
+- Qwen 2.5 3B remains the default but is no longer hardcoded per request
 
 ## [0.1a] - 2026-08-13
 
