@@ -41,6 +41,7 @@ All notable public-test changes are documented here.
 - platform-specific package contents, embedded file manifests, and SHA256SUMS output
 - release packaging tests that verify reproducibility, private-file exclusion, and Linux executable permissions
 - platform-neutral Windows ZIP and Linux gzip output that remains byte-identical across supported build environments
+- platform-neutral source manifest hashing for Windows CRLF and Linux LF checkouts
 
 ### Changed
 

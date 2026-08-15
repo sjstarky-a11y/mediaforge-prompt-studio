@@ -41,8 +41,8 @@
   },
   {
     "file": "CHANGELOG.md",
-    "bytes": 5231,
-    "sha256": "8ed688d79d82f34990123ce7542ea08418812033186cc4d498d7169a19daeb8c"
+    "bytes": 5314,
+    "sha256": "fb77534790cdd224a848fbb1478e64c57479ecbced344182db55023bfb60a988"
   },
   {
     "file": "CONTRIBUTING.md",
@@ -251,8 +251,8 @@
   },
   {
     "file": "scripts/build_manifest.py",
-    "bytes": 2105,
-    "sha256": "83eb11d6d175824766cc6f6bd783c41e390215ea89ab6caeeff3776acd62d182"
+    "bytes": 2474,
+    "sha256": "50a884d432f80a51563f6ea812861c84ccb24777fa3e136de2df5e2ec0c44f82"
   },
   {
     "file": "scripts/build_release.py",
@@ -328,6 +328,11 @@
     "file": "tests/test_linux_profile.py",
     "bytes": 1997,
     "sha256": "37ff64447c394f104a5be91b465ec6aad5b4449bde542674a7124dc8c1c257a2"
+  },
+  {
+    "file": "tests/test_manifest_builder.py",
+    "bytes": 600,
+    "sha256": "d0f96e7cde086f259fba1fbaec65f2ba0942872d1139884db2d6c41a9f85aee9"
   },
   {
     "file": "tests/test_model_adapter_profiles.py",

@@ -23,6 +23,17 @@ EXCLUDED_FILES = {
 EXCLUDED_PARTS = {".git", "data", "dist", "__pycache__", ".pytest_cache"}
 
 
+def canonical_content(content: bytes) -> bytes:
+    """Normalize UTF-8 text to Git's LF representation before hashing."""
+    if b"\x00" in content:
+        return content
+    try:
+        text = content.decode("utf-8")
+    except UnicodeDecodeError:
+        return content
+    return text.replace("\r\n", "\n").replace("\r", "\n").encode("utf-8")
+
+
 def build_manifest() -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
     for path in sorted(ROOT.rglob("*")):
@@ -33,7 +44,7 @@ def build_manifest() -> list[dict[str, object]]:
             continue
         if path.suffix in {".pyc", ".zip"}:
             continue
-        content = path.read_bytes()
+        content = canonical_content(path.read_bytes())
         entries.append({
             "file": relative.as_posix(),
             "bytes": len(content),
