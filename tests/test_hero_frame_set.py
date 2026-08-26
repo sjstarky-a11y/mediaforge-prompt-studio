@@ -39,8 +39,23 @@ class HeroFrameSetTests(unittest.TestCase):
     def test_backend_exposes_job_endpoints(self):
         self.assertIn('@app.post("/api/hero-frame-set")', self.main)
         self.assertIn('@app.get("/api/hero-frame-set/{job_id}")', self.main)
+        self.assertIn('@app.post("/api/hero-frame-set/{job_id}/cancel")', self.main)
         self.assertIn('@app.post("/v1/hero-sets")', self.service)
         self.assertIn('@app.get("/v1/hero-sets/{job_id}")', self.service)
+        self.assertIn('@app.post("/v1/hero-sets/{job_id}/cancel")', self.service)
+
+    def test_interface_resumes_and_stops_an_active_job(self):
+        self.assertIn("Stop after current frame", self.html)
+        self.assertIn("resumeHeroFrameSet", self.html)
+        self.assertIn("/cancel", self.html)
+        self.assertIn("Stopping after the current frame finishes", self.html)
+
+    def test_interface_shows_local_generation_progress(self):
+        self.assertIn("Preparing Hero Frame Set", self.html)
+        self.assertIn("Creating Hero Frame", self.html)
+        self.assertIn("hero-progress-ring", self.html)
+        self.assertIn("showHeroLocalProgress", self.html)
+        self.assertIn("restoreActiveHeroFrameSet", self.html)
 
     def test_service_generates_fixed_three_frame_sequence(self):
         self.assertIn("len(request.seeds) != 3", self.service)

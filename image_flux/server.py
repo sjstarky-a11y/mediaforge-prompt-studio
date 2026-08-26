@@ -63,6 +63,7 @@ def _public_job(job: dict) -> dict:
         "size": "512x512",
         "images": job["images"],
         "error": job.get("error"),
+        "cancel_requested": job.get("cancel_requested", False),
     }
 
 
@@ -117,10 +118,29 @@ def _generate_job(job_id: str, prompt: str, seeds: list[int]) -> None:
                 message="Preparing Hero Frame model. First use may download approximately 12 GB.",
             )
             pipeline = _load_pipeline()
+            with _state_lock:
+                cancel_requested = _jobs.get(job_id, {}).get("cancel_requested", False)
+            if cancel_requested:
+                _update_job(
+                    job_id,
+                    state="cancelled",
+                    message="Hero Frame Set cancelled before image generation.",
+                )
+                return
             images = []
             _set_service_state("generating", "Generating Hero Frame Set.")
 
             for index, seed in enumerate(seeds, start=1):
+                with _state_lock:
+                    cancel_requested = _jobs.get(job_id, {}).get("cancel_requested", False)
+                if cancel_requested:
+                    _update_job(
+                        job_id,
+                        state="cancelled",
+                        message="Hero Frame Set stopped after the current completed frame.",
+                        images=list(images),
+                    )
+                    return
                 _update_job(
                     job_id,
                     state="generating",
@@ -153,6 +173,17 @@ def _generate_job(job_id: str, prompt: str, seeds: list[int]) -> None:
                 if DEVICE_MODE == "cuda":
                     torch.cuda.empty_cache()
 
+                with _state_lock:
+                    cancel_requested = _jobs.get(job_id, {}).get("cancel_requested", False)
+                if cancel_requested:
+                    _update_job(
+                        job_id,
+                        state="cancelled",
+                        message="Hero Frame Set stopped after the current completed frame.",
+                        images=list(images),
+                    )
+                    return
+
             _update_job(
                 job_id,
                 state="completed",
@@ -167,14 +198,18 @@ def _generate_job(job_id: str, prompt: str, seeds: list[int]) -> None:
         _set_service_state("error", message)
     finally:
         with _state_lock:
+            was_cancelled = _jobs.get(job_id, {}).get("state") == "cancelled"
             if _active_job_id == job_id:
                 _active_job_id = None
+        if was_cancelled and _pipeline is not None:
+            _set_service_state("ready", "Hero Frame model is ready.")
 
 
 @app.get("/v1/status")
 def status():
     with _state_lock:
         state = dict(_service_state)
+        active_job = _jobs.get(_active_job_id) if _active_job_id else None
     return {
         **state,
         "ready": _pipeline is not None,
@@ -183,6 +218,7 @@ def status():
         "download_gb_approx": 12,
         "size": "512x512",
         "frames": 3,
+        "active_job": _public_job(dict(active_job)) if active_job else None,
     }
 
 
@@ -201,12 +237,17 @@ def create_hero_set(request: HeroSetRequest):
         "progress": 0,
         "images": [],
         "error": None,
+        "cancel_requested": False,
     }
     with _state_lock:
         if _active_job_id is not None:
+            active_job = _jobs.get(_active_job_id)
             raise HTTPException(
                 status_code=409,
-                detail="Another Hero Frame Set is already being generated.",
+                detail={
+                    "message": "Another Hero Frame Set is already being generated.",
+                    "job": _public_job(dict(active_job)) if active_job else None,
+                },
             )
         _active_job_id = job_id
         _jobs[job_id] = job
@@ -228,4 +269,18 @@ def hero_set_status(job_id: str):
         job = _jobs.get(job_id)
         if job is None:
             raise HTTPException(status_code=404, detail="Hero Frame Set job not found.")
+        return _public_job(dict(job))
+
+
+@app.post("/v1/hero-sets/{job_id}/cancel")
+def cancel_hero_set(job_id: str):
+    with _state_lock:
+        job = _jobs.get(job_id)
+        if job is None:
+            raise HTTPException(status_code=404, detail="Hero Frame Set job not found.")
+        if job["state"] in {"completed", "cancelled", "error"}:
+            return _public_job(dict(job))
+        job["cancel_requested"] = True
+        job["state"] = "cancelling"
+        job["message"] = "Stopping after the current frame finishes..."
         return _public_job(dict(job))

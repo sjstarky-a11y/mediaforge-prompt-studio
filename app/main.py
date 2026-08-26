@@ -526,6 +526,7 @@ async def hero_status():
             "size": data.get("size", "512x512"),
             "frames": data.get("frames", 3),
             "backend": HERO_BACKEND,
+            "active_job": data.get("active_job"),
         }
     except Exception:
         return {
@@ -3074,6 +3075,23 @@ async def hero_frame_set_status(job_id: str):
         raise
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Could not read Hero Frame Set status: {exc}")
+
+
+@app.post("/api/hero-frame-set/{job_id}/cancel")
+async def cancel_hero_frame_set(job_id: str):
+    if not re.fullmatch(r"[0-9a-f]{32}", job_id):
+        raise HTTPException(status_code=422, detail="Invalid Hero Frame Set job ID.")
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(f"{HERO_API_URL}/hero-sets/{job_id}/cancel")
+        if response.status_code == 404:
+            raise HTTPException(status_code=404, detail="Hero Frame Set job not found.")
+        response.raise_for_status()
+        return response.json()
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Could not cancel Hero Frame Set: {exc}")
 
 
 @app.get("/", response_class=HTMLResponse)

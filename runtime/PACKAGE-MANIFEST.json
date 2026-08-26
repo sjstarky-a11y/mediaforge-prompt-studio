@@ -126,13 +126,13 @@
   },
   {
     "file": "app/index.html",
-    "bytes": 60152,
-    "sha256": "7b14a197bdedfff18ecf71d133a73f0b418c8d54cb1586f398207f1154762eed"
+    "bytes": 67793,
+    "sha256": "cb14f30d00c462252d6ece4ae8a3f7a2c1e980868e2a94487ca728d883bd3683"
   },
   {
     "file": "app/main.py",
-    "bytes": 107775,
-    "sha256": "5553ba9150dfdb4ee71a069cc6cce4ff541af705bf4b991d20d4b0930ae57b8d"
+    "bytes": 108575,
+    "sha256": "0e276408bfeb3cf4eddb5eb2eb123d4ad364a94c2d0ef7ccfed25d68e96ae272"
   },
   {
     "file": "app/model_catalog.py",
@@ -226,8 +226,8 @@
   },
   {
     "file": "image_flux/server.py",
-    "bytes": 7119,
-    "sha256": "71623696094a5f1c499e7311c0e762cf55fbb32127b425fb6ab5cc0233b59067"
+    "bytes": 9578,
+    "sha256": "3f288114c85c357bdd85a1515d812921a36cfa7cc3becb6e932e60b00896708f"
   },
   {
     "file": "install.ps1",
@@ -351,8 +351,8 @@
   },
   {
     "file": "tests/test_hero_frame_set.py",
-    "bytes": 2130,
-    "sha256": "e150a39b8685c4f4f88ade40b45531ee3e320af542122802b6b841cd10561520"
+    "bytes": 2953,
+    "sha256": "52aa0d1844106055ae31ef672e42e2db98696ca25e490a06c1d8bc3a41b3b488"
   },
   {
     "file": "tests/test_image_readiness.py",
