@@ -122,7 +122,7 @@ try {
 } catch {
     Write-Host "Automatic Model Runner enable did not complete."
     Write-Host "Open Docker Desktop > Settings > AI and enable Docker Model Runner + host-side TCP on port 12434."
-    Fail "Docker Model Runner is required for MediaForge v0.2-dev."
+    Fail "Docker Model Runner is required for MediaForge v0.3."
 }
 
 Step "Checking Docker Model Runner"
@@ -264,7 +264,7 @@ if (-not $sdxlReady) {
 
 Write-Host ""
 Write-Host "=============================================="
-Write-Host "MediaForge Prompt Studio v0.2-dev Adaptive Runtime"
+Write-Host "MediaForge Prompt Studio v0.3 Adaptive Runtime"
 Write-Host "APP:  $appUrl"
 Write-Host "LLM:  $model"
 Write-Host "IMAGE:" $(if ($selectedImageRuntime -eq "nvidia") { "SDXL / NVIDIA CUDA Diffusers [$selectedNvidiaProfile]" } else { "OpenVINO SDXL INT8 / CPU" })

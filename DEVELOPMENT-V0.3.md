@@ -1,4 +1,4 @@
-# MediaForge v0.2-dev — NVIDIA + Multi-Model Runtime
+# MediaForge v0.3 — NVIDIA + Multi-Model Runtime
 
 ## Goal
 

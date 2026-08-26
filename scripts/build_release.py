@@ -27,7 +27,7 @@ COMMON_FILES = (
     Path("CHANGELOG.md"),
     Path("Dockerfile"),
     Path("LICENSE"),
-    Path("PACKAGING-V0.2.md"),
+    Path("PACKAGING-V0.3.md"),
     Path("README.md"),
     Path("SECURITY.md"),
     Path("docker-compose.nvidia.yml"),
@@ -436,7 +436,7 @@ def check_reproducibility(source_root: Path, version: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", default="v0.2-dev")
+    parser.add_argument("--version", default="v0.3")
     parser.add_argument("--output", type=Path, default=ROOT / "dist")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()

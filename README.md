@@ -1,10 +1,11 @@
-# MediaForge Prompt Studio — v0.2-dev NVIDIA + Multi-Model
+# MediaForge Prompt Studio — v0.3 Public Preview
 
 **Fix the prompt → protect the intent → see it before you generate.**
 
-The `develop` branch contains the Adaptive Runtime foundation built from the
-validated Public Test v0.1a baseline. The published v0.1a release remains the
-recommended package for external testers; v0.2-dev is active development code.
+MediaForge v0.3 extends the validated v0.2 local workflow with a complete
+Hero Frame Set: three sequential FLUX.2 Klein 4B candidates, visible generation
+progress, recovery of an active job after refresh, explicit Hero selection, and
+a safe stop-after-current-frame control.
 
 > **License:** Source available for personal, non-commercial evaluation only.
 > This is not an open-source project. See [`LICENSE`](LICENSE).
@@ -16,6 +17,9 @@ recommended package for external testers; v0.2-dev is active development code.
 - Visual Proof
 - Fast Proof: one SDXL scene-confirmation frame at 768×768
 - Hero Frame Set: three FLUX.2 Klein 4B options at 512×512 with explicit selection
+- visible Hero Frame preparation and frame-by-frame progress
+- active Hero job recovery after a browser refresh
+- safe stop after the currently generating Hero Frame finishes
 - Quality Proof 1024×1024
 - Single-Frame Extraction
 - Model Adapter
@@ -39,7 +43,7 @@ Model Adapter v2 is deliberately transparent:
 This keeps the normal workflow simple while preserving truthful model-specific
 behavior for richer prompts.
 
-## v0.2-dev runtime scope
+## v0.3 runtime scope
 
 MediaForge now records hardware and active inference backends separately:
 
@@ -406,15 +410,15 @@ not need to open or modify the technical folder.
 Maintainers can build both packages from one source checkpoint:
 
 ```powershell
-.\build-release.ps1 -Version "v0.2-dev"
+.\build-release.ps1 -Version "v0.3"
 ```
 
 ```bash
-./build-release.sh v0.2-dev
+./build-release.sh v0.3
 ```
 
 Generated artifacts are written to `dist/`. See
-[`PACKAGING-V0.2.md`](PACKAGING-V0.2.md) for the release verification workflow.
+[`PACKAGING-V0.3.md`](PACKAGING-V0.3.md) for the release verification workflow.
 
 ## Distribution architecture
 
@@ -455,6 +459,8 @@ See [`LICENSES/THIRD_PARTY.md`](LICENSES/THIRD_PARTY.md).
 
 ## Project status
 
-**v0.2-dev NVIDIA + Multi-Model Runtime — develop branch**
+**v0.3 Public Preview — local AI workflow for Windows and Linux**
 
-The stable public test remains `v0.1a`. Development builds require local validation before release.
+The public preview is intended for testing and feedback. Windows CPU,
+Windows NVIDIA low-memory, and Ubuntu 24.04 WSL2 CPU paths have completed
+real-world validation; broader native Linux hardware coverage is still growing.

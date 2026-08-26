@@ -1,4 +1,4 @@
-# MediaForge v0.2-dev — Linux/WSL2 test guide
+# MediaForge v0.3 — Linux/WSL2 test guide
 
 This development layer adds Ubuntu 24.04 x86_64 host scripts without changing
 the existing Windows PowerShell entry points.

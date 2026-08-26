@@ -203,7 +203,7 @@ fi
 
 "$ROOT/detect-runtime.sh" >/dev/null || true
 printf '\n==============================================\n'
-printf 'MediaForge Prompt Studio v0.2-dev — Linux\n'
+printf 'MediaForge Prompt Studio v0.3 — Linux\n'
 printf 'APP: %s\n' "$app_url"
 printf 'LLM: %s\n' "$model"
 printf 'IMAGE: %s\n' "$selected_runtime"

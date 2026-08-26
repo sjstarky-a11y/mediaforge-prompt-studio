@@ -6,8 +6,8 @@
   },
   {
     "file": ".env.example",
-    "bytes": 1977,
-    "sha256": "44b534f481ce1644a6fb92630419568504e9a45b7bae07928ede27be76c7fb41"
+    "bytes": 1971,
+    "sha256": "5539b2d38224acb12a5e0ab042287d824381caa91631c826d51a26f8d3c552af"
   },
   {
     "file": ".gitattributes",
@@ -41,8 +41,8 @@
   },
   {
     "file": "CHANGELOG.md",
-    "bytes": 5886,
-    "sha256": "1f61c552cbc6c9d9414501582a4b5aa9d51488fdd4217c0b91c7a0c62d9a18b5"
+    "bytes": 6099,
+    "sha256": "d5fb47ece9528938417875bde4e8047935ad9ec201ed6713a40d7eb638411701"
   },
   {
     "file": "CONTRIBUTING.md",
@@ -50,9 +50,9 @@
     "sha256": "9451c04268cf8440b4baa34923d2bf91d5fc19d2db3e56fb77ddc018cd509940"
   },
   {
-    "file": "DEVELOPMENT-V0.2.md",
-    "bytes": 6538,
-    "sha256": "e31c3976f7d311d1204a9ba1c2a3ae6ac26c8f80b638002ba60f41017aa3bbe0"
+    "file": "DEVELOPMENT-V0.3.md",
+    "bytes": 6534,
+    "sha256": "aaa4d3d214728f63a465fa0ed802a45f418f2da99ad2b6175cfe9533587c4d18"
   },
   {
     "file": "Dockerfile",
@@ -67,12 +67,12 @@
   {
     "file": "LICENSES/THIRD_PARTY.md",
     "bytes": 3485,
-    "sha256": "58f0f828c8186793fc428563d5c990d6273e867fd6f0191edb4f1fc400633f88"
+    "sha256": "8d16c51376b3c465c3c4ff12f938148ad52bee7a74728c7fc7563b0dd9e496e6"
   },
   {
-    "file": "LINUX-TEST-V0.2.md",
-    "bytes": 2776,
-    "sha256": "9721f9c3d3d86cd84163cc45e96d4b8f6c1d97335bcf063d7b7d013f21b1b9c5"
+    "file": "LINUX-TEST-V0.3.md",
+    "bytes": 2772,
+    "sha256": "56e24bdaf7536ef046fb0f404b46379ca9e8698f38f6d62809afb7af6b1b05f7"
   },
   {
     "file": "MediaForge-Linux.sh",
@@ -85,9 +85,9 @@
     "sha256": "8d8967594c8e9199216b999770e80c45a2bf1476e2874fc264a82efd6c4e4d77"
   },
   {
-    "file": "PACKAGING-V0.2.md",
-    "bytes": 3075,
-    "sha256": "1995b6c1b3dcc782b3173a39426b04c224cecd6bc0cf114122b8ebc9f3dba172"
+    "file": "PACKAGING-V0.3.md",
+    "bytes": 3067,
+    "sha256": "ef8db7ba3221c5a9206148e3e6f90413a28b7796b85cdeb7d30c7bf7fa99ca10"
   },
   {
     "file": "PUBLIC-TEST-V0.1A.txt",
@@ -96,8 +96,8 @@
   },
   {
     "file": "README.md",
-    "bytes": 16131,
-    "sha256": "6876ff71cef588b8ea2f4fd2f14a9149a7db0b791a97c4c045ccccb140c6315e"
+    "bytes": 16456,
+    "sha256": "02cabb756810375b13f8782c06709057dacdac04361dc9f8743dd1d9a7a89adf"
   },
   {
     "file": "SECURITY.md",
@@ -151,13 +151,13 @@
   },
   {
     "file": "build-release.ps1",
-    "bytes": 593,
-    "sha256": "b3e24f0f582cb3bf073bb4b5822c907222dfe46cf8bc7166ceae3b5f9741884a"
+    "bytes": 589,
+    "sha256": "383dafdb109989a20744160560633ab393edd2441a5a1f082fb4ebf78febe101"
   },
   {
     "file": "build-release.sh",
-    "bytes": 233,
-    "sha256": "c7d148f8f4df07c9180a15b0511d504203a0f417e02d17c701660847acff2235"
+    "bytes": 229,
+    "sha256": "ae1850e97fcd8d21f6935f27539ca1871324a468ecf82feef0629aaf7c1b6853"
   },
   {
     "file": "detect-hardware.ps1",
@@ -171,8 +171,8 @@
   },
   {
     "file": "detect-runtime.ps1",
-    "bytes": 8698,
-    "sha256": "fdfcf2dfd071e6cdc6090674b7fb4e7264cf034abcec83a9ffcb9f13d6a58805"
+    "bytes": 8694,
+    "sha256": "3f18eca2a4da189687d2f5c9e18303592b89a815e629d030a49183449808aaee"
   },
   {
     "file": "detect-runtime.sh",
@@ -181,13 +181,13 @@
   },
   {
     "file": "docker-compose.nvidia.yml",
-    "bytes": 3153,
-    "sha256": "e1fb21d777c6dad7c3440f701bd64d7ae72f01051ff182ba7378f0e028cce554"
+    "bytes": 3141,
+    "sha256": "ef486a4eadb47b1071df0bc4e9f60aa382a8346d8b8967cbc4223cf5c090b0e8"
   },
   {
     "file": "docker-compose.yml",
-    "bytes": 2873,
-    "sha256": "5d325702ef1d834b790530a51bed3511b12826705f4d3ebee17be7b5aa74aba4"
+    "bytes": 2865,
+    "sha256": "813da6ada856ef8e708691a54a5cfbbcdcac6a8fd84468bbd44848ec13a5e028"
   },
   {
     "file": "doctor.sh",
@@ -231,13 +231,13 @@
   },
   {
     "file": "install.ps1",
-    "bytes": 11261,
-    "sha256": "8fe6de39faacaf1fa7b1d1311a3c432493e7eb6f783fedbbd9b405990990f4c1"
+    "bytes": 11253,
+    "sha256": "0081dcb68e0e3d746905b2b20ce340be9b9b608e792797dac34b1fac17dc0b41"
   },
   {
     "file": "install.sh",
-    "bytes": 8597,
-    "sha256": "50d6b2984af4e2c6ec60650af494c9b08dc3cc70727f30b8ae8789dad63531c1"
+    "bytes": 8593,
+    "sha256": "693f3cf77d4c69c275e3f1ac92956950335a32b514c46af0c5ff46b601c7edb4"
   },
   {
     "file": "manage-models.ps1",
@@ -281,8 +281,8 @@
   },
   {
     "file": "scripts/build_release.py",
-    "bytes": 16315,
-    "sha256": "a26467e5471f3b8843f511118e2de9103b4841153dfa6939b7551454c405cceb"
+    "bytes": 16311,
+    "sha256": "18ec6165f159dde98b7c3e7f9271db3664f45a94522160fa0b6d81a2b40c0d1f"
   },
   {
     "file": "scripts/linux_profile.py",
@@ -292,7 +292,7 @@
   {
     "file": "scripts/mediaforge-common.sh",
     "bytes": 4343,
-    "sha256": "9f0a6c470ae95bd7ef1fb9dbc1b53301a6fb68308ba060888d495cc816c758ad"
+    "sha256": "da83b88503a7dfa1da80e3a9ba49e9af731794a1d4d1405c5ef55b6a806d2b61"
   },
   {
     "file": "start.ps1",
@@ -391,8 +391,8 @@
   },
   {
     "file": "tests/test_release_builder.py",
-    "bytes": 6231,
-    "sha256": "2c246d3a78c6383add7e3e85866f3c6dfaeebd618ffb93d919c050f8dd500560"
+    "bytes": 6215,
+    "sha256": "fbd6ba37a80cd07bb85fc7ba31c9c52a891770a668202afca138db149c017219"
   },
   {
     "file": "tests/test_runtime_status.py",

@@ -2,7 +2,7 @@
 
 All notable public-test changes are documented here.
 
-## [Unreleased] - v0.2-dev Adaptive Runtime Foundation
+## [Unreleased] - v0.3 Public Preview
 
 ### Added
 
@@ -49,6 +49,9 @@ All notable public-test changes are documented here.
 - Hero Frame Set workflow with three sequential 512×512 candidates and explicit selection
 - visible first-use FLUX download/loading state and approximately 12 GB confirmation
 - approved Hero Frame status plus a clearly marked planned Shot Pack phase
+- persistent Hero Frame job status so an active set is restored after refresh
+- visible preparation and frame-by-frame progress for Hero Frame generation
+- safe stop-after-current-frame control that preserves completed candidates
 
 ### Changed
 

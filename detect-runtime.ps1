@@ -207,7 +207,7 @@ $profile = [ordered]@{
         offload_mode  = $imageOffloadMode
         uses_cpu_offload = $imageUsesCpuOffload
     }
-    note                    = "LLM and image runtimes are detected and reported independently. CPU remains the image fallback in v0.2-dev."
+    note                    = "LLM and image runtimes are detected and reported independently. CPU remains the image fallback in v0.3."
 }
 
 $profile | ConvertTo-Json -Depth 8 | Set-Content $runtimePath -Encoding UTF8

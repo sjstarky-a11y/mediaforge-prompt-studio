@@ -35,14 +35,14 @@ class ReleaseBuilderTests(unittest.TestCase):
         linux = {path.as_posix() for path in collect_source_files(ROOT, LINUX)}
 
         self.assertIn("MediaForge-Windows.cmd", windows)
-        self.assertIn("PACKAGING-V0.2.md", windows)
+        self.assertIn("PACKAGING-V0.3.md", windows)
         self.assertIn("install.ps1", windows)
         self.assertIn("image_flux/Dockerfile.cpu", windows)
         self.assertIn("image_flux/Dockerfile.cuda", windows)
         self.assertNotIn("install.sh", windows)
         self.assertIn("install.sh", linux)
         self.assertIn("MediaForge-Linux.sh", linux)
-        self.assertIn("PACKAGING-V0.2.md", linux)
+        self.assertIn("PACKAGING-V0.3.md", linux)
         self.assertIn("scripts/mediaforge-common.sh", linux)
         self.assertIn("image_flux/server.py", linux)
         self.assertNotIn("install.ps1", linux)
@@ -77,7 +77,7 @@ class ReleaseBuilderTests(unittest.TestCase):
             release_root = create_release_tree(
                 ROOT,
                 Path(temporary),
-                "v0.2-test",
+                "v0.3-test",
                 WINDOWS,
             )
             self.assertEqual({path.name for path in release_root.iterdir()}, expected)
@@ -97,7 +97,7 @@ class ReleaseBuilderTests(unittest.TestCase):
             release_root = create_release_tree(
                 ROOT,
                 Path(temporary),
-                "v0.2-test",
+                "v0.3-test",
                 LINUX,
             )
             self.assertEqual({path.name for path in release_root.iterdir()}, expected)
@@ -106,19 +106,19 @@ class ReleaseBuilderTests(unittest.TestCase):
 
     def test_release_names_are_platform_specific(self):
         self.assertEqual(
-            package_name("v0.2-dev", WINDOWS),
-            "MediaForge-Prompt-Studio-v0.2-dev-Windows-x64",
+            package_name("v0.3", WINDOWS),
+            "MediaForge-Prompt-Studio-v0.3-Windows-x64",
         )
         self.assertEqual(
-            package_name("v0.2-dev", LINUX),
-            "MediaForge-Prompt-Studio-v0.2-dev-Linux-x86_64",
+            package_name("v0.3", LINUX),
+            "MediaForge-Prompt-Studio-v0.3-Linux-x86_64",
         )
 
     def test_release_archives_are_reproducible_and_have_matching_checksums(self):
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary)
-            first = build_releases(ROOT, base / "first", "v0.2-test")
-            second = build_releases(ROOT, base / "second", "v0.2-test")
+            first = build_releases(ROOT, base / "first", "v0.3-test")
+            second = build_releases(ROOT, base / "second", "v0.3-test")
 
             first_bytes = {path.name: path.read_bytes() for path in first}
             second_bytes = {path.name: path.read_bytes() for path in second}
@@ -139,7 +139,7 @@ class ReleaseBuilderTests(unittest.TestCase):
 
     def test_release_info_does_not_claim_models_are_bundled(self):
         with tempfile.TemporaryDirectory() as temporary:
-            artifacts = build_releases(ROOT, Path(temporary), "v0.2-test")
+            artifacts = build_releases(ROOT, Path(temporary), "v0.3-test")
             windows_zip = next(path for path in artifacts if path.suffix == ".zip")
 
             import zipfile

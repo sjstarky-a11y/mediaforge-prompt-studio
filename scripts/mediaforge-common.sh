@@ -31,7 +31,7 @@ mf_ensure_linux() {
     [ "$(uname -s)" = "Linux" ] || mf_die "This script supports Linux and WSL2. Use the PowerShell scripts on Windows."
     case "$(uname -m)" in
         x86_64|amd64) ;;
-        *) mf_die "The v0.2 Linux development package currently supports x86_64 only." ;;
+        *) mf_die "The v0.3 Linux development package currently supports x86_64 only." ;;
     esac
 }
 

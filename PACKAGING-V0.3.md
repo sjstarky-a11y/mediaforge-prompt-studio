@@ -1,4 +1,4 @@
-# MediaForge v0.2 release packaging
+# MediaForge v0.3 release packaging
 
 MediaForge publishes separate Windows and Linux packages from the same tested
 source checkpoint. The release builder keeps the first-run experience simple
@@ -28,13 +28,13 @@ code, and runtime metadata stay inside `MediaForge-System/`.
 Windows maintainer command:
 
 ```powershell
-.\build-release.ps1 -Version "v0.2-dev"
+.\build-release.ps1 -Version "v0.3"
 ```
 
 Linux maintainer command:
 
 ```bash
-./build-release.sh v0.2-dev
+./build-release.sh v0.3
 ```
 
 The output directory is `dist/` by default.

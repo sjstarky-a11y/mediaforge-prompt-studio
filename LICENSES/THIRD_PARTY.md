@@ -23,7 +23,7 @@ https://hub.docker.com/r/ai/qwen2.5
 
 ## Optional Prompt Doctor models
 
-The v0.2 development catalog can reference additional Qwen and Gemma variants.
+The v0.3 development catalog can reference additional Qwen and Gemma variants.
 No optional model weights are included in this repository. Qwen model pages
 identify Apache 2.0 licensing; Gemma variants are governed by the separate
 Gemma Terms. `manage-models.ps1` requires explicit acknowledgement before it

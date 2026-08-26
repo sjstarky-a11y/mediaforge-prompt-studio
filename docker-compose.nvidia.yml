@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: mediaforge-prompt-studio:v0.2-dev
+    image: mediaforge-prompt-studio:v0.3
     container_name: ${MEDIAFORGE_APP_CONTAINER:-mediaforge-prompt-studio}
     restart: unless-stopped
     ports:
@@ -37,7 +37,7 @@ services:
     build:
       context: ./image_cuda
       dockerfile: Dockerfile
-    image: mediaforge-image-cuda:v0.2-dev
+    image: mediaforge-image-cuda:v0.3
     container_name: ${MEDIAFORGE_NVIDIA_IMAGE_CONTAINER:-mediaforge-image-cuda}
     restart: unless-stopped
     ports:
@@ -62,7 +62,7 @@ services:
     build:
       context: ./image_flux
       dockerfile: Dockerfile.cuda
-    image: mediaforge-image-flux-cuda:v0.2-dev
+    image: mediaforge-image-flux-cuda:v0.3
     container_name: ${MEDIAFORGE_HERO_IMAGE_CONTAINER:-mediaforge-image-flux}
     restart: unless-stopped
     environment:
