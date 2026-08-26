@@ -18,6 +18,9 @@ services:
       MEDIAFORGE_IMAGE_API_URL: http://image-cuda:8000/v3
       MEDIAFORGE_IMAGE_MODEL: ${MEDIAFORGE_NVIDIA_IMAGE_MODEL:-stabilityai/stable-diffusion-xl-base-1.0}
       MEDIAFORGE_IMAGE_BACKEND: NVIDIA CUDA / Diffusers
+      MEDIAFORGE_HERO_API_URL: ${MEDIAFORGE_HERO_API_URL:-http://image-flux:8000/v1}
+      MEDIAFORGE_HERO_MODEL: ${MEDIAFORGE_HERO_MODEL:-black-forest-labs/FLUX.2-klein-4B}
+      MEDIAFORGE_HERO_BACKEND: ${MEDIAFORGE_HERO_BACKEND:-FLUX.2 Klein 4B / NVIDIA CUDA}
       MEDIAFORGE_DEFAULT_LANGUAGE: English
       MEDIAFORGE_RUNTIME_MODE: ${MEDIAFORGE_RUNTIME_MODE:-auto}
       MEDIAFORGE_RUNTIME_PROFILE_PATH: /runtime/runtime-profile.json
@@ -28,6 +31,7 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       - image-cuda
+      - image-flux
 
   image-cuda:
     build:
@@ -44,6 +48,28 @@ services:
       MEDIAFORGE_NVIDIA_OFFLOAD_MODE: ${MEDIAFORGE_NVIDIA_OFFLOAD_MODE:-auto}
       PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
       HF_HOME: /models/huggingface
+    volumes:
+      - ./data/huggingface:/models/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  image-flux:
+    build:
+      context: ./image_flux
+      dockerfile: Dockerfile.cuda
+    image: mediaforge-image-flux-cuda:v0.2-dev
+    container_name: ${MEDIAFORGE_HERO_IMAGE_CONTAINER:-mediaforge-image-flux}
+    restart: unless-stopped
+    environment:
+      MEDIAFORGE_HERO_MODEL: ${MEDIAFORGE_HERO_MODEL:-black-forest-labs/FLUX.2-klein-4B}
+      MEDIAFORGE_HERO_DEVICE: cuda
+      HF_HOME: /models/huggingface
+      PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
     volumes:
       - ./data/huggingface:/models/huggingface
     deploy:

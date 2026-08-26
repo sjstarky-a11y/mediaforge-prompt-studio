@@ -149,6 +149,7 @@ mf_configure_test_mode() {
     mf_env_set MEDIAFORGE_APP_CONTAINER mediaforge-linux-test
     mf_env_set MEDIAFORGE_CPU_IMAGE_CONTAINER mediaforge-ovms-sdxl-linux-test
     mf_env_set MEDIAFORGE_NVIDIA_IMAGE_CONTAINER mediaforge-image-cuda-linux-test
+    mf_env_set MEDIAFORGE_HERO_IMAGE_CONTAINER mediaforge-image-flux-linux-test
     mf_env_set MEDIAFORGE_APP_PORT 18889
     mf_env_set MEDIAFORGE_OVMS_PORT 8011
     mf_env_set MEDIAFORGE_IMAGE_PORT 8011

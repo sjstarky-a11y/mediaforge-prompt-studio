@@ -208,6 +208,7 @@ printf 'APP: %s\n' "$app_url"
 printf 'LLM: %s\n' "$model"
 printf 'IMAGE: %s\n' "$selected_runtime"
 printf 'SDXL READY: %s\n' "$proof_ready"
+printf 'HERO FRAME SET: optional; FLUX.2 downloads after first-use confirmation (~12 GB)\n'
 printf 'TEST MODE: %s\n' "$test_mode"
 printf '==============================================\n'
 if [ "$wait_for_proof" = true ] && [ "$proof_ready" != true ]; then

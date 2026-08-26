@@ -28,6 +28,13 @@ The first Visual Proof Frame model download is several gigabytes. MediaForge
 shows "Preparing Visual Proof model" until it is ready. Prompt Doctor can be
 used while the image model is downloading.
 
+Visual Proof has two choices:
+- Fast Proof creates one quick SDXL confirmation frame.
+- Hero Frame Set creates three 512x512 options with FLUX.2 Klein 4B.
+
+Hero Frame Set is optional. On first use MediaForge asks before downloading its
+approximately 12 GB local model. Keep at least 15 GB free (20 GB recommended).
+
 The MediaForge-System folder contains the technical runtime files. Ordinary
 use does not require opening or changing anything inside that folder.
 

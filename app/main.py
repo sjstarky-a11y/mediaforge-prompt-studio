@@ -84,6 +84,21 @@ IMAGE_PREPARING_MESSAGE = (
     "gigabytes and may take some time. Prompt Doctor remains available."
 )
 
+HERO_API_URL = os.getenv(
+    "MEDIAFORGE_HERO_API_URL",
+    "http://host.docker.internal:8020/v1",
+).rstrip("/")
+HERO_MODEL = os.getenv(
+    "MEDIAFORGE_HERO_MODEL",
+    "black-forest-labs/FLUX.2-klein-4B",
+)
+HERO_BACKEND = os.getenv("MEDIAFORGE_HERO_BACKEND", "FLUX.2 Klein 4B")
+HERO_DOWNLOAD_MESSAGE = (
+    "Hero Frame Set is preparing its optional local model. First use downloads "
+    "approximately 12 GB; keep at least 15 GB free. Prompt Doctor and Fast Proof "
+    "remain available."
+)
+
 
 app = FastAPI(title=APP_NAME)
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
@@ -136,6 +151,14 @@ class ProofFrameResponse(BaseModel):
     fidelity: FidelityObserverResult
     cleanup_applied: bool = False
     cleanup_notes: list[str] = Field(default_factory=list)
+
+
+class HeroFrameSetRequest(BaseModel):
+    source_prompt: str = Field(..., min_length=3, max_length=6000)
+    final_prompt: str = Field(..., min_length=3, max_length=12000)
+    mode: Literal["improve", "cinematic", "commercial"] = "improve"
+    aspect_ratio: Literal["16:9", "9:16", "1:1"] = "16:9"
+    base_seed: int = Field(default=42, ge=0, le=2147483645)
 
 
 class ModelAdapterRequest(BaseModel):
@@ -454,6 +477,7 @@ def health():
         "gpu_acceleration": runtime["gpu_acceleration"],
         "llm_runtime": runtime["llm"]["runtime"],
         "image_runtime": runtime["image"]["runtime"],
+        "hero_runtime": HERO_BACKEND,
         "runtime": runtime,
     }
 
@@ -484,6 +508,36 @@ async def image_status():
         "message": IMAGE_PREPARING_MESSAGE,
         "backend": IMAGE_BACKEND,
     }
+
+
+@app.get("/api/hero-status")
+async def hero_status():
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            response = await client.get(f"{HERO_API_URL}/status")
+        response.raise_for_status()
+        data = response.json()
+        return {
+            "available": True,
+            "ready": data.get("ready", False),
+            "state": data.get("state", "available"),
+            "message": data.get("message", HERO_DOWNLOAD_MESSAGE),
+            "download_gb_approx": data.get("download_gb_approx", 12),
+            "size": data.get("size", "512x512"),
+            "frames": data.get("frames", 3),
+            "backend": HERO_BACKEND,
+        }
+    except Exception:
+        return {
+            "available": False,
+            "ready": False,
+            "state": "unavailable",
+            "message": "Hero Frame Set service is not available. Fast Proof can still be used.",
+            "download_gb_approx": 12,
+            "size": "512x512",
+            "frames": 3,
+            "backend": HERO_BACKEND,
+        }
 
 
 @app.get("/api/models")
@@ -2798,54 +2852,49 @@ def _proof_quality_config(quality: str) -> tuple[str, int]:
     return "768x768", 16
 
 
-@app.post("/api/proof-frame", response_model=ProofFrameResponse)
-async def generate_proof_frame(req: ProofFrameRequest):
-    """
-    V1.2 isolated proof-of-concept with proof-only deterministic cleanup.
-
-    V1.1 remains unchanged. The original Prompt Doctor result is never rewritten.
-    """
+def _prepare_visual_prompt(
+    source_prompt: str,
+    final_prompt: str,
+    mode: str,
+    aspect_ratio: str,
+) -> tuple[str, str, str, FidelityObserverResult, bool, list[str]]:
+    """Validate intent once and return the shared proof-safe scene prompt."""
     original_fidelity = observe_output_fidelity_safe(
-        user_input=req.source_prompt,
-        result=req.final_prompt,
-        mode=req.mode,
-        aspect_ratio=req.aspect_ratio,
+        user_input=source_prompt,
+        result=final_prompt,
+        mode=mode,
+        aspect_ratio=aspect_ratio,
     )
-
-    proof_source = req.final_prompt
+    proof_source = final_prompt
     cleanup_notes: list[str] = []
 
     if original_fidelity.status == "REVIEW":
-        # Auto-clean only when every issue is one of the known, narrow
-        # unrequested-human-detail inventions. Anything else stays blocked.
         allowed_prefixes = (
             "INVENTION: the final prompt adds facial expression",
             "INVENTION: the final prompt adds smile",
             "INVENTION: the final prompt adds emotion",
             "INVENTION: the final prompt adds reaction/gesture",
         )
-
         if original_fidelity.issues and all(
             issue.startswith(allowed_prefixes)
             for issue in original_fidelity.issues
         ):
             proof_source, cleanup_notes = _proof_cleanup_unrequested_human_details(
-                source_prompt=req.source_prompt,
-                final_prompt=req.final_prompt,
+                source_prompt=source_prompt,
+                final_prompt=final_prompt,
             )
 
     fidelity = observe_output_fidelity_safe(
-        user_input=req.source_prompt,
+        user_input=source_prompt,
         result=proof_source,
-        mode=req.mode,
-        aspect_ratio=req.aspect_ratio,
+        mode=mode,
+        aspect_ratio=aspect_ratio,
     )
-
     if fidelity.status != "INTENT PROTECTED":
         raise HTTPException(
             status_code=409,
             detail={
-                "message": "Proof Frame blocked because the proof-safe prompt is not INTENT PROTECTED.",
+                "message": "Visual Proof blocked because the proof-safe prompt is not INTENT PROTECTED.",
                 "original_fidelity": original_fidelity.model_dump(),
                 "fidelity_after_cleanup": fidelity.model_dump(),
                 "cleanup_applied": bool(cleanup_notes),
@@ -2854,9 +2903,39 @@ async def generate_proof_frame(req: ProofFrameRequest):
         )
 
     single_frame_prompt, selection_reason, negative_prompt = build_visual_proof_prompt(
-        source_prompt=req.source_prompt,
+        source_prompt=source_prompt,
         final_prompt=proof_source,
+        mode=mode,
+    )
+    return (
+        single_frame_prompt,
+        selection_reason,
+        negative_prompt,
+        fidelity,
+        bool(cleanup_notes),
+        cleanup_notes,
+    )
+
+
+@app.post("/api/proof-frame", response_model=ProofFrameResponse)
+async def generate_proof_frame(req: ProofFrameRequest):
+    """
+    V1.2 isolated proof-of-concept with proof-only deterministic cleanup.
+
+    V1.1 remains unchanged. The original Prompt Doctor result is never rewritten.
+    """
+    (
+        single_frame_prompt,
+        selection_reason,
+        negative_prompt,
+        fidelity,
+        cleanup_applied,
+        cleanup_notes,
+    ) = _prepare_visual_prompt(
+        source_prompt=req.source_prompt,
+        final_prompt=req.final_prompt,
         mode=req.mode,
+        aspect_ratio=req.aspect_ratio,
     )
 
     proof_size, proof_steps = _proof_quality_config(req.quality)
@@ -2923,9 +3002,78 @@ async def generate_proof_frame(req: ProofFrameRequest):
         selection_reason=selection_reason,
         negative_prompt=negative_prompt,
         fidelity=fidelity,
-        cleanup_applied=bool(cleanup_notes),
+        cleanup_applied=cleanup_applied,
         cleanup_notes=cleanup_notes,
     )
+
+
+@app.post("/api/hero-frame-set")
+async def create_hero_frame_set(req: HeroFrameSetRequest):
+    (
+        single_frame_prompt,
+        selection_reason,
+        _negative_prompt,
+        fidelity,
+        cleanup_applied,
+        cleanup_notes,
+    ) = _prepare_visual_prompt(
+        source_prompt=req.source_prompt,
+        final_prompt=req.final_prompt,
+        mode=req.mode,
+        aspect_ratio=req.aspect_ratio,
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.post(
+                f"{HERO_API_URL}/hero-sets",
+                json={
+                    "prompt": single_frame_prompt,
+                    "seeds": [req.base_seed, req.base_seed + 1, req.base_seed + 2],
+                },
+            )
+            if response.status_code == 409:
+                raise HTTPException(status_code=409, detail=response.json().get("detail"))
+            response.raise_for_status()
+            data = response.json()
+    except HTTPException:
+        raise
+    except (httpx.ConnectError, httpx.ConnectTimeout):
+        raise HTTPException(status_code=503, detail=HERO_DOWNLOAD_MESSAGE)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"{HERO_BACKEND} returned HTTP {exc.response.status_code}: {exc.response.text}",
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Could not start Hero Frame Set: {exc}")
+
+    return {
+        **data,
+        "model": HERO_MODEL,
+        "proof_prompt": single_frame_prompt,
+        "selection_reason": selection_reason,
+        "fidelity": fidelity.model_dump(),
+        "cleanup_applied": cleanup_applied,
+        "cleanup_notes": cleanup_notes,
+    }
+
+
+@app.get("/api/hero-frame-set/{job_id}")
+async def hero_frame_set_status(job_id: str):
+    if not re.fullmatch(r"[0-9a-f]{32}", job_id):
+        raise HTTPException(status_code=422, detail="Invalid Hero Frame Set job ID.")
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(f"{HERO_API_URL}/hero-sets/{job_id}")
+        if response.status_code == 404:
+            raise HTTPException(status_code=404, detail="Hero Frame Set job not found.")
+        response.raise_for_status()
+        return response.json()
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Could not read Hero Frame Set status: {exc}")
 
 
 @app.get("/", response_class=HTMLResponse)

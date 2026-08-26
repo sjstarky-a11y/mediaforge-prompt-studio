@@ -45,6 +45,10 @@ All notable public-test changes are documented here.
 - friendly Visual Proof model download/loading status with automatic readiness checks
 - simplified release roots with technical runtime files grouped under `MediaForge-System/`
 - one-command `MediaForge-Linux.sh` launcher for generated Linux packages
+- optional FLUX.2 Klein 4B Hero Frame service for CPU and NVIDIA CUDA
+- Hero Frame Set workflow with three sequential 512×512 candidates and explicit selection
+- visible first-use FLUX download/loading state and approximately 12 GB confirmation
+- approved Hero Frame status plus a clearly marked planned Shot Pack phase
 
 ### Changed
 

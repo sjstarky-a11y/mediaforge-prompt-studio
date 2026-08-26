@@ -269,6 +269,7 @@ Write-Host "APP:  $appUrl"
 Write-Host "LLM:  $model"
 Write-Host "IMAGE:" $(if ($selectedImageRuntime -eq "nvidia") { "SDXL / NVIDIA CUDA Diffusers [$selectedNvidiaProfile]" } else { "OpenVINO SDXL INT8 / CPU" })
 Write-Host "SDXL READY: $sdxlReady"
+Write-Host "HERO FRAME SET: optional; FLUX.2 downloads only after first-use confirmation (~12 GB)"
 try {
     $runtimeProfile = Get-Content (Join-Path $PSScriptRoot "runtime\runtime-profile.json") -Raw | ConvertFrom-Json
     Write-Host "RUNTIME PROFILE: $($runtimeProfile.summary)"

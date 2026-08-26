@@ -12,6 +12,7 @@ machine-wide CPU/GPU label.
 | Prompt Doctor | Docker Model Runner / llama.cpp | CPU or NVIDIA CUDA; dynamic local model selection |
 | Visual Proof Frame | OpenVINO Model Server / SDXL INT8 | CPU compatibility profile |
 | Visual Proof Frame | Diffusers / SDXL FP16 | NVIDIA CUDA profiles for compute 6.0+, 4 GB+ VRAM |
+| Hero Frame Set | Diffusers / FLUX.2 Klein 4B | Optional CPU or NVIDIA CUDA; three sequential 512×512 frames |
 
 Detailed component runtimes remain available in Developer settings and the
 runtime report. The primary UI intentionally shows only `CPU`, `GPU + CPU`, or

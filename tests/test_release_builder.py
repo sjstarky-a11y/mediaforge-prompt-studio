@@ -37,11 +37,14 @@ class ReleaseBuilderTests(unittest.TestCase):
         self.assertIn("MediaForge-Windows.cmd", windows)
         self.assertIn("PACKAGING-V0.2.md", windows)
         self.assertIn("install.ps1", windows)
+        self.assertIn("image_flux/Dockerfile.cpu", windows)
+        self.assertIn("image_flux/Dockerfile.cuda", windows)
         self.assertNotIn("install.sh", windows)
         self.assertIn("install.sh", linux)
         self.assertIn("MediaForge-Linux.sh", linux)
         self.assertIn("PACKAGING-V0.2.md", linux)
         self.assertIn("scripts/mediaforge-common.sh", linux)
+        self.assertIn("image_flux/server.py", linux)
         self.assertNotIn("install.ps1", linux)
 
     def test_release_mapping_keeps_only_user_entry_files_at_root(self):

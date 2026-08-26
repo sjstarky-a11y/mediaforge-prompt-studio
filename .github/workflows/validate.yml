@@ -20,7 +20,7 @@ jobs:
           python-version: "3.12"
 
       - name: Validate Python syntax
-        run: python -m py_compile app/main.py app/fidelity_concepts.py app/model_catalog.py app/proof_constraints.py app/runtime_status.py image_cuda/server.py scripts/build_manifest.py scripts/build_release.py scripts/linux_profile.py
+        run: python -m py_compile app/main.py app/fidelity_concepts.py app/model_catalog.py app/proof_constraints.py app/runtime_status.py image_cuda/server.py image_flux/server.py scripts/build_manifest.py scripts/build_release.py scripts/linux_profile.py
 
       - name: Validate model catalog
         run: python -m json.tool models/model-catalog.json > /dev/null

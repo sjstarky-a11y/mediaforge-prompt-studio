@@ -15,6 +15,8 @@ The builder also writes `SHA256SUMS-<version>.txt` beside the archives.
 
 Models and runtime caches are never bundled. The installers download the
 selected local models after automatic CPU/NVIDIA detection.
+The optional FLUX.2 Klein 4B Hero Frame model is downloaded only after the
+user selects Hero Frame Set and confirms the approximately 12 GB first use.
 
 Each extracted package has a deliberately small user-facing root: the
 `START-HERE` guide, one launcher, `README.md`, `LICENSE`, and the

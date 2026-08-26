@@ -37,6 +37,7 @@ COMMON_FILES = (
 COMMON_DIRECTORIES = (
     Path("app"),
     Path("image_cuda"),
+    Path("image_flux"),
     Path("LICENSES"),
     Path("models"),
 )

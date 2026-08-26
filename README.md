@@ -13,8 +13,9 @@ recommended package for external testers; v0.2-dev is active development code.
 
 - Prompt Doctor
 - Fidelity Guard / Intent Lock
-- Visual Proof Frame
-- Fast Proof 768×768
+- Visual Proof
+- Fast Proof: one SDXL scene-confirmation frame at 768×768
+- Hero Frame Set: three FLUX.2 Klein 4B options at 512×512 with explicit selection
 - Quality Proof 1024×1024
 - Single-Frame Extraction
 - Model Adapter
@@ -48,6 +49,7 @@ MediaForge now records hardware and active inference backends separately:
 - Prompt Doctor discovers locally installed Docker Model Runner models and allows per-request selection.
 - Visual Proof Frame uses **OpenVINO SDXL INT8 / CPU** as the compatibility path.
 - Eligible NVIDIA GPUs can use the experimental **CUDA / Diffusers SDXL** image path.
+- **Hero Frame Set** uses the optional local **FLUX.2 Klein 4B** service on CPU or NVIDIA CUDA.
 
 The primary interface intentionally reports only the execution mode users need:
 
@@ -71,6 +73,7 @@ informational and never prevents the application from returning a health respons
 - Docker Model Runner
 - Internet connection for the first model downloads
 - Enough free RAM and disk space for local AI models
+- Hero Frame Set: at least 15 GB free disk space; 20 GB recommended
 
 Docker Model Runner must expose host-side TCP access on port `12434`. `install.ps1`
 configures Docker Desktop; Docker Engine enables this port by default when the
@@ -109,6 +112,10 @@ The installer will:
 7. build MediaForge and the selected image service,
 8. download/cache the selected SDXL model on first use,
 9. open the configured app URL (`http://127.0.0.1:18888/` by default).
+
+The optional FLUX.2 Hero Frame model is not downloaded during installation.
+MediaForge asks for confirmation before its first use and clearly reports the
+approximately 12 GB download/loading stage in the interface.
 
 ## Linux install
 
@@ -172,6 +179,19 @@ image model is ready. This state does not prevent Prompt Doctor use.
 The SDXL files are cached under `data/ovms-models/` and are reused on later starts.
 
 For the NVIDIA image profile, model files are cached under `data/huggingface/`.
+
+### Visual Proof modes
+
+- **Fast Proof** generates one quick SDXL scene-confirmation frame.
+- **Hero Frame Set** generates three FLUX.2 Klein 4B frames sequentially and
+  asks the user to select the strongest option for image-to-video use.
+- Only the selected frame receives **HERO FRAME APPROVED** status.
+- **Create Shot Pack** is shown as a planned next phase; it does not generate
+  establishing, action, or detail shots in this release.
+
+Hero frames use 512×512 because the goal is scene and intention confirmation,
+not final delivery resolution. On low-memory NVIDIA systems frames are generated
+one at a time with CPU offload. FLUX model files are cached locally and reused.
 
 ## Multi-model Prompt Doctor
 

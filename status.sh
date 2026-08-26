@@ -40,6 +40,13 @@ else
 fi
 mf_info "Image runtime: $(mf_env_get MEDIAFORGE_ACTIVE_IMAGE_RUNTIME cpu)"
 
+printf '\nHero Frame Set health\n---------------------\n'
+if curl --silent --show-error --fail --max-time 5 "http://127.0.0.1:$app_port/api/hero-status"; then
+    printf '\n'
+else
+    mf_warn "Hero Frame Set status is unavailable. Fast Proof may still be used."
+fi
+
 printf '\nRuntime profile\n---------------\n'
 if [ -f "$MF_RUNTIME_DIR/runtime-profile.json" ]; then
     cat "$MF_RUNTIME_DIR/runtime-profile.json"

@@ -91,6 +91,19 @@ if (Test-Path $profile) {
 }
 
 Write-Host ""
+Write-Host "Hero Frame Set health"
+Write-Host "---------------------"
+try {
+    $hero = Invoke-RestMethod "http://127.0.0.1:$appPort/api/hero-status" -TimeoutSec 5
+    Write-Host "Service available:" $hero.available
+    Write-Host "Model loaded:" $hero.ready
+    Write-Host "State:" $hero.state
+    Write-Host "Message:" $hero.message
+} catch {
+    Write-Host "Hero Frame Set status is unavailable. Fast Proof may still be used."
+}
+
+Write-Host ""
 Write-Host "Prompt Doctor models"
 Write-Host "--------------------"
 try {

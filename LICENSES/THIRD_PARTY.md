@@ -49,6 +49,16 @@ Its model card identifies the CreativeML Open RAIL++-M license. Users must
 review and accept the model terms at the download source:
 https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0
 
+## FLUX.2 Klein 4B Hero Frame model
+
+The optional Hero Frame Set downloads `black-forest-labs/FLUX.2-klein-4B`
+from Hugging Face only after the user confirms first use. Model weights are not
+included in this repository or the release archives. The model card identifies
+the license as Apache 2.0. Users should review the current model card and terms
+at the download source before use:
+
+https://huggingface.co/black-forest-labs/FLUX.2-klein-4B
+
 ## OpenVINO Model Server
 
 Used to serve the Visual Proof Frame image model locally.

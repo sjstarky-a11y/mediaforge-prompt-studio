@@ -508,6 +508,52 @@
       color: var(--accent2);
     }
 
+    .proof-mode-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+      margin-bottom: 11px;
+    }
+
+    .proof-mode {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.035);
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .proof-mode.selected {
+      border-color: rgba(157,108,255,0.65);
+      background: rgba(157,108,255,0.11);
+      box-shadow: 0 0 0 1px rgba(157,108,255,0.18) inset;
+    }
+
+    .proof-mode-mark {
+      color: var(--accent2);
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .proof-mode-title {
+      display: block;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .proof-mode-copy {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
     .proof-stage {
       display: none;
       margin-top: 12px;
@@ -580,6 +626,98 @@
 
     .proof-approved.visible {
       display: block;
+    }
+
+    .hero-stage {
+      display: none;
+      margin-top: 12px;
+    }
+
+    .hero-stage.visible {
+      display: block;
+    }
+
+    .hero-intro {
+      margin-bottom: 10px;
+    }
+
+    .hero-intro strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .hero-intro span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11.5px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .hero-card {
+      position: relative;
+      padding: 0;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      background: rgba(0,0,0,0.28);
+      cursor: pointer;
+      min-height: 135px;
+    }
+
+    .hero-card.selected {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 2px rgba(95,224,192,0.16);
+    }
+
+    .hero-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .hero-card-label {
+      position: absolute;
+      left: 7px;
+      bottom: 7px;
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: rgba(7,8,13,0.84);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .shot-pack {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.45;
+    }
+
+    .shot-pack.visible {
+      display: block;
+    }
+
+    .shot-pack button {
+      width: 100%;
+      margin-bottom: 7px;
+    }
+
+    @media (max-width: 720px) {
+      .proof-mode-grid,
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .adapter-panel {
@@ -909,8 +1047,25 @@
 
           <div class="proof-panel" id="proofPanel">
             <div class="proof-head">
-              <div class="proof-title">Visual Proof Frame</div>
+              <div class="proof-title">Visual Proof</div>
               <div class="proof-meta" id="proofMeta">Fast Proof · 768×768</div>
+            </div>
+
+            <div class="proof-mode-grid" role="radiogroup" aria-label="Visual Proof mode">
+              <button class="proof-mode selected" type="button" id="fastProofMode" role="radio" aria-checked="true">
+                <span class="proof-mode-mark">●</span>
+                <span>
+                  <span class="proof-mode-title">Fast Proof</span>
+                  <span class="proof-mode-copy">Generate one quick scene-confirmation frame.</span>
+                </span>
+              </button>
+              <button class="proof-mode" type="button" id="heroProofMode" role="radio" aria-checked="false">
+                <span class="proof-mode-mark">○</span>
+                <span>
+                  <span class="proof-mode-title">Hero Frame Set</span>
+                  <span class="proof-mode-copy">Generate three frame options and select one for AI video.</span>
+                </span>
+              </button>
             </div>
 
             <button class="proof-generate" type="button" id="proofGenerateBtn">Generate Proof Frame</button>
@@ -930,6 +1085,24 @@
               </div>
 
               <div class="proof-approved" id="proofApproved">✓ Scene approved</div>
+            </div>
+
+            <div class="hero-stage" id="heroStage">
+              <div class="hero-intro" id="heroIntro">
+                <strong>Choose your Hero Frame</strong>
+                <span>Select the image that best represents your scene.</span>
+              </div>
+              <div class="hero-grid" id="heroGrid"></div>
+              <div class="proof-actions">
+                <button class="approve" type="button" id="approveHeroBtn" disabled>✓ Approve Hero Frame</button>
+                <button class="secondary" type="button" id="downloadHeroBtn" disabled>Download selected frame</button>
+                <button class="regenerate" type="button" id="regenerateHeroBtn">↻ Generate another set</button>
+              </div>
+              <div class="proof-approved" id="heroApproved">✓ HERO FRAME APPROVED</div>
+              <div class="shot-pack" id="shotPack">
+                <button class="secondary" type="button" disabled>Create Shot Pack · planned</button>
+                Generate establishing, action and detail shots from this Hero Frame.
+              </div>
             </div>
           </div>
 
@@ -997,6 +1170,8 @@
     const fidelityTitle = document.getElementById("fidelityTitle");
     const fidelityCopy = document.getElementById("fidelityCopy");
     const proofPanel = document.getElementById("proofPanel");
+    const fastProofMode = document.getElementById("fastProofMode");
+    const heroProofMode = document.getElementById("heroProofMode");
     const proofGenerateBtn = document.getElementById("proofGenerateBtn");
     const proofReadiness = document.getElementById("proofReadiness");
     const proofStage = document.getElementById("proofStage");
@@ -1007,6 +1182,13 @@
     const approveProofBtn = document.getElementById("approveProofBtn");
     const regenerateProofBtn = document.getElementById("regenerateProofBtn");
     const proofApproved = document.getElementById("proofApproved");
+    const heroStage = document.getElementById("heroStage");
+    const heroGrid = document.getElementById("heroGrid");
+    const approveHeroBtn = document.getElementById("approveHeroBtn");
+    const downloadHeroBtn = document.getElementById("downloadHeroBtn");
+    const regenerateHeroBtn = document.getElementById("regenerateHeroBtn");
+    const heroApproved = document.getElementById("heroApproved");
+    const shotPack = document.getElementById("shotPack");
     const adapterPanel = document.getElementById("adapterPanel");
     const adapterProfile = document.getElementById("adapterProfile");
     const adaptModelBtn = document.getElementById("adaptModelBtn");
@@ -1024,9 +1206,18 @@
     let modelMetadata = new Map();
     let imageReady = false;
     let imageReadinessTimer = null;
+    let visualProofMode = "fast";
+    let heroAvailable = false;
+    let heroModelReady = false;
+    let heroJobId = "";
+    let heroPollTimer = null;
+    let heroImages = [];
+    let selectedHeroIndex = -1;
 
     const imagePreparingMessage =
       "Visual Proof model is being prepared. The first download is several gigabytes and may take some time. Prompt Doctor remains available.";
+    const heroFirstUseMessage =
+      "Hero Frame Set uses an optional local model. First use downloads approximately 12 GB. Keep at least 15 GB free; 20 GB is recommended.";
 
     function hideFidelity() {
       fidelityStatus.className = "fidelity-status";
@@ -1156,9 +1347,21 @@
         clearTimeout(imageReadinessTimer);
         imageReadinessTimer = null;
       }
+      if (heroPollTimer) {
+        clearTimeout(heroPollTimer);
+        heroPollTimer = null;
+      }
       imageReady = false;
+      heroAvailable = false;
+      heroModelReady = false;
+      heroJobId = "";
+      heroImages = [];
+      selectedHeroIndex = -1;
+      visualProofMode = "fast";
       proofPanel.className = "proof-panel";
       proofStage.className = "proof-stage";
+      heroStage.className = "hero-stage";
+      heroGrid.innerHTML = "";
       proofGenerateBtn.hidden = false;
       proofGenerateBtn.disabled = false;
       proofGenerateBtn.textContent = "Generate Proof Frame";
@@ -1171,6 +1374,16 @@
       proofCaption.textContent = "";
       proofMeta.textContent = "Fast Proof · 768×768";
       proofApproved.className = "proof-approved";
+      heroApproved.className = "proof-approved";
+      shotPack.className = "shot-pack";
+      approveHeroBtn.disabled = true;
+      downloadHeroBtn.disabled = true;
+      fastProofMode.className = "proof-mode selected";
+      fastProofMode.setAttribute("aria-checked", "true");
+      fastProofMode.querySelector(".proof-mode-mark").textContent = "●";
+      heroProofMode.className = "proof-mode";
+      heroProofMode.setAttribute("aria-checked", "false");
+      heroProofMode.querySelector(".proof-mode-mark").textContent = "○";
       resetModelAdapter();
     }
 
@@ -1196,7 +1409,7 @@
     }
 
     async function refreshImageReadiness() {
-      if (!proofPanel.classList.contains("visible")) {
+      if (!proofPanel.classList.contains("visible") || visualProofMode !== "fast") {
         return;
       }
 
@@ -1214,6 +1427,72 @@
       }
     }
 
+    function setProofMode(mode) {
+      visualProofMode = mode;
+      const isFast = mode === "fast";
+      proofGenerateBtn.hidden = false;
+      fastProofMode.className = isFast ? "proof-mode selected" : "proof-mode";
+      fastProofMode.setAttribute("aria-checked", String(isFast));
+      fastProofMode.querySelector(".proof-mode-mark").textContent = isFast ? "●" : "○";
+      heroProofMode.className = isFast ? "proof-mode" : "proof-mode selected";
+      heroProofMode.setAttribute("aria-checked", String(!isFast));
+      heroProofMode.querySelector(".proof-mode-mark").textContent = isFast ? "○" : "●";
+      proofStage.className = "proof-stage";
+      heroStage.className = "hero-stage";
+      proofApproved.className = "proof-approved";
+      heroApproved.className = "proof-approved";
+      shotPack.className = "shot-pack";
+      resetModelAdapter();
+
+      if (isFast) {
+        if (heroPollTimer) {
+          clearTimeout(heroPollTimer);
+          heroPollTimer = null;
+        }
+        proofMeta.textContent = "Fast Proof · 768×768";
+        proofGenerateBtn.textContent = "Generate Proof Frame";
+        showImageReadiness(false, "Checking Fast Proof model...");
+        refreshImageReadiness();
+      } else {
+        if (imageReadinessTimer) {
+          clearTimeout(imageReadinessTimer);
+          imageReadinessTimer = null;
+        }
+        proofMeta.textContent = "Hero Frame Set · 3 × 512×512";
+        proofGenerateBtn.textContent = "Generate Hero Frame Set";
+        proofGenerateBtn.disabled = true;
+        proofReadiness.textContent = "Checking Hero Frame Set...";
+        proofReadiness.className = "proof-readiness visible";
+        refreshHeroReadiness();
+      }
+    }
+
+    async function refreshHeroReadiness() {
+      if (!proofPanel.classList.contains("visible") || visualProofMode !== "hero") {
+        return;
+      }
+      try {
+        const res = await fetch("/api/hero-status", {cache: "no-store"});
+        const data = await res.json();
+        heroAvailable = res.ok && data.available === true;
+        heroModelReady = data.ready === true;
+        proofGenerateBtn.disabled = !heroAvailable;
+        proofGenerateBtn.textContent = "Generate Hero Frame Set";
+        proofReadiness.textContent = data.ready
+          ? "Hero Frame model is ready. Three images are generated sequentially."
+          : (data.message || heroFirstUseMessage);
+        proofReadiness.className = data.ready
+          ? "proof-readiness visible ready"
+          : "proof-readiness visible";
+      } catch {
+        heroAvailable = false;
+        heroModelReady = false;
+        proofGenerateBtn.disabled = true;
+        proofReadiness.textContent = "Hero Frame Set service is unavailable. Fast Proof can still be used.";
+        proofReadiness.className = "proof-readiness visible";
+      }
+    }
+
     function updateProofAvailability() {
       const supportedMode = ["improve", "cinematic", "commercial"].includes(activeMode);
       const canGenerate =
@@ -1224,8 +1503,7 @@
 
       if (canGenerate) {
         proofPanel.className = "proof-panel visible";
-        showImageReadiness(false, "Checking Visual Proof model...");
-        refreshImageReadiness();
+        setProofMode(visualProofMode);
       } else {
         resetProofFrame();
       }
@@ -1315,6 +1593,148 @@
       }
     }
 
+    function renderHeroFrames() {
+      heroGrid.innerHTML = "";
+      heroImages.forEach((frame, index) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = index === selectedHeroIndex ? "hero-card selected" : "hero-card";
+        card.setAttribute("aria-label", "Select Hero Frame " + (index + 1));
+
+        const image = document.createElement("img");
+        image.src = "data:image/png;base64," + frame.image_b64;
+        image.alt = "Hero Frame option " + (index + 1);
+
+        const label = document.createElement("span");
+        label.className = "hero-card-label";
+        label.textContent = index === selectedHeroIndex
+          ? "Selected"
+          : "Option " + (index + 1);
+
+        card.appendChild(image);
+        card.appendChild(label);
+        card.addEventListener("click", () => {
+          selectedHeroIndex = index;
+          heroApproved.className = "proof-approved";
+          shotPack.className = "shot-pack";
+          approveHeroBtn.disabled = false;
+          downloadHeroBtn.disabled = false;
+          renderHeroFrames();
+        });
+        heroGrid.appendChild(card);
+      });
+    }
+
+    async function pollHeroFrameSet() {
+      if (!heroJobId || visualProofMode !== "hero") {
+        return;
+      }
+      try {
+        const res = await fetch("/api/hero-frame-set/" + heroJobId, {cache: "no-store"});
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(typeof data.detail === "string" ? data.detail : "Could not read Hero Frame Set status.");
+        }
+
+        proofReadiness.textContent = data.message || "Preparing Hero Frame Set...";
+        proofReadiness.className = "proof-readiness visible";
+        heroImages = Array.isArray(data.images) ? data.images : [];
+        renderHeroFrames();
+
+        if (data.state === "completed") {
+          heroModelReady = true;
+          heroStage.className = "hero-stage visible";
+          proofReadiness.textContent = "Choose the image that best represents your scene.";
+          proofReadiness.className = "proof-readiness visible ready";
+          proofGenerateBtn.hidden = true;
+          regenerateHeroBtn.disabled = false;
+          statusEl.textContent = "Hero Frame Set ready.";
+          statusEl.className = "status";
+          return;
+        }
+        if (data.state === "error") {
+          throw new Error(data.error || data.message || "Hero Frame Set failed.");
+        }
+
+        heroStage.className = heroImages.length ? "hero-stage visible" : "hero-stage";
+        heroPollTimer = setTimeout(pollHeroFrameSet, 3000);
+      } catch (err) {
+        proofGenerateBtn.hidden = false;
+        proofGenerateBtn.disabled = false;
+        proofReadiness.textContent = err.message;
+        proofReadiness.className = "proof-readiness visible";
+        statusEl.textContent = err.message;
+        statusEl.className = "status error";
+      }
+    }
+
+    async function generateHeroFrameSet(isRegenerate = false) {
+      if (!heroAvailable || !lastSourcePrompt || !lastFinalPrompt) {
+        return;
+      }
+
+      if (!heroModelReady) {
+        const confirmed = window.confirm(
+          heroFirstUseMessage + "\n\nThe model is downloaded once and remains on this computer. Continue?"
+        );
+        if (!confirmed) {
+          return;
+        }
+      }
+
+      if (isRegenerate) {
+        proofSeed = proofSeed > 2147483545 ? 45 : proofSeed + 3;
+      } else {
+        proofSeed = 42;
+      }
+      heroJobId = "";
+      heroImages = [];
+      selectedHeroIndex = -1;
+      heroGrid.innerHTML = "";
+      heroStage.className = "hero-stage";
+      heroApproved.className = "proof-approved";
+      shotPack.className = "shot-pack";
+      resetModelAdapter();
+      proofGenerateBtn.hidden = true;
+      proofReadiness.textContent = "Starting Hero Frame Set...";
+      proofReadiness.className = "proof-readiness visible";
+      regenerateHeroBtn.disabled = true;
+      approveHeroBtn.disabled = true;
+      downloadHeroBtn.disabled = true;
+
+      try {
+        const res = await fetch("/api/hero-frame-set", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            source_prompt: lastSourcePrompt,
+            final_prompt: lastFinalPrompt,
+            mode: activeMode,
+            aspect_ratio: aspectRatio.value,
+            base_seed: proofSeed
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          const detail = typeof data.detail === "string"
+            ? data.detail
+            : (data.detail && data.detail.message) || "Could not start Hero Frame Set.";
+          throw new Error(detail);
+        }
+        heroJobId = data.job_id;
+        proofReadiness.textContent = data.message || heroFirstUseMessage;
+        statusEl.textContent = "Hero Frame Set is being prepared.";
+        statusEl.className = "status";
+        pollHeroFrameSet();
+      } catch (err) {
+        proofGenerateBtn.hidden = false;
+        proofGenerateBtn.disabled = false;
+        proofReadiness.textContent = err.message;
+        statusEl.textContent = err.message;
+        statusEl.className = "status error";
+      }
+    }
+
     chips.forEach(chip => {
       chip.addEventListener("click", () => {
         chips.forEach(c => c.classList.remove("active"));
@@ -1335,8 +1755,9 @@
         runtimeBadge.textContent = "LOCAL AI · " + runtimeLabel;
         const llmRuntime = runtime.llm && runtime.llm.runtime ? runtime.llm.runtime : "Unknown";
         const imageRuntime = runtime.image && runtime.image.runtime ? runtime.image.runtime : "Unknown";
-        runtimeBadge.title = "Prompt Doctor: " + llmRuntime + " | Visual Proof Frame: " + imageRuntime;
-        developerRuntime.textContent = "Prompt Doctor: " + llmRuntime + " · Visual Proof Frame: " + imageRuntime;
+        const heroRuntime = data.hero_runtime || "FLUX.2 Klein 4B";
+        runtimeBadge.title = "Local Prompt Doctor and Visual Proof services";
+        developerRuntime.textContent = "Prompt Doctor: " + llmRuntime + " · Fast Proof: " + imageRuntime + " · Hero Frame Set: " + heroRuntime;
       } catch {
         modelStatus.textContent = "Model: unavailable";
         runtimeBadge.textContent = "LOCAL AI · RUNTIME UNAVAILABLE";
@@ -1494,9 +1915,21 @@
       statusEl.className = "status";
     });
 
-    proofGenerateBtn.addEventListener("click", () => generateProofFrame(false));
+    fastProofMode.addEventListener("click", () => setProofMode("fast"));
+
+    heroProofMode.addEventListener("click", () => setProofMode("hero"));
+
+    proofGenerateBtn.addEventListener("click", () => {
+      if (visualProofMode === "hero") {
+        generateHeroFrameSet(false);
+      } else {
+        generateProofFrame(false);
+      }
+    });
 
     regenerateProofBtn.addEventListener("click", () => generateProofFrame(true));
+
+    regenerateHeroBtn.addEventListener("click", () => generateHeroFrameSet(true));
 
     approveProofBtn.addEventListener("click", () => {
       if (proofImage.hidden || !proofImage.src) {
@@ -1505,6 +1938,32 @@
       proofApproved.className = "proof-approved visible";
       showModelAdapter();
       statusEl.textContent = "Scene approved.";
+      statusEl.className = "status";
+    });
+
+    approveHeroBtn.addEventListener("click", () => {
+      if (selectedHeroIndex < 0 || !heroImages[selectedHeroIndex]) {
+        return;
+      }
+      heroApproved.className = "proof-approved visible";
+      shotPack.className = "shot-pack visible";
+      showModelAdapter();
+      statusEl.textContent = "Hero Frame approved.";
+      statusEl.className = "status";
+    });
+
+    downloadHeroBtn.addEventListener("click", () => {
+      const frame = heroImages[selectedHeroIndex];
+      if (!frame || !frame.image_b64) {
+        return;
+      }
+      const link = document.createElement("a");
+      link.href = "data:image/png;base64," + frame.image_b64;
+      link.download = "mediaforge-hero-frame-" + (selectedHeroIndex + 1) + ".png";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      statusEl.textContent = "Hero Frame downloaded.";
       statusEl.className = "status";
     });
 
