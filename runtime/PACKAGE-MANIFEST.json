@@ -380,6 +380,11 @@
     "sha256": "a35e2754750e9033ceaadc521e0bfdc1e74c1b6d9bcbc884f57d867448f3663e"
   },
   {
+    "file": "solohost/requirements.txt",
+    "bytes": 57,
+    "sha256": "2a4322f83bd16f01cd2bf12d6547e450d4cb915e057156b8f7e30c9c49417b8a"
+  },
+  {
     "file": "start.ps1",
     "bytes": 1055,
     "sha256": "0fa3639f80199628167f792dfaaa3fda50fdbc68c564d22eba09396fb143663c"
