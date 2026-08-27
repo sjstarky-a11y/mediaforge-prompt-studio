@@ -1,6 +1,6 @@
 title: MediaForge Prompt Studio v0.3 Configurator
 
-eyebrow: Director's Cut AI Pro · Local Prompt Doctor
+eyebrow: Director's Cut AI Pro Â· Local Prompt Doctor
 
 description: >
   MediaForge Prompt Studio is the local AI workspace of Director's Cut AI Pro.
@@ -13,9 +13,9 @@ description: >
 
 output_file: .env
 
-after_save: Saved. Run docker compose up -d --build --force-recreate when ready.
+after_save: Saved. MediaForge Prompt Studio Core is ready to start through Pi SoloHost.
 
-footer_hint: Core uses Qwen 2.5 3B. Visual Proof is optional, local and CPU-limited to protect Pi Node stability.
+footer_hint: Core uses Qwen 2.5 3B. Optional Visual Proof is installed separately and provides its own CPU limit setting.
 
 fixed_values:
   - name: MEDIAFORGE_MODEL
@@ -29,10 +29,6 @@ fixed_values:
   - name: COMPOSE_PROFILES
     value: core
     env_comment: Core profile only. The optional Visual Proof add-on is installed separately.
-
-  - name: MEDIAFORGE_HERO_CPU_LIMIT
-    value: "8.0"
-    env_comment: Reserved CPU limit for the optional Visual Proof service.
 
 fields:
   - name: MEDIAFORGE_DEFAULT_LANGUAGE

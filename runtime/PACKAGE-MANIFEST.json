@@ -346,8 +346,8 @@
   },
   {
     "file": "solohost/config_options.core.yml",
-    "bytes": 1720,
-    "sha256": "d05a488ebd5e0df3bd73676f30e3206b0a67a21d2216ac56e0c14546fe2ed8eb"
+    "bytes": 1608,
+    "sha256": "a751649fdfce724feb20cdc15791a2988cdf9f684b7a20f36c6dff75e5407119"
   },
   {
     "file": "solohost/config_options.hero.yml",
