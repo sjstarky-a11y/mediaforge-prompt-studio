@@ -1,0 +1,49 @@
+title: MediaForge Prompt Studio v0.3 Configurator
+
+eyebrow: Director's Cut AI Pro · Local Prompt Doctor
+
+description: >
+  MediaForge Prompt Studio is the local AI workspace of Director's Cut AI Pro.
+  The validated Qwen 2.5 3B Prompt Doctor improves AI-video prompts, protects
+  creative intent and prepares model-ready scene direction on your own computer.
+
+  Optional Visual Proof uses FLUX.2 Klein 4B to create a three-image Hero Frame
+  Set. It is disabled by default and downloads approximately 12 GB only after
+  you explicitly enable it.
+
+output_file: .env
+
+after_save: Saved. Run docker compose up -d --build --force-recreate when ready.
+
+footer_hint: Core uses Qwen 2.5 3B. Visual Proof is optional, local and CPU-limited to protect Pi Node stability.
+
+fixed_values:
+  - name: MEDIAFORGE_MODEL
+    value: ai/qwen2.5:3B-Q4_K_M
+    env_comment: Validated fixed Prompt Doctor model for MediaForge SoloHost Core.
+
+  - name: MEDIAFORGE_DMR_API_KEY
+    value: docker-model-runner
+    env_comment: Placeholder bearer token for the local Docker Model Runner connection.
+
+  - name: COMPOSE_PROFILES
+    value: core
+    env_comment: Core profile only. The optional Visual Proof add-on is installed separately.
+
+  - name: MEDIAFORGE_HERO_CPU_LIMIT
+    value: "8.0"
+    env_comment: Reserved CPU limit for the optional Visual Proof service.
+
+fields:
+  - name: MEDIAFORGE_DEFAULT_LANGUAGE
+    label: Default output language
+    type: select
+    default: English
+    required: true
+    help: Choose English or Croatian as the default Prompt Doctor output language.
+    env_comment: Default generated output language.
+    options:
+      - value: English
+        label: English
+      - value: Croatian
+        label: Croatian

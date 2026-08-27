@@ -1,0 +1,49 @@
+title: MediaForge Prompt Studio v0.3 Hero Add-on
+
+eyebrow: Director's Cut AI Pro · Local Prompt Doctor
+
+description: >
+  This add-on enables MediaForge Visual Proof on this Pi SoloHost installation.
+  The validated Qwen 2.5 3B Prompt Doctor remains unchanged. FLUX.2 Klein 4B
+  runs as a separate local CPU service and generates three 512 x 512 Hero Frame
+  candidates after you approve a prompt.
+
+  The FLUX model downloads approximately 12 GB only when you request the first
+  Hero Frame Set. It remains local on this computer after that download.
+
+output_file: .env
+
+after_save: Saved. Visual Proof is enabled. Pi Desktop will start the local Hero service; the FLUX model downloads only when you generate the first Hero Frame Set.
+
+footer_hint: Visual Proof remains local and is limited to 8 CPU cores to protect Pi Node stability.
+
+fixed_values:
+  - name: MEDIAFORGE_MODEL
+    value: ai/qwen2.5:3B-Q4_K_M
+    env_comment: Validated fixed Prompt Doctor model for MediaForge SoloHost Core.
+
+  - name: MEDIAFORGE_DMR_API_KEY
+    value: docker-model-runner
+    env_comment: Placeholder bearer token for the local Docker Model Runner connection.
+
+  - name: COMPOSE_PROFILES
+    value: visual-proof
+    env_comment: Enables the separately installed local Visual Proof service.
+
+  - name: MEDIAFORGE_HERO_CPU_LIMIT
+    value: "8.0"
+    env_comment: Maximum CPU capacity available to the local Visual Proof service.
+
+fields:
+  - name: MEDIAFORGE_DEFAULT_LANGUAGE
+    label: Default output language
+    type: select
+    default: English
+    required: true
+    help: Choose English or Croatian as the default Prompt Doctor output language.
+    env_comment: Default generated output language.
+    options:
+      - value: English
+        label: English
+      - value: Croatian
+        label: Croatian

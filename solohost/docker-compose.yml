@@ -1,0 +1,75 @@
+services:
+  mediaforge-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sjstarky/mediaforge-prompt-studio:0.3-solohost.3
+
+    labels:
+      - pi.ui.primary=true
+
+    ports:
+      - "127.0.0.1:18888:8080"
+
+    environment:
+      - MEDIAFORGE_DMR_API_KEY=${MEDIAFORGE_DMR_API_KEY:-docker-model-runner}
+      - MEDIAFORGE_DEFAULT_LANGUAGE=${MEDIAFORGE_DEFAULT_LANGUAGE:-English}
+      - MEDIAFORGE_MAX_TOKENS=700
+      - MEDIAFORGE_TEMPERATURE=0.55
+      - MEDIAFORGE_SOLOHOST_MODE=true
+      - MEDIAFORGE_FAST_PROOF_ENABLED=false
+      - MEDIAFORGE_VISUAL_PROOF_ENABLED=${COMPOSE_PROFILES:-}
+      - MEDIAFORGE_HERO_API_URL=http://image-flux:8000/v1
+      - MEDIAFORGE_HERO_MODEL=black-forest-labs/FLUX.2-klein-4B
+      - MEDIAFORGE_HERO_BACKEND=FLUX.2 Klein 4B / CPU
+
+    models:
+      mediaforge-llm:
+        endpoint_var: MEDIAFORGE_DMR_URL
+        model_var: MEDIAFORGE_MODEL
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3)\" || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+    restart: unless-stopped
+
+  image-flux:
+    profiles: ["visual-proof"]
+    build:
+      context: ./image_flux
+      dockerfile: Dockerfile.cpu
+    image: sjstarky/mediaforge-image-flux:0.3-solohost.2
+    environment:
+      - MEDIAFORGE_HERO_MODEL=black-forest-labs/FLUX.2-klein-4B
+      - MEDIAFORGE_HERO_DEVICE=cpu
+      - HF_HOME=/models/huggingface
+    volumes:
+      - mediaforge-flux-models:/models/huggingface
+    cpus: "${MEDIAFORGE_HERO_CPU_LIMIT:-8.0}"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/v1/status', timeout=3)\" || exit 1"
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 20s
+    restart: unless-stopped
+
+models:
+  mediaforge-llm:
+    model: ${MEDIAFORGE_MODEL:-ai/qwen2.5:3B-Q4_K_M}
+    context_size: 4096
+
+volumes:
+  mediaforge-flux-models:

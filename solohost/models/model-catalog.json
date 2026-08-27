@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "default_model": "ai/qwen2.5:3B-Q4_K_M",
+  "models": [
+    {
+      "id": "ai/qwen2.5:3B-Q4_K_M",
+      "display_name": "Qwen 2.5 3B",
+      "family": "Qwen 2.5",
+      "parameters": "3B",
+      "recommended_vram_gb": 4,
+      "profile": "MediaForge SoloHost Core",
+      "validation": "validated",
+      "license": "Apache-2.0",
+      "prompt_mode": "standard"
+    }
+  ]
+}

@@ -1,0 +1,2229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MediaForge Prompt Studio</title>
+
+  <style>
+    :root {
+      --bg: #0b0b10;
+      --panel: #15141d;
+      --panel2: #1d1b27;
+      --text: #f6f1ff;
+      --muted: #aaa2bd;
+      --accent: #9d6cff;
+      --accent2: #5fe0c0;
+      --danger: #ff7474;
+      --border: rgba(255,255,255,0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(157,108,255,0.22), transparent 340px),
+        radial-gradient(circle at bottom right, rgba(95,224,192,0.12), transparent 360px),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .shell {
+      width: min(1220px, calc(100% - 24px));
+      margin: 0 auto;
+      padding: 14px 0 16px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #0b0b10;
+      display: grid;
+      place-items: center;
+      font-weight: 950;
+      letter-spacing: -0.06em;
+      box-shadow: 0 18px 44px rgba(157,108,255,0.22);
+      flex: 0 0 auto;
+      overflow: hidden;
+    }
+
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 21px;
+      line-height: 1.05;
+      letter-spacing: -0.045em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badge {
+      border: 1px solid var(--border);
+      color: var(--accent2);
+      background: rgba(95,224,192,0.07);
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(420px, 0.96fr) minmax(360px, 1.04fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025));
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: 0 22px 70px rgba(0,0,0,0.34);
+      overflow: hidden;
+    }
+
+    .card-inner {
+      padding: 18px;
+    }
+
+    .intro {
+      margin-bottom: 14px;
+    }
+
+    .intro h2 {
+      margin: 0 0 7px;
+      font-size: clamp(25px, 3.4vw, 40px);
+      line-height: 0.98;
+      letter-spacing: -0.065em;
+    }
+
+    .intro p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      max-width: 680px;
+    }
+
+    .form {
+      display: grid;
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 850;
+      color: #e7def7;
+      margin-bottom: 7px;
+    }
+
+    textarea, select {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.27);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 13px;
+      font: inherit;
+      outline: none;
+    }
+
+    select {
+      color-scheme: dark;
+    }
+
+    select option {
+      color: #f5f1ff;
+      background: #15141c;
+    }
+
+    select optgroup {
+      color: #d9d0ec;
+      background: #111017;
+      font-style: normal;
+      font-weight: 800;
+    }
+
+    select option:disabled {
+      color: #aaa3b8;
+      background: #1b1922;
+    }
+
+    textarea {
+      min-height: 118px;
+      max-height: 190px;
+      resize: vertical;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    textarea:focus,
+    select:focus {
+      border-color: rgba(157,108,255,0.84);
+      box-shadow: 0 0 0 4px rgba(157,108,255,0.12);
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .chip {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.045);
+      color: var(--muted);
+      border-radius: 13px;
+      padding: 9px 8px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 850;
+      font-size: 12px;
+      user-select: none;
+    }
+
+    .chip.active {
+      color: #08080d;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-color: transparent;
+    }
+
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 150px;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .model-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(180px, 0.72fr);
+      gap: 10px;
+      align-items: end;
+    }
+
+    .engine-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .engine-status {
+      color: var(--accent2);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .engine-status::before {
+      content: "●";
+      margin-right: 7px;
+      font-size: 9px;
+    }
+
+    .developer-toggle {
+      padding: 8px 11px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: rgba(255,255,255,0.035);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .developer-toggle[aria-expanded="true"] {
+      border-color: rgba(157,108,255,0.55);
+      color: var(--text);
+      background: rgba(157,108,255,0.10);
+    }
+
+    .developer-panel {
+      padding: 12px;
+      border: 1px solid rgba(157,108,255,0.28);
+      border-radius: 16px;
+      background: rgba(157,108,255,0.055);
+    }
+
+    .developer-title {
+      margin-bottom: 10px;
+      color: #e7def7;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .developer-runtime {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .model-help {
+      min-height: 45px;
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.025);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 900;
+      border-radius: 14px;
+      padding: 13px 15px;
+    }
+
+    .primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #08080d;
+      box-shadow: 0 18px 45px rgba(157,108,255,0.22);
+      width: 100%;
+    }
+
+    .secondary {
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 11px 14px;
+    }
+
+    .result-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 9px;
+    }
+
+    .result-head label {
+      margin: 0;
+    }
+
+    .result {
+      white-space: pre-wrap;
+      line-height: 1.5;
+      color: #f7f2ff;
+      min-height: 330px;
+      max-height: 56vh;
+      overflow: auto;
+      background: rgba(0,0,0,0.24);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 15px;
+      overflow-wrap: anywhere;
+      font-size: 14px;
+    }
+
+    .result.empty {
+      color: var(--muted);
+      min-height: 300px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      font-size: 12px;
+      color: var(--muted);
+      min-height: 18px;
+      overflow-wrap: anywhere;
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .fidelity-status {
+      display: none;
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.035);
+    }
+
+    .fidelity-status.visible {
+      display: block;
+    }
+
+    .fidelity-status.protected {
+      border-color: rgba(95,224,192,0.28);
+      background: rgba(95,224,192,0.07);
+    }
+
+    .fidelity-status.review {
+      border-color: rgba(255,205,92,0.30);
+      background: rgba(255,205,92,0.07);
+    }
+
+    .fidelity-status.conflict {
+      border-color: rgba(255,116,116,0.30);
+      background: rgba(255,116,116,0.07);
+    }
+
+    .fidelity-title {
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+    }
+
+    .fidelity-status.protected .fidelity-title {
+      color: var(--accent2);
+    }
+
+    .fidelity-status.review .fidelity-title {
+      color: #ffd36f;
+    }
+
+    .fidelity-status.conflict .fidelity-title {
+      color: var(--danger);
+    }
+
+    .fidelity-copy {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .fidelity-approve {
+      margin-top: 9px;
+      padding: 7px 10px;
+      font-size: 11px;
+    }
+
+
+    .proof-panel {
+      display: none;
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 13px;
+      background: rgba(0,0,0,0.20);
+    }
+
+    .proof-panel.visible {
+      display: block;
+    }
+
+    .proof-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .proof-title {
+      font-size: 12px;
+      font-weight: 900;
+      color: #e7def7;
+      letter-spacing: 0.02em;
+    }
+
+    .proof-meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .proof-generate {
+      width: 100%;
+      background: rgba(157,108,255,0.13);
+      color: #f6f1ff;
+      border: 1px solid rgba(157,108,255,0.34);
+    }
+
+    .proof-generate:hover {
+      background: rgba(157,108,255,0.20);
+    }
+
+    .proof-readiness {
+      display: none;
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.45;
+    }
+
+    .proof-readiness.visible {
+      display: block;
+    }
+
+    .proof-readiness.ready {
+      color: var(--accent2);
+    }
+
+    .proof-mode-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 9px;
+      margin-bottom: 11px;
+    }
+
+    .proof-mode {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.035);
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .proof-mode.selected {
+      border-color: rgba(157,108,255,0.65);
+      background: rgba(157,108,255,0.11);
+      box-shadow: 0 0 0 1px rgba(157,108,255,0.18) inset;
+    }
+
+    .proof-mode-mark {
+      color: var(--accent2);
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .proof-mode-title {
+      display: block;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .proof-mode-copy {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .proof-stage {
+      display: none;
+      margin-top: 12px;
+    }
+
+    .proof-stage.visible {
+      display: block;
+    }
+
+    .proof-image-wrap {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.30);
+      min-height: 180px;
+      display: grid;
+      place-items: center;
+    }
+
+    .proof-image {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .proof-loading {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 34px 12px;
+      text-align: center;
+    }
+
+    .proof-caption {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.4;
+    }
+
+    .proof-actions {
+      display: flex;
+      gap: 9px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .proof-actions button {
+      flex: 1 1 150px;
+    }
+
+    .approve {
+      background: rgba(95,224,192,0.12);
+      color: var(--accent2);
+      border: 1px solid rgba(95,224,192,0.30);
+    }
+
+    .regenerate {
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .proof-approved {
+      display: none;
+      margin-top: 9px;
+      color: var(--accent2);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .proof-approved.visible {
+      display: block;
+    }
+
+    .hero-local-progress {
+      display: none;
+      align-items: center;
+      gap: 13px;
+      margin-top: 16px;
+      padding: 13px 14px;
+      border: 1px solid rgba(157,108,255,0.38);
+      border-radius: 16px;
+      background: linear-gradient(110deg, rgba(157,108,255,0.12), rgba(95,224,192,0.06));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .hero-local-progress.visible {
+      display: flex;
+    }
+
+    .hero-progress-ring {
+      --hero-progress: 0deg;
+      position: relative;
+      flex: 0 0 auto;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent2) var(--hero-progress), rgba(255,255,255,0.10) 0);
+    }
+
+    .hero-progress-ring::after {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border-radius: inherit;
+      background: #11121a;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+    }
+
+    .hero-progress-ring.loading {
+      background: conic-gradient(var(--accent2), var(--accent) 45%, rgba(255,255,255,0.10) 46%);
+      animation: hero-spin 1.1s linear infinite;
+    }
+
+    .hero-progress-ring span {
+      position: absolute;
+      z-index: 1;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--accent2);
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .hero-local-progress-copy {
+      min-width: 0;
+    }
+
+    .hero-local-progress-copy strong,
+    .hero-local-progress-copy span {
+      display: block;
+    }
+
+    .hero-local-progress-copy strong {
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .hero-local-progress-copy span {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.4;
+    }
+
+    @keyframes hero-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .hero-stage {
+      display: none;
+      margin-top: 12px;
+    }
+
+    .hero-stage.visible {
+      display: block;
+    }
+
+    .hero-intro {
+      margin-bottom: 10px;
+    }
+
+    .hero-intro strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .hero-intro span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11.5px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .hero-card {
+      position: relative;
+      padding: 0;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      background: rgba(0,0,0,0.28);
+      cursor: pointer;
+      min-height: 135px;
+    }
+
+    .hero-card.selected {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 2px rgba(95,224,192,0.16);
+    }
+
+    .hero-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .hero-card-label {
+      position: absolute;
+      left: 7px;
+      bottom: 7px;
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: rgba(7,8,13,0.84);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .shot-pack {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.45;
+    }
+
+    .shot-pack.visible {
+      display: block;
+    }
+
+    .shot-pack button {
+      width: 100%;
+      margin-bottom: 7px;
+    }
+
+    @media (max-width: 720px) {
+      .proof-mode-grid,
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .adapter-panel {
+      display: none;
+      margin-top: 12px;
+      border: 1px solid rgba(157,108,255,0.28);
+      border-radius: 18px;
+      padding: 13px;
+      background: rgba(157,108,255,0.055);
+    }
+
+    .adapter-panel.visible {
+      display: block;
+    }
+
+    .adapter-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .adapter-title {
+      font-size: 12px;
+      font-weight: 900;
+      color: #e7def7;
+      letter-spacing: 0.02em;
+    }
+
+    .adapter-status {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .adapter-controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 9px;
+      align-items: end;
+    }
+
+    .adapter-controls button {
+      white-space: nowrap;
+    }
+
+    .adapter-output {
+      display: none;
+      margin-top: 10px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(0,0,0,0.24);
+      color: #f7f2ff;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .adapter-output.visible {
+      display: block;
+    }
+
+    .adapter-ready {
+      display: none;
+      margin-top: 9px;
+      color: var(--accent2);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .adapter-ready.visible {
+      display: block;
+    }
+
+    .adapter-summary {
+      display: none;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .adapter-summary.visible {
+      display: block;
+    }
+
+    .adapter-copy {
+      display: none;
+      margin-top: 9px;
+    }
+
+    .adapter-copy.visible {
+      display: inline-flex;
+    }
+
+    .footer {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .shell {
+        width: min(100% - 16px, 760px);
+        padding: 10px 0 12px;
+      }
+
+      .badge {
+        display: none;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .card-inner {
+        padding: 14px;
+      }
+
+      .intro {
+        margin-bottom: 11px;
+      }
+
+      .intro h2 {
+        font-size: 24px;
+        line-height: 1.03;
+      }
+
+      .intro p {
+        font-size: 13px;
+      }
+
+      textarea {
+        min-height: 96px;
+        max-height: 150px;
+      }
+
+      .mode-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+      }
+
+      .chip {
+        padding: 8px 5px;
+        font-size: 10.5px;
+      }
+
+      .bottom-row {
+        grid-template-columns: 1fr 1fr 140px;
+        gap: 8px;
+      }
+
+      select {
+        padding: 11px;
+        font-size: 13px;
+      }
+
+      .primary {
+        padding: 12px;
+      }
+
+      .result {
+        min-height: 180px;
+        max-height: 300px;
+      }
+
+      .result.empty {
+        min-height: 150px;
+      }
+
+      .adapter-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .adapter-controls button {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .brand h1 {
+        font-size: 17px;
+      }
+
+      .brand p {
+        display: none;
+      }
+
+      .logo {
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+      }
+
+      .intro h2 {
+        font-size: 21px;
+      }
+
+      .mode-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .bottom-row {
+        grid-template-columns: 1fr;
+      }
+
+      .model-row {
+        grid-template-columns: 1fr;
+      }
+
+      .result {
+        min-height: 160px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo"><img src="/assets/mediaforge-logo.png" alt="MediaForge logo"></div>
+        <div>
+          <h1>MediaForge Prompt Studio</h1>
+          <p>Local AI prompt tool for cinematic video creation</p>
+        </div>
+      </div>
+      <div class="badge" id="runtimeBadge">LOCAL AI · RUNTIME DETECTION PENDING</div>
+    </header>
+
+    <section class="workspace">
+      <section class="card">
+        <div class="card-inner">
+          <div class="intro">
+            <h2>Build stronger AI video prompts.</h2>
+            <p>Turn rough ideas into cinematic prompts with camera direction, lighting, movement, framing and negative constraints.</p>
+          </div>
+
+          <form class="form" id="generateForm">
+            <div>
+              <label for="userInput">Your rough idea or weak prompt</label>
+              <textarea id="userInput" placeholder="Example: a lonely man entering an old cinema"></textarea>
+            </div>
+
+            <div>
+              <label>Mode</label>
+              <div class="mode-grid" id="modeGrid">
+                <div class="chip active" data-mode="improve">Improve</div>
+                <div class="chip" data-mode="diagnose">Diagnose</div>
+                <div class="chip" data-mode="cinematic">Cinematic</div>
+                <div class="chip" data-mode="commercial">Ad</div>
+                <div class="chip" data-mode="shotlist">Shots</div>
+              </div>
+            </div>
+
+            <div class="engine-row">
+              <div class="engine-status" id="engineStatus">Detecting local AI engine...</div>
+              <button class="developer-toggle" type="button" id="developerToggle" aria-expanded="false" aria-controls="developerPanel">Developer</button>
+            </div>
+
+            <div class="developer-panel" id="developerPanel" hidden>
+              <div class="developer-title">Developer settings</div>
+              <div class="model-row">
+                <div>
+                  <label for="llmModel">Installed Prompt Doctor model</label>
+                  <select id="llmModel" disabled>
+                    <option value="">Loading local models...</option>
+                  </select>
+                </div>
+                <div class="model-help" id="modelHelp">Detecting locally installed Docker Model Runner models.</div>
+              </div>
+              <div class="developer-runtime" id="developerRuntime">Runtime details are loading...</div>
+            </div>
+
+            <div class="bottom-row">
+              <div>
+                <label for="aspectRatio">Format</label>
+                <select id="aspectRatio">
+                  <option value="16:9">16:9 horizontal</option>
+                  <option value="9:16">9:16 vertical</option>
+                  <option value="1:1">1:1 square</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="language">Language</label>
+                <select id="language">
+                  <option value="English">English</option>
+                  <option value="Croatian">Croatian</option>
+                </select>
+              </div>
+
+              <div>
+                <label>&nbsp;</label>
+                <button class="primary" type="submit">Generate</button>
+              </div>
+            </div>
+
+            <div class="status" id="status">Ready.</div>
+            <div class="hero-local-progress" id="heroLocalProgress" aria-live="polite">
+              <div class="hero-progress-ring loading" id="heroProgressRing" aria-hidden="true">
+                <span id="heroProgressNumber">…</span>
+              </div>
+              <div class="hero-local-progress-copy">
+                <strong id="heroProgressTitle">Preparing Hero Frame Set</strong>
+                <span id="heroProgressCopy">Preparing the optional local image model.</span>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-inner">
+          <div class="result-head">
+            <label>Result</label>
+            <div class="status" id="modelStatus" hidden>Model: loading...</div>
+          </div>
+
+          <div class="result empty" id="result">Your improved prompt will appear here.</div>
+
+          <div class="fidelity-status" id="fidelityStatus" aria-live="polite">
+            <div class="fidelity-title" id="fidelityTitle"></div>
+            <div class="fidelity-copy" id="fidelityCopy"></div>
+            <button class="secondary fidelity-approve" type="button" id="approveReviewBtn" hidden>
+              Approve this addition
+            </button>
+          </div>
+
+          <div class="proof-panel" id="proofPanel">
+            <div class="proof-head">
+              <div class="proof-title">Optional Visual Proof</div>
+              <div class="proof-meta" id="proofMeta">Hero Frame Set · 3 × 512×512</div>
+            </div>
+
+            <div class="proof-mode-grid" role="radiogroup" aria-label="Visual Proof mode">
+              <button class="proof-mode selected" type="button" id="heroProofMode" role="radio" aria-checked="true">
+                <span class="proof-mode-mark">●</span>
+                <span>
+                  <span class="proof-mode-title">Hero Frame Set · optional</span>
+                  <span class="proof-mode-copy">Optional local add-on for three frame options before AI video.</span>
+                </span>
+              </button>
+            </div>
+
+            <button class="proof-generate" type="button" id="proofGenerateBtn">Generate Proof Frame</button>
+            <div class="proof-readiness" id="proofReadiness" aria-live="polite"></div>
+
+            <div class="proof-stage" id="proofStage">
+              <div class="proof-image-wrap" id="proofImageWrap">
+                <div class="proof-loading" id="proofLoading">Preparing proof frame...</div>
+                <img class="proof-image" id="proofImage" alt="Generated visual proof frame" hidden>
+              </div>
+
+              <div class="proof-caption" id="proofCaption"></div>
+
+              <div class="proof-actions">
+                <button class="approve" type="button" id="approveProofBtn">✓ Approve scene</button>
+                <button class="regenerate" type="button" id="regenerateProofBtn">↻ Regenerate</button>
+              </div>
+
+              <div class="proof-approved" id="proofApproved">✓ Scene approved</div>
+            </div>
+
+            <div class="hero-stage" id="heroStage">
+              <div class="hero-intro" id="heroIntro">
+                <strong>Choose your Hero Frame</strong>
+                <span>Select the image that best represents your scene.</span>
+              </div>
+              <div class="hero-grid" id="heroGrid"></div>
+              <div class="proof-actions">
+                <button class="approve" type="button" id="approveHeroBtn" disabled>✓ Approve Hero Frame</button>
+                <button class="secondary" type="button" id="downloadHeroBtn" disabled>Download selected frame</button>
+                <button class="regenerate" type="button" id="regenerateHeroBtn">↻ Generate another set</button>
+                <button class="secondary" type="button" id="cancelHeroBtn" hidden>Stop after current frame</button>
+              </div>
+              <div class="proof-approved" id="heroApproved">✓ HERO FRAME APPROVED</div>
+              <div class="shot-pack" id="shotPack">
+                <button class="secondary" type="button" disabled>Create Shot Pack · planned</button>
+                Generate establishing, action and detail shots from this Hero Frame.
+              </div>
+            </div>
+          </div>
+
+          <div class="adapter-panel" id="adapterPanel">
+            <div class="adapter-head">
+              <div class="adapter-title">Model Adapter</div>
+              <div class="adapter-status" id="adapterStatus">Choose target model</div>
+            </div>
+
+            <div class="adapter-controls">
+              <div>
+                <label for="adapterProfile">Target Model</label>
+                <select id="adapterProfile">
+                  <option value="generic_video">Generic Video</option>
+                  <option value="runway_gen4_5">Runway Gen-4.5</option>
+                  <option value="veo_3_1">Veo 3.1</option>
+                  <option value="kling_video_3_0">Kling VIDEO 3.0</option>
+                </select>
+              </div>
+
+              <button class="primary" type="button" id="adaptModelBtn">Adapt for Model</button>
+            </div>
+
+            <div class="adapter-ready" id="adapterReady">✓ MODEL READY</div>
+            <div class="adapter-summary" id="adapterSummary"></div>
+            <div class="adapter-output" id="adapterOutput"></div>
+            <button class="secondary adapter-copy" type="button" id="copyAdapterBtn">Copy Model Prompt</button>
+          </div>
+
+          <div class="actions">
+            <div class="button-group">
+              <button class="secondary" type="button" id="copyBtn">Copy</button>
+              <button class="secondary" type="button" id="clearBtn">Clear</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <div class="footer">
+      Runs locally through Pi SoloHost. Your creative work stays on your computer.
+    </div>
+  </main>
+
+  <script>
+    const modeGrid = document.getElementById("modeGrid");
+    const chips = Array.from(modeGrid.querySelectorAll(".chip"));
+    const form = document.getElementById("generateForm");
+    const input = document.getElementById("userInput");
+    const aspectRatio = document.getElementById("aspectRatio");
+    const language = document.getElementById("language");
+    const llmModel = document.getElementById("llmModel");
+    const modelHelp = document.getElementById("modelHelp");
+    const engineStatus = document.getElementById("engineStatus");
+    const developerToggle = document.getElementById("developerToggle");
+    const developerPanel = document.getElementById("developerPanel");
+    const developerRuntime = document.getElementById("developerRuntime");
+    const result = document.getElementById("result");
+    const statusEl = document.getElementById("status");
+    const modelStatus = document.getElementById("modelStatus");
+    const runtimeBadge = document.getElementById("runtimeBadge");
+    const copyBtn = document.getElementById("copyBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const fidelityStatus = document.getElementById("fidelityStatus");
+    const fidelityTitle = document.getElementById("fidelityTitle");
+    const fidelityCopy = document.getElementById("fidelityCopy");
+    const approveReviewBtn = document.getElementById("approveReviewBtn");
+    const proofPanel = document.getElementById("proofPanel");
+    const heroProofMode = document.getElementById("heroProofMode");
+    const proofGenerateBtn = document.getElementById("proofGenerateBtn");
+    const proofReadiness = document.getElementById("proofReadiness");
+    const proofStage = document.getElementById("proofStage");
+    const proofLoading = document.getElementById("proofLoading");
+    const proofImage = document.getElementById("proofImage");
+    const proofCaption = document.getElementById("proofCaption");
+    const proofMeta = document.getElementById("proofMeta");
+    const approveProofBtn = document.getElementById("approveProofBtn");
+    const regenerateProofBtn = document.getElementById("regenerateProofBtn");
+    const proofApproved = document.getElementById("proofApproved");
+    const heroStage = document.getElementById("heroStage");
+    const heroGrid = document.getElementById("heroGrid");
+    const approveHeroBtn = document.getElementById("approveHeroBtn");
+    const downloadHeroBtn = document.getElementById("downloadHeroBtn");
+    const regenerateHeroBtn = document.getElementById("regenerateHeroBtn");
+    const cancelHeroBtn = document.getElementById("cancelHeroBtn");
+    const heroApproved = document.getElementById("heroApproved");
+    const shotPack = document.getElementById("shotPack");
+    const heroLocalProgress = document.getElementById("heroLocalProgress");
+    const heroProgressRing = document.getElementById("heroProgressRing");
+    const heroProgressNumber = document.getElementById("heroProgressNumber");
+    const heroProgressTitle = document.getElementById("heroProgressTitle");
+    const heroProgressCopy = document.getElementById("heroProgressCopy");
+    const adapterPanel = document.getElementById("adapterPanel");
+    const adapterProfile = document.getElementById("adapterProfile");
+    const adaptModelBtn = document.getElementById("adaptModelBtn");
+    const adapterStatus = document.getElementById("adapterStatus");
+    const adapterReady = document.getElementById("adapterReady");
+    const adapterSummary = document.getElementById("adapterSummary");
+    const adapterOutput = document.getElementById("adapterOutput");
+    const copyAdapterBtn = document.getElementById("copyAdapterBtn");
+
+    let activeMode = "improve";
+    let lastSourcePrompt = "";
+    let lastFinalPrompt = "";
+    let lastFidelityStatus = "";
+    let userApprovedAddition = false;
+    let proofSeed = 42;
+    let modelMetadata = new Map();
+    let imageReady = false;
+    let imageReadinessTimer = null;
+    let visualProofMode = "hero";
+    let heroAvailable = false;
+    let heroModelReady = false;
+    let heroJobId = "";
+    let heroPollTimer = null;
+    let heroImages = [];
+    let selectedHeroIndex = -1;
+
+    const imagePreparingMessage =
+      "Visual Proof model is being prepared. The first download is several gigabytes and may take some time. Prompt Doctor remains available.";
+    const heroFirstUseMessage =
+      "Hero Frame Set uses an optional local model. First use downloads approximately 12 GB. Keep at least 15 GB free; 20 GB is recommended.";
+
+    function hideHeroLocalProgress() {
+      heroLocalProgress.className = "hero-local-progress";
+    }
+
+    function showHeroLocalProgress(job) {
+      const progress = Math.max(0, Math.min(3, Number(job?.progress) || 0));
+      const isLoading = job?.state === "loading" || job?.state === "queued";
+      const nextFrame = Math.min(3, progress + 1);
+      heroLocalProgress.className = "hero-local-progress visible";
+      heroProgressRing.className = isLoading ? "hero-progress-ring loading" : "hero-progress-ring";
+      heroProgressRing.style.setProperty("--hero-progress", (progress / 3 * 360) + "deg");
+      heroProgressNumber.textContent = isLoading ? "…" : (progress + "/3");
+      heroProgressTitle.textContent = isLoading
+        ? "Preparing Hero Frame Set"
+        : "Creating Hero Frame " + nextFrame + " of 3";
+      heroProgressCopy.textContent = job?.message || (isLoading
+        ? "Preparing the optional local image model."
+        : "Each frame is generated locally, one at a time.");
+    }
+
+    function hideFidelity() {
+      fidelityStatus.className = "fidelity-status";
+      fidelityTitle.textContent = "";
+      fidelityCopy.textContent = "";
+      approveReviewBtn.hidden = true;
+    }
+
+    function showFidelity(fidelity) {
+      hideFidelity();
+
+      if (!fidelity || !fidelity.status) {
+        return;
+      }
+
+      const issues = Array.isArray(fidelity.issues) ? fidelity.issues : [];
+
+      if (fidelity.status === "INTENT PROTECTED") {
+        fidelityStatus.className = "fidelity-status visible protected";
+        fidelityTitle.textContent = "🛡 INTENT PROTECTED";
+        fidelityCopy.textContent = "Original creative direction preserved.";
+        return;
+      }
+
+      if (fidelity.status === "REVIEW") {
+        fidelityStatus.className = "fidelity-status visible review";
+        fidelityTitle.textContent = "⚠ REVIEW";
+        fidelityCopy.textContent = issues[0] || "A locked creative detail may have changed.";
+        approveReviewBtn.hidden = false;
+        return;
+      }
+
+      if (fidelity.status === "CONFLICT") {
+        fidelityStatus.className = "fidelity-status visible conflict";
+        fidelityTitle.textContent = "⚠ CLARIFICATION RECOMMENDED";
+        fidelityCopy.textContent = issues[0] || "The source prompt contains conflicting instructions.";
+      }
+    }
+
+
+    function resetModelAdapter() {
+      adapterPanel.className = "adapter-panel";
+      adapterStatus.textContent = "Choose target model";
+      adapterReady.className = "adapter-ready";
+      adapterReady.textContent = "✓ MODEL READY";
+      adapterSummary.className = "adapter-summary";
+      adapterSummary.textContent = "";
+      adapterOutput.className = "adapter-output";
+      adapterOutput.textContent = "";
+      copyAdapterBtn.className = "secondary adapter-copy";
+      adaptModelBtn.disabled = false;
+      adaptModelBtn.textContent = "Adapt for Model";
+    }
+
+    function showModelAdapter() {
+      adapterPanel.className = "adapter-panel visible";
+      adapterStatus.textContent = "Scene approved · ready to adapt";
+    }
+
+    async function adaptForModel() {
+      if (!lastSourcePrompt || !lastFinalPrompt || lastFidelityStatus !== "INTENT PROTECTED") {
+        return;
+      }
+
+      adaptModelBtn.disabled = true;
+      adaptModelBtn.textContent = "Adapting...";
+      adapterStatus.textContent = "Preparing model-ready prompt...";
+      adapterReady.className = "adapter-ready";
+      adapterSummary.className = "adapter-summary";
+      adapterSummary.textContent = "";
+      adapterOutput.className = "adapter-output";
+      copyAdapterBtn.className = "secondary adapter-copy";
+
+      try {
+        const res = await fetch("/api/model-adapter", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            source_prompt: lastSourcePrompt,
+            approved_prompt: lastFinalPrompt,
+            mode: activeMode,
+            aspect_ratio: aspectRatio.value,
+            profile: adapterProfile.value
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          const detail =
+            typeof data.detail === "string"
+              ? data.detail
+              : (data.detail && data.detail.message) || "Model adaptation failed.";
+          throw new Error(detail);
+        }
+
+        adapterStatus.textContent = data.profile || "Model ready";
+        adapterReady.textContent = data.changed
+          ? "✓ MODEL-ADAPTED PROMPT"
+          : "✓ COMPATIBLE AS-IS";
+        adapterReady.className = "adapter-ready visible";
+        adapterSummary.textContent = Array.isArray(data.adaptation_notes)
+          ? data.adaptation_notes.join(" ")
+          : "";
+        adapterSummary.className = adapterSummary.textContent
+          ? "adapter-summary visible"
+          : "adapter-summary";
+        adapterOutput.textContent = data.prompt || "";
+        adapterOutput.className = "adapter-output visible";
+        copyAdapterBtn.className = "secondary adapter-copy visible";
+        statusEl.textContent = "Model-ready prompt created.";
+        statusEl.className = "status";
+      } catch (err) {
+        adapterStatus.textContent = "Adapter failed";
+        adapterSummary.className = "adapter-summary";
+        adapterSummary.textContent = "";
+        adapterOutput.textContent = err.message;
+        adapterOutput.className = "adapter-output visible";
+        statusEl.textContent = err.message;
+        statusEl.className = "status error";
+      } finally {
+        adaptModelBtn.disabled = false;
+        adaptModelBtn.textContent = "Adapt for Model";
+      }
+    }
+
+    function resetProofFrame() {
+      if (imageReadinessTimer) {
+        clearTimeout(imageReadinessTimer);
+        imageReadinessTimer = null;
+      }
+      if (heroPollTimer) {
+        clearTimeout(heroPollTimer);
+        heroPollTimer = null;
+      }
+      imageReady = false;
+      heroAvailable = false;
+      heroModelReady = false;
+      heroJobId = "";
+      heroImages = [];
+      selectedHeroIndex = -1;
+      visualProofMode = "hero";
+      proofPanel.className = "proof-panel";
+      proofStage.className = "proof-stage";
+      heroStage.className = "hero-stage";
+      heroGrid.innerHTML = "";
+      proofGenerateBtn.hidden = false;
+      proofGenerateBtn.disabled = false;
+      proofGenerateBtn.textContent = "Generate Hero Frame Set";
+      proofReadiness.className = "proof-readiness";
+      proofReadiness.textContent = "";
+      proofImage.hidden = true;
+      proofImage.removeAttribute("src");
+      proofLoading.hidden = false;
+      proofLoading.textContent = "Preparing proof frame...";
+      proofCaption.textContent = "";
+      proofMeta.textContent = "Hero Frame Set · 3 × 512×512";
+      proofApproved.className = "proof-approved";
+      heroApproved.className = "proof-approved";
+      shotPack.className = "shot-pack";
+      approveHeroBtn.disabled = true;
+      downloadHeroBtn.disabled = true;
+      cancelHeroBtn.hidden = true;
+      cancelHeroBtn.disabled = false;
+      hideHeroLocalProgress();
+      heroProofMode.className = "proof-mode selected";
+      heroProofMode.setAttribute("aria-checked", "true");
+      heroProofMode.querySelector(".proof-mode-mark").textContent = "●";
+      resetModelAdapter();
+    }
+
+    function scheduleImageReadinessCheck() {
+      if (imageReadinessTimer) {
+        clearTimeout(imageReadinessTimer);
+      }
+      imageReadinessTimer = setTimeout(refreshImageReadiness, 5000);
+    }
+
+    function showImageReadiness(ready, message) {
+      imageReady = ready;
+      proofGenerateBtn.disabled = !ready;
+      proofGenerateBtn.textContent = ready
+        ? "Generate Proof Frame"
+        : "Preparing Visual Proof model...";
+      proofReadiness.textContent = message || (ready
+        ? "Visual Proof model is ready."
+        : imagePreparingMessage);
+      proofReadiness.className = ready
+        ? "proof-readiness visible ready"
+        : "proof-readiness visible";
+    }
+
+    async function refreshImageReadiness() {
+      if (!proofPanel.classList.contains("visible") || visualProofMode !== "fast") {
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/image-status", {cache: "no-store"});
+        const data = await res.json();
+        const ready = res.ok && data.ready === true;
+        showImageReadiness(ready, data.message);
+        if (!ready) {
+          scheduleImageReadinessCheck();
+        }
+      } catch {
+        showImageReadiness(false, imagePreparingMessage);
+        scheduleImageReadinessCheck();
+      }
+    }
+
+    function setProofMode() {
+      visualProofMode = "hero";
+      proofGenerateBtn.hidden = false;
+      heroProofMode.className = "proof-mode selected";
+      heroProofMode.setAttribute("aria-checked", "true");
+      heroProofMode.querySelector(".proof-mode-mark").textContent = "●";
+      proofStage.className = "proof-stage";
+      heroStage.className = "hero-stage";
+      proofApproved.className = "proof-approved";
+      heroApproved.className = "proof-approved";
+      shotPack.className = "shot-pack";
+      hideHeroLocalProgress();
+      resetModelAdapter();
+
+      if (imageReadinessTimer) {
+        clearTimeout(imageReadinessTimer);
+        imageReadinessTimer = null;
+      }
+      proofMeta.textContent = "Hero Frame Set · 3 × 512×512";
+      proofGenerateBtn.textContent = "Generate Hero Frame Set";
+      proofGenerateBtn.disabled = true;
+      proofReadiness.textContent = "Checking Hero Frame Set...";
+      proofReadiness.className = "proof-readiness visible";
+      refreshHeroReadiness();
+    }
+
+    async function refreshHeroReadiness() {
+      if (!proofPanel.classList.contains("visible") || visualProofMode !== "hero") {
+        return;
+      }
+      try {
+        const res = await fetch("/api/hero-status", {cache: "no-store"});
+        const data = await res.json();
+        heroAvailable = res.ok && data.available === true;
+        heroModelReady = data.ready === true;
+        if (data.active_job && !heroJobId) {
+          resumeHeroFrameSet(data.active_job);
+          return;
+        }
+        proofGenerateBtn.disabled = !heroAvailable;
+        proofGenerateBtn.textContent = "Generate Hero Frame Set";
+        proofReadiness.textContent = data.ready
+          ? "Hero Frame model is ready. Three images are generated sequentially."
+          : (data.message || heroFirstUseMessage);
+        proofReadiness.className = data.ready
+          ? "proof-readiness visible ready"
+          : "proof-readiness visible";
+      } catch {
+        heroAvailable = false;
+        heroModelReady = false;
+        proofGenerateBtn.disabled = true;
+        proofReadiness.textContent = "Optional Visual Proof is unavailable. Prompt Doctor remains fully available.";
+        proofReadiness.className = "proof-readiness visible";
+      }
+    }
+
+    async function restoreActiveHeroFrameSet() {
+      try {
+        const res = await fetch("/api/hero-status", {cache: "no-store"});
+        const data = await res.json();
+        if (!res.ok || !data.active_job) {
+          return;
+        }
+        proofPanel.className = "proof-panel visible";
+        setProofMode();
+      } catch {
+        // A missing optional Hero service must not affect Prompt Doctor startup.
+      }
+    }
+
+    function updateProofAvailability() {
+      const supportedMode = ["improve", "cinematic", "commercial"].includes(activeMode);
+      const canGenerate =
+        supportedMode &&
+        lastFidelityStatus === "INTENT PROTECTED" &&
+        lastSourcePrompt &&
+        lastFinalPrompt;
+
+      if (canGenerate) {
+        proofPanel.className = "proof-panel visible";
+        setProofMode();
+      } else {
+        resetProofFrame();
+      }
+    }
+
+    async function generateProofFrame(isRegenerate = false) {
+      if (!lastSourcePrompt || !lastFinalPrompt || lastFidelityStatus !== "INTENT PROTECTED") {
+        return;
+      }
+
+      if (!imageReady) {
+        showImageReadiness(false, imagePreparingMessage);
+        refreshImageReadiness();
+        return;
+      }
+
+      if (isRegenerate) {
+        proofSeed = proofSeed >= 2147483646 ? 42 : proofSeed + 1;
+      } else {
+        proofSeed = 42;
+      }
+
+      proofPanel.className = "proof-panel visible";
+      proofStage.className = "proof-stage visible";
+      proofGenerateBtn.hidden = true;
+      proofImage.hidden = true;
+      proofImage.removeAttribute("src");
+      proofLoading.hidden = false;
+      proofLoading.textContent = "Generating Visual Proof Frame...";
+      proofCaption.textContent = "";
+      proofApproved.className = "proof-approved";
+      resetModelAdapter();
+      approveProofBtn.disabled = true;
+      regenerateProofBtn.disabled = true;
+
+      try {
+        const res = await fetch("/api/proof-frame", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            source_prompt: lastSourcePrompt,
+            final_prompt: lastFinalPrompt,
+            mode: activeMode,
+            aspect_ratio: aspectRatio.value,
+            quality: "fast",
+            rng_seed: proofSeed
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          const detailObject = data.detail && typeof data.detail === "object"
+            ? data.detail
+            : null;
+          if (detailObject && detailObject.state === "preparing") {
+            proofStage.className = "proof-stage";
+            proofGenerateBtn.hidden = false;
+            showImageReadiness(false, detailObject.message || imagePreparingMessage);
+            statusEl.textContent = "Prompt Doctor is ready. Visual Proof is still being prepared.";
+            statusEl.className = "status";
+            scheduleImageReadinessCheck();
+            return;
+          }
+          const detail = typeof data.detail === "string"
+            ? data.detail
+            : (detailObject && detailObject.message) || "Proof Frame generation failed.";
+          throw new Error(detail);
+        }
+
+        proofImage.src = "data:image/png;base64," + data.image_b64;
+        proofImage.hidden = false;
+        proofLoading.hidden = true;
+        proofMeta.textContent = "Fast Proof · " + (data.size || "768×768").replace("x", "×");
+        proofCaption.textContent = data.single_frame_prompt || "";
+        statusEl.textContent = "Proof Frame ready.";
+        statusEl.className = "status";
+      } catch (err) {
+        proofImage.hidden = true;
+        proofLoading.hidden = false;
+        proofLoading.textContent = "Proof Frame failed: " + err.message;
+        statusEl.textContent = err.message;
+        statusEl.className = "status error";
+      } finally {
+        approveProofBtn.disabled = proofImage.hidden;
+        regenerateProofBtn.disabled = !imageReady;
+      }
+    }
+
+    function renderHeroFrames() {
+      heroGrid.innerHTML = "";
+      heroImages.forEach((frame, index) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = index === selectedHeroIndex ? "hero-card selected" : "hero-card";
+        card.setAttribute("aria-label", "Select Hero Frame " + (index + 1));
+
+        const image = document.createElement("img");
+        image.src = "data:image/png;base64," + frame.image_b64;
+        image.alt = "Hero Frame option " + (index + 1);
+
+        const label = document.createElement("span");
+        label.className = "hero-card-label";
+        label.textContent = index === selectedHeroIndex
+          ? "Selected"
+          : "Option " + (index + 1);
+
+        card.appendChild(image);
+        card.appendChild(label);
+        card.addEventListener("click", () => {
+          selectedHeroIndex = index;
+          heroApproved.className = "proof-approved";
+          shotPack.className = "shot-pack";
+          approveHeroBtn.disabled = false;
+          downloadHeroBtn.disabled = false;
+          renderHeroFrames();
+        });
+        heroGrid.appendChild(card);
+      });
+    }
+
+    function resumeHeroFrameSet(job) {
+      if (!job || !job.job_id) {
+        return;
+      }
+      heroJobId = job.job_id;
+      heroImages = Array.isArray(job.images) ? job.images : [];
+      selectedHeroIndex = -1;
+      heroStage.className = heroImages.length ? "hero-stage visible" : "hero-stage";
+      renderHeroFrames();
+      proofGenerateBtn.hidden = true;
+      cancelHeroBtn.hidden = false;
+      cancelHeroBtn.disabled = job.state === "cancelling";
+      regenerateHeroBtn.disabled = true;
+      proofReadiness.textContent = job.message || "Hero Frame Set is being generated.";
+      proofReadiness.className = "proof-readiness visible";
+      showHeroLocalProgress(job);
+      statusEl.textContent = "Resumed active Hero Frame Set.";
+      statusEl.className = "status";
+      if (!heroPollTimer) {
+        pollHeroFrameSet();
+      }
+    }
+
+    async function pollHeroFrameSet() {
+      if (!heroJobId || visualProofMode !== "hero") {
+        return;
+      }
+      try {
+        const res = await fetch("/api/hero-frame-set/" + heroJobId, {cache: "no-store"});
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(typeof data.detail === "string" ? data.detail : "Could not read Hero Frame Set status.");
+        }
+
+        proofReadiness.textContent = data.message || "Preparing Hero Frame Set...";
+        proofReadiness.className = "proof-readiness visible";
+        showHeroLocalProgress(data);
+        heroImages = Array.isArray(data.images) ? data.images : [];
+        renderHeroFrames();
+
+        if (data.state === "completed") {
+          heroModelReady = true;
+          heroStage.className = "hero-stage visible";
+          proofReadiness.textContent = "Choose the image that best represents your scene.";
+          proofReadiness.className = "proof-readiness visible ready";
+          proofGenerateBtn.hidden = true;
+          cancelHeroBtn.hidden = true;
+          regenerateHeroBtn.disabled = false;
+          hideHeroLocalProgress();
+          statusEl.textContent = "Hero Frame Set ready.";
+          statusEl.className = "status";
+          return;
+        }
+        if (data.state === "cancelled") {
+          heroJobId = "";
+          heroStage.className = heroImages.length ? "hero-stage visible" : "hero-stage";
+          proofGenerateBtn.hidden = false;
+          proofGenerateBtn.disabled = false;
+          proofGenerateBtn.textContent = "Generate Hero Frame Set";
+          cancelHeroBtn.hidden = true;
+          regenerateHeroBtn.disabled = false;
+          hideHeroLocalProgress();
+          proofReadiness.textContent = data.message || "Hero Frame Set stopped.";
+          proofReadiness.className = "proof-readiness visible";
+          statusEl.textContent = "Hero Frame Set stopped.";
+          statusEl.className = "status";
+          return;
+        }
+        if (data.state === "error") {
+          throw new Error(data.error || data.message || "Hero Frame Set failed.");
+        }
+
+        heroStage.className = heroImages.length ? "hero-stage visible" : "hero-stage";
+        heroPollTimer = setTimeout(pollHeroFrameSet, 3000);
+      } catch (err) {
+        proofGenerateBtn.hidden = false;
+        proofGenerateBtn.disabled = false;
+        cancelHeroBtn.hidden = true;
+        proofReadiness.textContent = err.message;
+        proofReadiness.className = "proof-readiness visible";
+        statusEl.textContent = err.message;
+        statusEl.className = "status error";
+      }
+    }
+
+    async function generateHeroFrameSet(isRegenerate = false) {
+      if (!heroAvailable || !lastSourcePrompt || !lastFinalPrompt) {
+        return;
+      }
+
+      if (!heroModelReady) {
+        const confirmed = window.confirm(
+          heroFirstUseMessage + "\n\nThe model is downloaded once and remains on this computer. Continue?"
+        );
+        if (!confirmed) {
+          return;
+        }
+      }
+
+      if (isRegenerate) {
+        proofSeed = proofSeed > 2147483545 ? 45 : proofSeed + 3;
+      } else {
+        proofSeed = 42;
+      }
+      heroJobId = "";
+      heroImages = [];
+      selectedHeroIndex = -1;
+      heroGrid.innerHTML = "";
+      heroStage.className = "hero-stage";
+      heroApproved.className = "proof-approved";
+      shotPack.className = "shot-pack";
+      resetModelAdapter();
+      proofGenerateBtn.hidden = true;
+      cancelHeroBtn.hidden = false;
+      cancelHeroBtn.disabled = false;
+      proofReadiness.textContent = "Starting Hero Frame Set...";
+      proofReadiness.className = "proof-readiness visible";
+      showHeroLocalProgress({state: "queued", progress: 0, message: "Preparing your three local frame options."});
+      regenerateHeroBtn.disabled = true;
+      approveHeroBtn.disabled = true;
+      downloadHeroBtn.disabled = true;
+
+      try {
+        const res = await fetch("/api/hero-frame-set", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            source_prompt: lastSourcePrompt,
+            final_prompt: lastFinalPrompt,
+            mode: activeMode,
+            aspect_ratio: aspectRatio.value,
+            base_seed: proofSeed,
+            user_approved_addition: userApprovedAddition
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          const detail = typeof data.detail === "string"
+            ? data.detail
+            : (data.detail && data.detail.message) || "Could not start Hero Frame Set.";
+          throw new Error(detail);
+        }
+        heroJobId = data.job_id;
+        proofReadiness.textContent = data.message || heroFirstUseMessage;
+        statusEl.textContent = "Hero Frame Set is being prepared.";
+        statusEl.className = "status";
+        pollHeroFrameSet();
+      } catch (err) {
+        proofGenerateBtn.hidden = false;
+        proofGenerateBtn.disabled = false;
+        proofReadiness.textContent = err.message;
+        statusEl.textContent = err.message;
+        statusEl.className = "status error";
+        if (err.message === "Another Hero Frame Set is already being generated.") {
+          heroJobId = "";
+          refreshHeroReadiness();
+        }
+      }
+    }
+
+    chips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        chips.forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
+        activeMode = chip.dataset.mode;
+        updateProofAvailability();
+      });
+    });
+
+    async function loadHealth() {
+      try {
+        const res = await fetch("/health");
+        const data = await res.json();
+        modelStatus.textContent = "Model: " + data.model.replace("ai/", "");
+        const runtime = data.runtime || {};
+        const gpuEnabled = runtime.gpu_acceleration === true || data.gpu_acceleration === true;
+        const runtimeLabel = runtime.display_mode || (gpuEnabled ? "GPU + CPU" : "CPU");
+        runtimeBadge.textContent = "LOCAL AI · " + runtimeLabel;
+        const llmRuntime = runtime.llm && runtime.llm.runtime ? runtime.llm.runtime : "Unknown";
+        const imageRuntime = runtime.image && runtime.image.runtime ? runtime.image.runtime : "Unknown";
+        const heroRuntime = data.hero_runtime || "FLUX.2 Klein 4B";
+        if (["English", "Croatian"].includes(data.default_language)) {
+          language.value = data.default_language;
+        }
+        runtimeBadge.title = "Local Prompt Doctor and Visual Proof services";
+        developerRuntime.textContent = "Prompt Doctor: " + llmRuntime + " · Optional Visual Proof: " + heroRuntime;
+      } catch {
+        modelStatus.textContent = "Model: unavailable";
+        runtimeBadge.textContent = "LOCAL AI · RUNTIME UNAVAILABLE";
+        developerRuntime.textContent = "Runtime details are unavailable.";
+      }
+    }
+
+    function updateSelectedModelStatus() {
+      const modelId = llmModel.value;
+      const metadata = modelMetadata.get(modelId);
+
+      if (!modelId) {
+        modelStatus.textContent = "Model: unavailable";
+        modelHelp.textContent = "No local Docker Model Runner model is available.";
+        engineStatus.textContent = "Local AI engine unavailable";
+        return;
+      }
+
+      engineStatus.textContent = "Local AI engine ready";
+      modelStatus.textContent = "Model: " + (metadata ? metadata.display_name : modelId.replace("ai/", ""));
+      if (!metadata) {
+        modelHelp.textContent = "Installed local model · compatibility not yet validated";
+        return;
+      }
+
+      const validationLabels = {
+        validated: "Validated",
+        candidate: "Compatibility candidate",
+        unverified: "Unverified local model"
+      };
+      const validation = validationLabels[metadata.validation] || "Unverified local model";
+      const vram = metadata.recommended_vram_gb ? " · recommended " + metadata.recommended_vram_gb + " GB VRAM" : "";
+      modelHelp.textContent = metadata.profile + " profile · " + validation + vram;
+    }
+
+    async function loadModels() {
+      try {
+        const res = await fetch("/api/models");
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || "Model discovery failed.");
+        }
+
+        const installed = Array.isArray(data.installed) ? data.installed : [];
+        modelMetadata = new Map(installed.map(item => [item.id, item]));
+        llmModel.innerHTML = "";
+
+        installed.forEach(item => {
+          const option = document.createElement("option");
+          option.value = item.id;
+          const validationLabels = {
+            validated: "Validated",
+            candidate: "Candidate",
+            unverified: "Unverified"
+          };
+          option.textContent = item.display_name + " · " + (validationLabels[item.validation] || "Unverified");
+          llmModel.appendChild(option);
+        });
+
+        const savedModel = localStorage.getItem("mediaforgePromptModel");
+        const installedIds = new Set(installed.map(item => item.id));
+        llmModel.value = installedIds.has(savedModel) ? savedModel : data.default_model;
+        if (!llmModel.value && installed.length) {
+          llmModel.value = installed[0].id;
+        }
+        llmModel.disabled = installed.length === 0 || data.fixed_model === true;
+        updateSelectedModelStatus();
+        if (data.fixed_model === true) {
+          modelHelp.textContent = "Validated SoloHost Core model · fixed for reliable local prompt work.";
+        }
+      } catch (err) {
+        llmModel.disabled = true;
+        modelHelp.textContent = "Model discovery unavailable: " + err.message;
+        engineStatus.textContent = "Local AI engine unavailable";
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const userInput = input.value.trim();
+
+      if (!userInput) {
+        statusEl.textContent = "Enter an idea or weak prompt first.";
+        statusEl.className = "status error";
+        return;
+      }
+
+      statusEl.textContent = "Generating...";
+      statusEl.className = "status";
+      result.textContent = "Working...";
+      result.classList.remove("empty");
+      hideFidelity();
+      resetProofFrame();
+      lastSourcePrompt = "";
+      lastFinalPrompt = "";
+      lastFidelityStatus = "";
+      userApprovedAddition = false;
+
+      try {
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            user_input: userInput,
+            model: llmModel.value || null,
+            mode: activeMode,
+            aspect_ratio: aspectRatio.value,
+            language: language.value
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || "Generation failed.");
+        }
+
+        result.textContent = data.result;
+        modelStatus.textContent = "Model: " + data.model.replace("ai/", "");
+        showFidelity(data.fidelity);
+
+        lastSourcePrompt = userInput;
+        lastFinalPrompt = data.result;
+        lastFidelityStatus = data.fidelity && data.fidelity.status ? data.fidelity.status : "";
+        updateProofAvailability();
+
+        statusEl.textContent = "Done.";
+      } catch (err) {
+        result.textContent = "Generation failed.";
+        hideFidelity();
+        statusEl.textContent = err.message;
+        statusEl.className = "status error";
+      }
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      const text = result.textContent.trim();
+
+      if (!text || text === "Your improved prompt will appear here.") {
+        return;
+      }
+
+      await navigator.clipboard.writeText(text);
+      statusEl.textContent = "Copied.";
+      statusEl.className = "status";
+    });
+
+    clearBtn.addEventListener("click", () => {
+      input.value = "";
+      result.textContent = "Your improved prompt will appear here.";
+      result.classList.add("empty");
+      hideFidelity();
+      lastSourcePrompt = "";
+      lastFinalPrompt = "";
+      lastFidelityStatus = "";
+      userApprovedAddition = false;
+      resetProofFrame();
+      statusEl.textContent = "Ready.";
+      statusEl.className = "status";
+    });
+
+    heroProofMode.addEventListener("click", () => setProofMode());
+
+    approveReviewBtn.addEventListener("click", () => {
+      if (!lastSourcePrompt || !lastFinalPrompt || lastFidelityStatus !== "REVIEW") {
+        return;
+      }
+      lastFidelityStatus = "INTENT PROTECTED";
+      userApprovedAddition = true;
+      fidelityStatus.className = "fidelity-status visible protected";
+      fidelityTitle.textContent = "🛡 INTENT PROTECTED · USER-APPROVED ADDITION";
+      fidelityCopy.textContent = "You approved the added detail. It is now part of this prompt's creative direction.";
+      approveReviewBtn.hidden = true;
+      updateProofAvailability();
+      statusEl.textContent = "Addition approved. Hero Frame Set is available.";
+      statusEl.className = "status";
+    });
+
+    proofGenerateBtn.addEventListener("click", () => {
+      if (visualProofMode === "hero") {
+        generateHeroFrameSet(false);
+      } else {
+        generateProofFrame(false);
+      }
+    });
+
+    regenerateProofBtn.addEventListener("click", () => generateProofFrame(true));
+
+    regenerateHeroBtn.addEventListener("click", () => generateHeroFrameSet(true));
+    cancelHeroBtn.addEventListener("click", async () => {
+      if (!heroJobId) {
+        return;
+      }
+      cancelHeroBtn.disabled = true;
+      proofReadiness.textContent = "Stopping after the current frame finishes...";
+      proofReadiness.className = "proof-readiness visible";
+      try {
+        const res = await fetch("/api/hero-frame-set/" + heroJobId + "/cancel", {
+          method: "POST"
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(typeof data.detail === "string" ? data.detail : "Could not stop Hero Frame Set.");
+        }
+        proofReadiness.textContent = data.message || "Stopping after the current frame finishes...";
+      } catch (err) {
+        cancelHeroBtn.disabled = false;
+        proofReadiness.textContent = err.message;
+        statusEl.textContent = err.message;
+        statusEl.className = "status error";
+      }
+    });
+
+    approveProofBtn.addEventListener("click", () => {
+      if (proofImage.hidden || !proofImage.src) {
+        return;
+      }
+      proofApproved.className = "proof-approved visible";
+      showModelAdapter();
+      statusEl.textContent = "Scene approved.";
+      statusEl.className = "status";
+    });
+
+    approveHeroBtn.addEventListener("click", () => {
+      if (selectedHeroIndex < 0 || !heroImages[selectedHeroIndex]) {
+        return;
+      }
+      heroApproved.className = "proof-approved visible";
+      shotPack.className = "shot-pack visible";
+      showModelAdapter();
+      statusEl.textContent = "Hero Frame approved.";
+      statusEl.className = "status";
+    });
+
+    downloadHeroBtn.addEventListener("click", () => {
+      const frame = heroImages[selectedHeroIndex];
+      if (!frame || !frame.image_b64) {
+        return;
+      }
+      const link = document.createElement("a");
+      link.href = "data:image/png;base64," + frame.image_b64;
+      link.download = "mediaforge-hero-frame-" + (selectedHeroIndex + 1) + ".png";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      statusEl.textContent = "Hero Frame downloaded.";
+      statusEl.className = "status";
+    });
+
+    adaptModelBtn.addEventListener("click", adaptForModel);
+
+    adapterProfile.addEventListener("change", () => {
+      adapterReady.className = "adapter-ready";
+      adapterReady.textContent = "✓ MODEL READY";
+      adapterSummary.className = "adapter-summary";
+      adapterSummary.textContent = "";
+      adapterOutput.className = "adapter-output";
+      adapterOutput.textContent = "";
+      copyAdapterBtn.className = "secondary adapter-copy";
+      adapterStatus.textContent = "Ready to adapt for selected model";
+    });
+
+    copyAdapterBtn.addEventListener("click", async () => {
+      const text = adapterOutput.textContent.trim();
+      if (!text) {
+        return;
+      }
+      await navigator.clipboard.writeText(text);
+      statusEl.textContent = "Model prompt copied.";
+      statusEl.className = "status";
+    });
+
+    llmModel.addEventListener("change", () => {
+      localStorage.setItem("mediaforgePromptModel", llmModel.value);
+      updateSelectedModelStatus();
+    });
+
+    developerToggle.addEventListener("click", () => {
+      const enabled = developerPanel.hidden;
+      developerPanel.hidden = !enabled;
+      modelStatus.hidden = !enabled;
+      developerToggle.setAttribute("aria-expanded", String(enabled));
+      developerToggle.textContent = enabled ? "Close Developer" : "Developer";
+    });
+
+    resetProofFrame();
+    loadHealth();
+    loadModels();
+    restoreActiveHeroFrameSet();
+  </script>
+</body>
+</html>
