@@ -3,21 +3,23 @@ title: MediaForge Prompt Studio v0.3 Configurator
 eyebrow: Director's Cut AI Pro · Local Prompt Doctor
 
 description: >
-  MediaForge Prompt Studio is the local AI workspace of Director's Cut AI Pro.
-  The validated Qwen 2.5 3B Prompt Doctor improves AI-video prompts, protects
-  creative intent and prepares model-ready scene direction on your own computer.
+  Better AI video starts with a better prompt. MediaForge Prompt Studio turns
+  rough ideas into clear, production-ready prompts with stronger scene
+  direction, camera movement, lighting, framing and atmosphere, while keeping
+  your original creative idea in control.
 
-  Core installs immediately and does not download the FLUX model. Optional
-  Visual Proof uses FLUX.2 Klein 4B to create either one Proof Frame or a
-  three-image Hero Frame Set. Enabling it pulls the separate local service;
-  the first image request then downloads approximately 12 GB. Keep at least
-  20 GB of free disk space.
+  The lightweight Core installs without an image model. Optional Visual Proof
+  can generate one Proof Frame or three Hero Frame options directly on your
+  computer. Its first image request requires one additional download of
+  approximately 12 GB. After that, generate as many local images as you want,
+  without per-image service fees or uploading your creative work to an external
+  image service. Keep at least 20 GB of free disk space.
 
 output_file: .env
 
 after_save: Saved. Pi Desktop will recreate MediaForge with the selected local features.
 
-footer_hint: Core uses Qwen 2.5 3B. Visual Proof is optional, local and CPU-limited to protect Pi Node stability.
+footer_hint: Core is lightweight. Visual Proof is optional, local and CPU-limited to protect Pi Node stability.
 
 fixed_values:
   - name: MEDIAFORGE_MODEL

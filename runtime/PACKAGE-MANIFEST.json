@@ -356,8 +356,8 @@
   },
   {
     "file": "solohost/config_options.yml",
-    "bytes": 3103,
-    "sha256": "ddd9a3e4fdf06250ad9a676d1a8d4eea8ae657ecc951f7413d8f4d8fe5fafdbb"
+    "bytes": 3244,
+    "sha256": "2253bd413106d730fe4179262557080b3f0048a234f5e74636ebbf3b2433e91f"
   },
   {
     "file": "solohost/docker-compose.yml",
