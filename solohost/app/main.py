@@ -569,6 +569,7 @@ async def hero_status():
         return {
             "available": True,
             "ready": data.get("ready", False),
+            "downloaded": data.get("downloaded", data.get("ready", False)),
             "state": data.get("state", "available"),
             "message": data.get("message", HERO_DOWNLOAD_MESSAGE),
             "download_gb_approx": data.get("download_gb_approx", 12),
@@ -586,6 +587,7 @@ async def hero_status():
         return {
             "available": False,
             "ready": False,
+            "downloaded": False,
             "state": "unavailable",
             "message": message,
             "download_gb_approx": 12,

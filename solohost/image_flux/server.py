@@ -11,6 +11,7 @@ import torch
 from diffusers import Flux2KleinPipeline
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from huggingface_hub import snapshot_download
 from pydantic import BaseModel, Field
 
 
@@ -33,6 +34,7 @@ class HeroSetRequest(BaseModel):
 _state_lock = threading.Lock()
 _generation_lock = threading.Lock()
 _pipeline = None
+_model_cached = False
 _active_job_id = None
 _service_state = {
     "state": "available",
@@ -67,16 +69,36 @@ def _public_job(job: dict) -> dict:
     }
 
 
+def _model_is_cached() -> bool:
+    """Return true only when Hugging Face can resolve the model locally."""
+    global _model_cached
+    if _pipeline is not None or _model_cached:
+        return True
+    try:
+        snapshot_download(
+            repo_id=MODEL_ID,
+            cache_dir=HF_HOME,
+            local_files_only=True,
+        )
+    except Exception:
+        return False
+    _model_cached = True
+    return True
+
+
 def _load_pipeline():
-    global _pipeline
+    global _pipeline, _model_cached
     if _pipeline is not None:
         return _pipeline
 
-    _set_service_state(
-        "loading",
-        "Downloading FLUX.2 model (approximately 12 GB) and loading it locally. "
-        "This happens only on first use.",
+    model_cached = _model_is_cached()
+    message = (
+        "Loading the previously downloaded Visual Proof model."
+        if model_cached
+        else "Downloading the Visual Proof model (approximately 12 GB) and loading it locally. "
+             "This happens only on first use."
     )
+    _set_service_state("loading", message)
 
     use_cuda = DEVICE_MODE == "cuda"
     if use_cuda and not torch.cuda.is_available():
@@ -104,6 +126,7 @@ def _load_pipeline():
         pipeline.to("cpu")
 
     _pipeline = pipeline
+    _model_cached = True
     _set_service_state("ready", "Hero Frame model is ready.")
     return _pipeline
 
@@ -117,7 +140,7 @@ def _generate_job(job_id: str, prompt: str, seeds: list[int]) -> None:
             _update_job(
                 job_id,
                 state="loading",
-                message="Preparing Hero Frame model. First use may download approximately 12 GB.",
+                message="Preparing the local Visual Proof model.",
             )
             pipeline = _load_pipeline()
             with _state_lock:
@@ -213,12 +236,21 @@ def _generate_job(job_id: str, prompt: str, seeds: list[int]) -> None:
 
 @app.get("/v1/status")
 def status():
+    downloaded = _model_is_cached()
     with _state_lock:
         state = dict(_service_state)
         active_job = _jobs.get(_active_job_id) if _active_job_id else None
+    if _pipeline is not None:
+        message = "Visual Proof model is loaded and ready."
+    elif downloaded:
+        message = "Visual Proof model is already downloaded and ready to load."
+    else:
+        message = state["message"]
     return {
         **state,
+        "message": message,
         "ready": _pipeline is not None,
+        "downloaded": downloaded,
         "model": MODEL_ID,
         "device": DEVICE_MODE,
         "download_gb_approx": 12,

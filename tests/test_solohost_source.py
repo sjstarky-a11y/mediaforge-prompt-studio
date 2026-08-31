@@ -40,11 +40,11 @@ class SoloHostSourceTests(unittest.TestCase):
     def test_compose_uses_public_versioned_images(self):
         self.assertNotIn("build:", self.compose)
         self.assertIn(
-            "aerialcroatia/mediaforge-prompt-studio:0.3-solohost.6",
+            "aerialcroatia/mediaforge-prompt-studio:0.3-solohost.7",
             self.compose,
         )
         self.assertIn(
-            "aerialcroatia/mediaforge-image-flux:0.3-solohost.6",
+            "aerialcroatia/mediaforge-image-flux:0.3-solohost.7",
             self.compose,
         )
         self.assertIn(
@@ -69,6 +69,9 @@ class SoloHostSourceTests(unittest.TestCase):
         self.assertIn('frame_count: Literal[1, 3] = 3', self.main)
         self.assertIn('total not in {1, 3}', self.hero_server)
         self.assertIn('"total": job["total"]', self.hero_server)
+        self.assertIn("local_files_only=True", self.hero_server)
+        self.assertIn('"downloaded": downloaded', self.hero_server)
+        self.assertIn("data.ready === true || data.downloaded === true", self.html)
 
     def test_review_approval_reaches_hero_backend(self):
         self.assertIn('id="approveReviewBtn"', self.html)

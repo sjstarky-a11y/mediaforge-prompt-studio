@@ -34,6 +34,8 @@ This gives the public package the intended behaviour:
 - Users can generate one Proof Frame or a three-image Hero Frame Set with the
   same FLUX.2 Klein 4B service.
 - The FLUX model is downloaded only after the first confirmed image request.
+- A persisted model cache is detected after restarts, so the large-download
+  confirmation is shown only when the model is not already on disk.
 - CPU capacity is selected independently: 4, 8, 12 or 16 cores.
 - The public Compose file is pull-only and never depends on local source or a
   Docker build context.

@@ -1630,7 +1630,7 @@
         const res = await fetch("/api/hero-status", {cache: "no-store"});
         const data = await res.json();
         heroAvailable = res.ok && data.available === true;
-        heroModelReady = data.ready === true;
+        heroModelReady = data.ready === true || data.downloaded === true;
         if (data.active_job && !heroJobId) {
           resumeHeroFrameSet(data.active_job);
           return;
@@ -1643,8 +1643,10 @@
           ? (visualProofMode === "single"
               ? "Visual Proof model is ready. One image will be generated."
               : "Visual Proof model is ready. Three images are generated sequentially.")
-          : (data.message || heroFirstUseMessage);
-        proofReadiness.className = data.ready
+          : (data.downloaded === true
+              ? "Visual Proof model is already downloaded and will load locally when needed."
+              : (data.message || heroFirstUseMessage));
+        proofReadiness.className = (data.ready || data.downloaded)
           ? "proof-readiness visible ready"
           : "proof-readiness visible";
       } catch {
