@@ -16,12 +16,31 @@ model and is managed by Pi Desktop.
 - Fast Proof is not included in SoloHost. The interface exposes only the Hero
   Frame Set path.
 
-## Profiles
+## Public package
+
+`config_options.yml` is the single public SoloHost configurator. It
+installs Core by default and exposes an explicit `Hero Frame Set` choice.
+
+The configurator deliberately does not expose `COMPOSE_PROFILES` directly.
+Pi Desktop previously treated that reserved field as required even when Core
+was selected. Instead, the package keeps an internal `enabled` profile active
+and assigns the Hero service to it only when
+`MEDIAFORGE_VISUAL_PROOF_MODE=enabled`.
+
+This gives the public package the intended behaviour:
+
+- Core does not pull or start the FLUX service.
+- Enabling Hero pulls the separate public image.
+- The FLUX model is still downloaded only after the first confirmed Hero set.
+- CPU capacity is selected independently: 4, 8, 12 or 16 cores.
+
+## Source profiles
 
 | Source file | Intended use | Visual service |
 | --- | --- | --- |
 | `config_options.core.yml` | Default light local Prompt Doctor | Disabled |
 | `config_options.hero.yml` | Explicit Hero add-on | FLUX.2 Klein 4B, CPU capped at 8 cores |
+| `config_options.yml` | One public app with user-selectable Hero | Disabled by default; 4/8/12/16 CPU choice |
 
 The Hero profile starts the small local service but does not download the
 model. The first confirmed Hero Frame Set downloads approximately 12 GB; keep
@@ -30,9 +49,9 @@ at least 20 GB of free disk space.
 ## Pi Desktop packaging rule
 
 Pi Desktop expects the active configuration file to be named
-`config_options.yml`. A release package must include exactly one of the two
-profile files above under that name. Do not present a profile selector in the
-Pi Desktop form; it has proven unreliable for this Compose-profile setting.
+`config_options.yml`; the repository now carries the public configurator under
+that exact name. The separate Core and Hero files remain versioned
+rollback/reference profiles; they are not separate public applications.
 
 ## Operational rule
 

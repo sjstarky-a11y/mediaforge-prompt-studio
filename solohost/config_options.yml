@@ -1,0 +1,81 @@
+title: MediaForge Prompt Studio v0.3 Configurator
+
+eyebrow: Director's Cut AI Pro · Local Prompt Doctor
+
+description: >
+  MediaForge Prompt Studio is the local AI workspace of Director's Cut AI Pro.
+  The validated Qwen 2.5 3B Prompt Doctor improves AI-video prompts, protects
+  creative intent and prepares model-ready scene direction on your own computer.
+
+  Core installs immediately and does not download the FLUX model. Optional
+  Visual Proof uses FLUX.2 Klein 4B to create a three-image Hero Frame Set.
+  Enabling it pulls the separate local service; the first Hero request then
+  downloads approximately 12 GB. Keep at least 20 GB of free disk space.
+
+output_file: .env
+
+after_save: Saved. Pi Desktop will recreate MediaForge with the selected local features.
+
+footer_hint: Core uses Qwen 2.5 3B. Hero Frame Set is optional, local and CPU-limited to protect Pi Node stability.
+
+fixed_values:
+  - name: MEDIAFORGE_MODEL
+    value: ai/qwen2.5:3B-Q4_K_M
+    env_comment: Validated fixed Prompt Doctor model for MediaForge SoloHost.
+
+  - name: MEDIAFORGE_DMR_API_KEY
+    value: docker-model-runner
+    env_comment: Placeholder bearer token for the local Docker Model Runner connection.
+
+  - name: COMPOSE_PROFILES
+    value: enabled
+    env_comment: Internal profile gate. The user-facing Visual Proof mode decides whether the Hero service joins this active profile.
+
+fields:
+  - name: MEDIAFORGE_DEFAULT_LANGUAGE
+    label: Default output language
+    type: select
+    default: English
+    required: true
+    help: Choose English or Croatian as the default Prompt Doctor output language.
+    env_comment: Default generated output language.
+    options:
+      - value: English
+        label: English
+      - value: Croatian
+        label: Croatian
+
+  - name: MEDIAFORGE_VISUAL_PROOF_MODE
+    label: Hero Frame Set
+    type: select
+    default: disabled
+    required: true
+    help: >
+      Core keeps the initial install lightweight. Enable Hero Frame Set only if
+      you accept the separate local service and approximately 12 GB FLUX model
+      download on the first Hero request.
+    env_comment: Controls whether the optional FLUX Hero service is included.
+    options:
+      - value: disabled
+        label: Core only - install Prompt Doctor now
+      - value: enabled
+        label: Enable Hero Frame Set - separate local FLUX download required
+
+  - name: MEDIAFORGE_HERO_CPU_LIMIT
+    label: Hero Frame Set CPU limit
+    type: select
+    default: "8.0"
+    required: true
+    help: >
+      Maximum CPU capacity available to FLUX when Hero Frame Set is enabled.
+      Eight cores is the safe default for a workstation that also runs Pi Node.
+    env_comment: CPU quota applied only to the optional Hero service.
+    options:
+      - value: "4.0"
+        label: 4 CPU cores - conservative
+      - value: "8.0"
+        label: 8 CPU cores - recommended
+      - value: "12.0"
+        label: 12 CPU cores - faster
+      - value: "16.0"
+        label: 16 CPU cores - high-performance workstation

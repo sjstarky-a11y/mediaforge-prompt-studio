@@ -306,8 +306,8 @@
   },
   {
     "file": "solohost/README.md",
-    "bytes": 1825,
-    "sha256": "e910bfc50355405ff7a424fa0c71cd7fc652a2be37dccfe6ac8137a58ec2198e"
+    "bytes": 2705,
+    "sha256": "ce82e0e098446f9c49d3fb0ba89bd8fcd5de5632903192d56b057eac2996c9dd"
   },
   {
     "file": "solohost/app/assets/mediaforge-logo.png",
@@ -326,8 +326,8 @@
   },
   {
     "file": "solohost/app/main.py",
-    "bytes": 110962,
-    "sha256": "51316f0fea1c1e34288129f6d9deb409d57397c5e7a5b5f3857147b843ba813d"
+    "bytes": 111028,
+    "sha256": "4f286637d2d5bbd53f4ca02e3dce711f9d0ca87bfe1d0083c2292b673c6923d9"
   },
   {
     "file": "solohost/app/model_catalog.py",
@@ -355,9 +355,14 @@
     "sha256": "fc34a47314f52b26a6df33bf5f02ae06bdfe0291c0e1684232ab041689436558"
   },
   {
+    "file": "solohost/config_options.yml",
+    "bytes": 3003,
+    "sha256": "3c042418ef5dd67dd5c85196365c6dfa090e11ee00ffc76a20e0ae01f3a62ad6"
+  },
+  {
     "file": "solohost/docker-compose.yml",
-    "bytes": 2095,
-    "sha256": "5e7bb19f16a27664fc8c129b2324bf609b1a5ad5790b5e23ceea70ec68496899"
+    "bytes": 2154,
+    "sha256": "fcbcc25b2a9c63fd74441f0a9d23b9d613b721f7c8b80d743d7a37e63bd131de"
   },
   {
     "file": "solohost/image_flux/Dockerfile.cpu",
@@ -491,7 +496,7 @@
   },
   {
     "file": "tests/test_solohost_source.py",
-    "bytes": 1434,
-    "sha256": "780d47751304a5326deed61f568b036ed08152fd510abfb0e7a6a57c522e109b"
+    "bytes": 2845,
+    "sha256": "1ba2700b5597847a44735fdf0b03329d791ca683af649574dc826052c052341c"
   }
 ]
