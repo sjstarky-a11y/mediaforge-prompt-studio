@@ -1,6 +1,6 @@
 services:
   mediaforge-studio:
-    image: aerialcroatia/mediaforge-prompt-studio:0.3-solohost.4
+    image: aerialcroatia/mediaforge-prompt-studio:0.3-solohost.5
 
     labels:
       - pi.ui.primary=true
@@ -40,7 +40,7 @@ services:
 
   image-flux:
     profiles: ["${MEDIAFORGE_VISUAL_PROOF_MODE:-disabled}"]
-    image: aerialcroatia/mediaforge-image-flux:0.3-solohost.4
+    image: aerialcroatia/mediaforge-image-flux:0.3-solohost.5
     environment:
       - MEDIAFORGE_HERO_MODEL=black-forest-labs/FLUX.2-klein-4B
       - MEDIAFORGE_HERO_DEVICE=cpu

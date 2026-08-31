@@ -18,8 +18,8 @@ model and is managed by Pi Desktop.
 
 ## Public package
 
-`config_options.yml` is the single public SoloHost configurator. It
-installs Core by default and exposes an explicit `Hero Frame Set` choice.
+`config_options.yml` is the single public SoloHost configurator. It installs
+Core by default and exposes an explicit optional `Visual Proof` choice.
 
 The configurator deliberately does not expose `COMPOSE_PROFILES` directly.
 Pi Desktop previously treated that reserved field as required even when Core
@@ -30,8 +30,10 @@ and assigns the Hero service to it only when
 This gives the public package the intended behaviour:
 
 - Core does not pull or start the FLUX service.
-- Enabling Hero pulls the separate public image.
-- The FLUX model is still downloaded only after the first confirmed Hero set.
+- Enabling Visual Proof pulls the separate public image.
+- Users can generate one Proof Frame or a three-image Hero Frame Set with the
+  same FLUX.2 Klein 4B service.
+- The FLUX model is downloaded only after the first confirmed image request.
 - CPU capacity is selected independently: 4, 8, 12 or 16 cores.
 - The public Compose file is pull-only and never depends on local source or a
   Docker build context.

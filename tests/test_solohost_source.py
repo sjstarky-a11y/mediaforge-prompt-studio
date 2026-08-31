@@ -11,6 +11,7 @@ class SoloHostSourceTests(unittest.TestCase):
     def setUp(self):
         self.main = (SOLOHOST / "app" / "main.py").read_text(encoding="utf-8")
         self.html = (SOLOHOST / "app" / "index.html").read_text(encoding="utf-8")
+        self.hero_server = (SOLOHOST / "image_flux" / "server.py").read_text(encoding="utf-8")
         self.core = (SOLOHOST / "config_options.core.yml").read_text(encoding="utf-8")
         self.hero = (SOLOHOST / "config_options.hero.yml").read_text(encoding="utf-8")
         self.public = (SOLOHOST / "config_options.yml").read_text(encoding="utf-8")
@@ -18,6 +19,7 @@ class SoloHostSourceTests(unittest.TestCase):
 
     def test_profile_sources_are_valid(self):
         ast.parse(self.main)
+        ast.parse(self.hero_server)
         self.assertIn("value: core", self.core)
         self.assertIn("value: visual-proof", self.hero)
         self.assertIn("name: MEDIAFORGE_VISUAL_PROOF_MODE", self.public)
@@ -38,11 +40,11 @@ class SoloHostSourceTests(unittest.TestCase):
     def test_compose_uses_public_versioned_images(self):
         self.assertNotIn("build:", self.compose)
         self.assertIn(
-            "aerialcroatia/mediaforge-prompt-studio:0.3-solohost.4",
+            "aerialcroatia/mediaforge-prompt-studio:0.3-solohost.5",
             self.compose,
         )
         self.assertIn(
-            "aerialcroatia/mediaforge-image-flux:0.3-solohost.4",
+            "aerialcroatia/mediaforge-image-flux:0.3-solohost.5",
             self.compose,
         )
         self.assertIn(
@@ -57,9 +59,14 @@ class SoloHostSourceTests(unittest.TestCase):
             self.compose,
         )
 
-    def test_only_hero_visual_path_is_presented(self):
+    def test_single_and_hero_visual_paths_share_optional_service(self):
         self.assertNotIn('id="fastProofMode"', self.html)
+        self.assertIn('id="singleProofMode"', self.html)
         self.assertIn('id="heroProofMode"', self.html)
+        self.assertIn('frame_count: frameCount', self.html)
+        self.assertIn('frame_count: Literal[1, 3] = 3', self.main)
+        self.assertIn('total not in {1, 3}', self.hero_server)
+        self.assertIn('"total": job["total"]', self.hero_server)
 
     def test_review_approval_reaches_hero_backend(self):
         self.assertIn('id="approveReviewBtn"', self.html)

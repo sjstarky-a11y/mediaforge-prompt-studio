@@ -183,6 +183,7 @@ class HeroFrameSetRequest(BaseModel):
     mode: Literal["improve", "cinematic", "commercial"] = "improve"
     aspect_ratio: Literal["16:9", "9:16", "1:1"] = "16:9"
     base_seed: int = Field(default=42, ge=0, le=2147483645)
+    frame_count: Literal[1, 3] = 3
     user_approved_addition: bool = False
 
 
@@ -3097,7 +3098,7 @@ async def create_hero_frame_set(req: HeroFrameSetRequest):
                 f"{HERO_API_URL}/hero-sets",
                 json={
                     "prompt": single_frame_prompt,
-                    "seeds": [req.base_seed, req.base_seed + 1, req.base_seed + 2],
+                    "seeds": [req.base_seed + offset for offset in range(req.frame_count)],
                 },
             )
             if response.status_code == 409:

@@ -306,8 +306,8 @@
   },
   {
     "file": "solohost/README.md",
-    "bytes": 2807,
-    "sha256": "4611e9467bb1704940c78401cc2a87263c1455173021423a8d8c3e13721faece"
+    "bytes": 2931,
+    "sha256": "b8b217d6fd6766de2f362ff24e1473271c465e124fd2f40ad37170b385e5789a"
   },
   {
     "file": "solohost/app/assets/mediaforge-logo.png",
@@ -321,13 +321,13 @@
   },
   {
     "file": "solohost/app/index.html",
-    "bytes": 68012,
-    "sha256": "6bbe6d1557b9b93a11116ec293739a3c093b34123aa66bd1ad388abc61cb2175"
+    "bytes": 73288,
+    "sha256": "e126020101dc3186ecc27c6e75cc7bf228ac16a3233c4550d0735ba8d3da46d7"
   },
   {
     "file": "solohost/app/main.py",
-    "bytes": 111028,
-    "sha256": "4f286637d2d5bbd53f4ca02e3dce711f9d0ca87bfe1d0083c2292b673c6923d9"
+    "bytes": 111071,
+    "sha256": "7ddee01d2298397f8d1a21edad7f2264e16c6fa82f8b4dd208a675b9815ade7b"
   },
   {
     "file": "solohost/app/model_catalog.py",
@@ -356,13 +356,13 @@
   },
   {
     "file": "solohost/config_options.yml",
-    "bytes": 3003,
-    "sha256": "3c042418ef5dd67dd5c85196365c6dfa090e11ee00ffc76a20e0ae01f3a62ad6"
+    "bytes": 3103,
+    "sha256": "ddd9a3e4fdf06250ad9a676d1a8d4eea8ae657ecc951f7413d8f4d8fe5fafdbb"
   },
   {
     "file": "solohost/docker-compose.yml",
     "bytes": 2025,
-    "sha256": "0e5654923220fea8ed050f6905f15eff8353971cce6304a72638a0220d5554c8"
+    "sha256": "f94f626d8e11cd50ea729f2896ba72f69bb06fa14ee389393e6bcd81ef074d99"
   },
   {
     "file": "solohost/image_flux/Dockerfile.cpu",
@@ -376,8 +376,8 @@
   },
   {
     "file": "solohost/image_flux/server.py",
-    "bytes": 9578,
-    "sha256": "3f288114c85c357bdd85a1515d812921a36cfa7cc3becb6e932e60b00896708f"
+    "bytes": 9919,
+    "sha256": "9984f8485680a9653a9690ad7da29fe8ceeb0baa6772919a1f66f63306f1d92f"
   },
   {
     "file": "solohost/models/model-catalog.json",
@@ -496,7 +496,7 @@
   },
   {
     "file": "tests/test_solohost_source.py",
-    "bytes": 2894,
-    "sha256": "9c72c58c02a3d483c1ba66fcc4889cf1834c64bf0264373427f9b0871c135c01"
+    "bytes": 3354,
+    "sha256": "7ab5c65c34cb8be42d74fb3c3966b873ff69a178b612ea4457e91fd63ac73e40"
   }
 ]

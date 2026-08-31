@@ -36,7 +36,7 @@ _pipeline = None
 _active_job_id = None
 _service_state = {
     "state": "available",
-    "message": "Hero Frame Set is available. The model downloads on first use.",
+    "message": "Optional Visual Proof is available. The model downloads on first use.",
 }
 _jobs: OrderedDict[str, dict] = OrderedDict()
 
@@ -59,7 +59,7 @@ def _public_job(job: dict) -> dict:
         "state": job["state"],
         "message": job["message"],
         "progress": job["progress"],
-        "total": 3,
+        "total": job["total"],
         "size": "512x512",
         "images": job["images"],
         "error": job.get("error"),
@@ -110,6 +110,8 @@ def _load_pipeline():
 
 def _generate_job(job_id: str, prompt: str, seeds: list[int]) -> None:
     global _active_job_id
+    total = len(seeds)
+    job_label = "Proof Frame" if total == 1 else "Hero Frame Set"
     try:
         with _generation_lock:
             _update_job(
@@ -124,11 +126,11 @@ def _generate_job(job_id: str, prompt: str, seeds: list[int]) -> None:
                 _update_job(
                     job_id,
                     state="cancelled",
-                    message="Hero Frame Set cancelled before image generation.",
+                    message=f"{job_label} cancelled before image generation.",
                 )
                 return
             images = []
-            _set_service_state("generating", "Generating Hero Frame Set.")
+            _set_service_state("generating", f"Generating {job_label}.")
 
             for index, seed in enumerate(seeds, start=1):
                 with _state_lock:
@@ -137,14 +139,14 @@ def _generate_job(job_id: str, prompt: str, seeds: list[int]) -> None:
                     _update_job(
                         job_id,
                         state="cancelled",
-                        message="Hero Frame Set stopped after the current completed frame.",
+                        message=f"{job_label} stopped after the current completed frame.",
                         images=list(images),
                     )
                     return
                 _update_job(
                     job_id,
                     state="generating",
-                    message=f"Generating frame {index} of 3...",
+                    message=f"Generating frame {index} of {total}...",
                     progress=index - 1,
                 )
                 generator_device = "cuda" if DEVICE_MODE == "cuda" else "cpu"
@@ -179,7 +181,7 @@ def _generate_job(job_id: str, prompt: str, seeds: list[int]) -> None:
                     _update_job(
                         job_id,
                         state="cancelled",
-                        message="Hero Frame Set stopped after the current completed frame.",
+                        message=f"{job_label} stopped after the current completed frame.",
                         images=list(images),
                     )
                     return
@@ -187,8 +189,12 @@ def _generate_job(job_id: str, prompt: str, seeds: list[int]) -> None:
             _update_job(
                 job_id,
                 state="completed",
-                message="Choose your Hero Frame.",
-                progress=3,
+                message=(
+                    "Proof Frame is ready."
+                    if total == 1
+                    else "Choose your Hero Frame."
+                ),
+                progress=total,
                 images=images,
             )
             _set_service_state("ready", "Hero Frame model is ready.")
@@ -217,7 +223,7 @@ def status():
         "device": DEVICE_MODE,
         "download_gb_approx": 12,
         "size": "512x512",
-        "frames": 3,
+        "frame_options": [1, 3],
         "active_job": _public_job(dict(active_job)) if active_job else None,
     }
 
@@ -225,16 +231,18 @@ def status():
 @app.post("/v1/hero-sets")
 def create_hero_set(request: HeroSetRequest):
     global _active_job_id
-    if len(request.seeds) != 3 or len(set(request.seeds)) != 3:
-        raise HTTPException(status_code=422, detail="Exactly three unique seeds are required.")
+    total = len(request.seeds)
+    if total not in {1, 3} or len(set(request.seeds)) != total:
+        raise HTTPException(status_code=422, detail="One or three unique seeds are required.")
     if any(seed < 0 or seed > 2147483647 for seed in request.seeds):
         raise HTTPException(status_code=422, detail="Seeds must be between 0 and 2147483647.")
     job_id = uuid.uuid4().hex
     job = {
         "job_id": job_id,
         "state": "queued",
-        "message": "Hero Frame Set queued.",
+        "message": "Proof Frame queued." if total == 1 else "Hero Frame Set queued.",
         "progress": 0,
+        "total": total,
         "images": [],
         "error": None,
         "cancel_requested": False,
@@ -245,7 +253,7 @@ def create_hero_set(request: HeroSetRequest):
             raise HTTPException(
                 status_code=409,
                 detail={
-                    "message": "Another Hero Frame Set is already being generated.",
+                    "message": "Another Visual Proof job is already being generated.",
                     "job": _public_job(dict(active_job)) if active_job else None,
                 },
             )
