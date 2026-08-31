@@ -1147,24 +1147,24 @@
               <div class="proof-meta" id="proofMeta">Proof Frame · 1 × 512×512</div>
             </div>
 
-            <div class="proof-mode-grid" role="radiogroup" aria-label="Visual Proof mode">
-              <button class="proof-mode selected" type="button" id="singleProofMode" role="radio" aria-checked="true">
+            <div class="proof-mode-grid" aria-label="Visual Proof actions">
+              <button class="proof-mode" type="button" id="singleProofMode">
                 <span class="proof-mode-mark">●</span>
                 <span>
-                  <span class="proof-mode-title">Proof Frame · 1 image</span>
+                  <span class="proof-mode-title">Generate One Proof Frame</span>
                   <span class="proof-mode-copy">Generate one local scene-confirmation image.</span>
                 </span>
               </button>
-              <button class="proof-mode" type="button" id="heroProofMode" role="radio" aria-checked="false">
+              <button class="proof-mode" type="button" id="heroProofMode">
                 <span class="proof-mode-mark">○</span>
                 <span>
-                  <span class="proof-mode-title">Hero Frame Set · optional</span>
-                  <span class="proof-mode-copy">Optional local add-on for three frame options before AI video.</span>
+                  <span class="proof-mode-title">Generate Hero Frame Set</span>
+                  <span class="proof-mode-copy">Generate three local frame options before AI video.</span>
                 </span>
               </button>
             </div>
 
-            <button class="proof-generate" type="button" id="proofGenerateBtn">Generate Proof Frame</button>
+            <button class="proof-generate" type="button" id="proofGenerateBtn" style="display:none">Generate Proof Frame</button>
             <div class="proof-readiness" id="proofReadiness" aria-live="polite"></div>
 
             <div class="proof-stage" id="proofStage">
@@ -1524,10 +1524,8 @@
       heroProofMode.disabled = false;
       hideHeroLocalProgress();
       singleProofMode.className = "proof-mode selected";
-      singleProofMode.setAttribute("aria-checked", "true");
       singleProofMode.querySelector(".proof-mode-mark").textContent = "●";
       heroProofMode.className = "proof-mode";
-      heroProofMode.setAttribute("aria-checked", "false");
       heroProofMode.querySelector(".proof-mode-mark").textContent = "○";
       heroIntroTitle.textContent = "Review your Proof Frame";
       heroIntroCopy.textContent = "Approve or download the generated scene-confirmation image.";
@@ -1575,14 +1573,12 @@
       }
     }
 
-    function setProofMode(mode = "single") {
+    function setProofMode(mode = "single", checkReadiness = true) {
       visualProofMode = mode === "hero" ? "hero" : "single";
       proofGenerateBtn.hidden = false;
       singleProofMode.className = visualProofMode === "single" ? "proof-mode selected" : "proof-mode";
-      singleProofMode.setAttribute("aria-checked", String(visualProofMode === "single"));
       singleProofMode.querySelector(".proof-mode-mark").textContent = visualProofMode === "single" ? "●" : "○";
       heroProofMode.className = visualProofMode === "hero" ? "proof-mode selected" : "proof-mode";
-      heroProofMode.setAttribute("aria-checked", String(visualProofMode === "hero"));
       heroProofMode.querySelector(".proof-mode-mark").textContent = visualProofMode === "hero" ? "●" : "○";
       proofStage.className = "proof-stage";
       heroStage.className = "hero-stage";
@@ -1617,9 +1613,13 @@
         ? "↻ Regenerate Proof Frame"
         : "↻ Generate another set";
       proofGenerateBtn.disabled = true;
+      singleProofMode.disabled = true;
+      heroProofMode.disabled = true;
       proofReadiness.textContent = "Checking optional Visual Proof...";
       proofReadiness.className = "proof-readiness visible";
-      refreshHeroReadiness();
+      if (checkReadiness) {
+        refreshHeroReadiness();
+      }
     }
 
     async function refreshHeroReadiness() {
@@ -1636,6 +1636,8 @@
           return;
         }
         proofGenerateBtn.disabled = !heroAvailable;
+        singleProofMode.disabled = !heroAvailable;
+        heroProofMode.disabled = !heroAvailable;
         proofGenerateBtn.textContent = proofActionLabel();
         proofReadiness.textContent = data.ready
           ? (visualProofMode === "single"
@@ -1649,6 +1651,8 @@
         heroAvailable = false;
         heroModelReady = false;
         proofGenerateBtn.disabled = true;
+        singleProofMode.disabled = true;
+        heroProofMode.disabled = true;
         proofReadiness.textContent = "Optional Visual Proof is unavailable. Prompt Doctor remains fully available.";
         proofReadiness.className = "proof-readiness visible";
       }
@@ -1927,6 +1931,8 @@
           heroFirstUseMessage + "\n\nThe model is downloaded once and remains on this computer. Continue?"
         );
         if (!confirmed) {
+          singleProofMode.disabled = false;
+          heroProofMode.disabled = false;
           return;
         }
       }
@@ -2195,8 +2201,14 @@
       statusEl.className = "status";
     });
 
-    singleProofMode.addEventListener("click", () => setProofMode("single"));
-    heroProofMode.addEventListener("click", () => setProofMode("hero"));
+    singleProofMode.addEventListener("click", () => {
+      setProofMode("single", false);
+      generateHeroFrameSet(false);
+    });
+    heroProofMode.addEventListener("click", () => {
+      setProofMode("hero", false);
+      generateHeroFrameSet(false);
+    });
 
     approveReviewBtn.addEventListener("click", () => {
       if (!lastSourcePrompt || !lastFinalPrompt || lastFidelityStatus !== "REVIEW") {

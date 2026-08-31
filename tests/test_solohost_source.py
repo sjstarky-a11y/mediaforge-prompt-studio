@@ -40,11 +40,11 @@ class SoloHostSourceTests(unittest.TestCase):
     def test_compose_uses_public_versioned_images(self):
         self.assertNotIn("build:", self.compose)
         self.assertIn(
-            "aerialcroatia/mediaforge-prompt-studio:0.3-solohost.5",
+            "aerialcroatia/mediaforge-prompt-studio:0.3-solohost.6",
             self.compose,
         )
         self.assertIn(
-            "aerialcroatia/mediaforge-image-flux:0.3-solohost.5",
+            "aerialcroatia/mediaforge-image-flux:0.3-solohost.6",
             self.compose,
         )
         self.assertIn(
@@ -63,6 +63,8 @@ class SoloHostSourceTests(unittest.TestCase):
         self.assertNotIn('id="fastProofMode"', self.html)
         self.assertIn('id="singleProofMode"', self.html)
         self.assertIn('id="heroProofMode"', self.html)
+        self.assertIn("Generate One Proof Frame", self.html)
+        self.assertIn("Generate Hero Frame Set", self.html)
         self.assertIn('frame_count: frameCount', self.html)
         self.assertIn('frame_count: Literal[1, 3] = 3', self.main)
         self.assertIn('total not in {1, 3}', self.hero_server)
