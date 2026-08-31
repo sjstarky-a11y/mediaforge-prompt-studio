@@ -33,6 +33,8 @@ This gives the public package the intended behaviour:
 - Enabling Hero pulls the separate public image.
 - The FLUX model is still downloaded only after the first confirmed Hero set.
 - CPU capacity is selected independently: 4, 8, 12 or 16 cores.
+- The public Compose file is pull-only and never depends on local source or a
+  Docker build context.
 
 ## Source profiles
 
