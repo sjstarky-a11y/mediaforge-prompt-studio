@@ -40,11 +40,11 @@ class SoloHostSourceTests(unittest.TestCase):
     def test_compose_uses_public_versioned_images(self):
         self.assertNotIn("build:", self.compose)
         self.assertIn(
-            "aerialcroatia/mediaforge-prompt-studio:0.3-solohost.7",
+            "aerialcroatia/mediaforge-prompt-studio:0.3-solohost.8",
             self.compose,
         )
         self.assertIn(
-            "aerialcroatia/mediaforge-image-flux:0.3-solohost.7",
+            "aerialcroatia/mediaforge-image-flux:0.3-solohost.8",
             self.compose,
         )
         self.assertIn(

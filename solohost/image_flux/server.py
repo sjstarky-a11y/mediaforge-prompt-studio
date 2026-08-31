@@ -1,11 +1,13 @@
 import base64
 import gc
 import io
+import json
 import os
 import threading
 import time
 import uuid
 from collections import OrderedDict
+from pathlib import Path
 
 import torch
 from diffusers import Flux2KleinPipeline
@@ -69,8 +71,74 @@ def _public_job(job: dict) -> dict:
     }
 
 
+def _cached_runtime_snapshot() -> Path | None:
+    """Locate a usable cached model even if optional Hub files are absent."""
+    repo_cache = Path(HF_HOME) / f"models--{MODEL_ID.replace('/', '--')}"
+    if not repo_cache.is_dir():
+        return None
+
+    candidates: list[Path] = []
+    main_ref = repo_cache / "refs" / "main"
+    if main_ref.is_file():
+        revision = main_ref.read_text(encoding="utf-8").strip()
+        if revision:
+            candidates.append(repo_cache / "snapshots" / revision)
+
+    snapshots = repo_cache / "snapshots"
+    if snapshots.is_dir():
+        candidates.extend(
+            path
+            for path in snapshots.iterdir()
+            if path.is_dir() and path not in candidates
+        )
+
+    # A partial transfer must never be treated as a usable cached model.
+    if any(repo_cache.rglob("*.incomplete")):
+        return None
+
+    for snapshot in candidates:
+        model_index = snapshot / "model_index.json"
+        if not model_index.is_file():
+            continue
+        try:
+            manifest = json.loads(model_index.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            continue
+
+        component_dirs_valid = all(
+            (snapshot / name).is_dir()
+            for name, definition in manifest.items()
+            if not name.startswith("_")
+            and definition is not None
+            and isinstance(definition, list)
+            and len(definition) == 2
+        )
+        if not component_dirs_valid:
+            continue
+
+        weights = [path for path in snapshot.rglob("*.safetensors") if path.is_file()]
+        if not weights:
+            continue
+
+        shard_indexes_valid = True
+        for index_file in snapshot.rglob("*.index.json"):
+            try:
+                index_data = json.loads(index_file.read_text(encoding="utf-8"))
+                shard_names = set(index_data.get("weight_map", {}).values())
+            except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+                shard_indexes_valid = False
+                break
+            if shard_names and not all((index_file.parent / name).is_file() for name in shard_names):
+                shard_indexes_valid = False
+                break
+        if shard_indexes_valid:
+            return snapshot
+
+    return None
+
+
 def _model_is_cached() -> bool:
-    """Return true only when Hugging Face can resolve the model locally."""
+    """Return true when the complete runtime model is available locally."""
     global _model_cached
     if _pipeline is not None or _model_cached:
         return True
@@ -81,7 +149,10 @@ def _model_is_cached() -> bool:
             local_files_only=True,
         )
     except Exception:
-        return False
+        # Hub validation also requires optional repository files such as the
+        # README and license. Diffusers does not need those files at runtime.
+        if _cached_runtime_snapshot() is None:
+            return False
     _model_cached = True
     return True
 
