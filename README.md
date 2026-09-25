@@ -8,6 +8,15 @@ MediaForge Prompt Studio.
 > **License:** Source available for personal, non-commercial evaluation only.
 > This is not an open-source project. See [`LICENSE`](LICENSE).
 
+## Distribution tracks
+
+This repository now documents two tested distribution tracks:
+
+- **Pi SoloHost v0.3.1** — current SoloHost package configuration is stored under [`solohost/v0.3.1/`](solohost/v0.3.1/). Docker Desktop must already be running and Docker Model Runner must be enabled before Pi Desktop recreates or installs the app.
+- **Standalone Public Test v0.1a CPU** — the repository-root installer and Compose files remain the original Windows CPU public-test package.
+
+The two tracks share the MediaForge product direction but use different packaging. The root standalone Compose is intentionally not replaced by the SoloHost Compose.
+
 ## What is included
 
 - Prompt Doctor
@@ -180,6 +189,7 @@ See [`LICENSES/THIRD_PARTY.md`](LICENSES/THIRD_PARTY.md).
 
 ## Project status
 
-**Public Test v0.1a CPU**
+- **Pi SoloHost: v0.3.1 — installation/setup hardening**
+- **Standalone Windows package: Public Test v0.1a CPU**
 
-This package is for testing and feedback before wider release.
+Both tracks are for testing and feedback before wider release.
