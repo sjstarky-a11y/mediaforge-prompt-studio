@@ -1,6 +1,19 @@
 # Changelog
 
-All notable public-test changes are documented here.
+All notable MediaForge Prompt Studio public-test and SoloHost packaging changes are documented here.
+
+## [0.3.1] - 2026-09-25 — Pi SoloHost
+
+### Installation and setup hardening
+
+- added a dedicated Pi SoloHost v0.3.1 package reference under `solohost/v0.3.1/`
+- clarified that Docker Desktop must be started and Docker Engine must be running before Pi Desktop installs or recreates MediaForge
+- clarified that Docker Model Runner must be enabled in Docker Desktop Settings > AI
+- retained explicit Docker Model Runner model provisioning for reliable clean installations
+- kept Visual Proof optional and configurable with 4, 8, 12, or 16 CPU-core limits
+- clarified first-run local model download behavior and the approximately 12 GB Visual Proof download
+- retained tested runtime images `0.3-solohost.8`; no application runtime rebuild is required for this packaging update
+- preserved the repository-root standalone Public Test v0.1a package unchanged
 
 ## [0.1a] - 2026-08-13
 
