@@ -35,14 +35,14 @@ class ReleaseBuilderTests(unittest.TestCase):
         linux = {path.as_posix() for path in collect_source_files(ROOT, LINUX)}
 
         self.assertIn("MediaForge-Windows.cmd", windows)
-        self.assertIn("PACKAGING-V0.3.md", windows)
+        self.assertIn("docs/MAINTENANCE.md", windows)
         self.assertIn("install.ps1", windows)
         self.assertIn("image_flux/Dockerfile.cpu", windows)
         self.assertIn("image_flux/Dockerfile.cuda", windows)
         self.assertNotIn("install.sh", windows)
         self.assertIn("install.sh", linux)
         self.assertIn("MediaForge-Linux.sh", linux)
-        self.assertIn("PACKAGING-V0.3.md", linux)
+        self.assertIn("docs/MAINTENANCE.md", linux)
         self.assertIn("scripts/mediaforge-common.sh", linux)
         self.assertIn("image_flux/server.py", linux)
         self.assertNotIn("install.ps1", linux)

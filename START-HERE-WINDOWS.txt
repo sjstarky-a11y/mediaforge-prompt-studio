@@ -1,12 +1,15 @@
-MediaForge Prompt Studio - Windows preview
+MediaForge Prompt Studio v0.4 preview - Windows
 
-1. Install and start Docker Desktop with the WSL2 engine.
-2. Enable Docker Model Runner and local TCP access in Settings > AI.
-3. Open MediaForge-Windows.cmd. First use installs; later use starts.
+1. Start Docker Desktop with the WSL2 engine.
+2. Enable Docker Model Runner and local TCP access in its AI settings.
+3. Double-click MediaForge-Windows.cmd. First use installs; later use starts.
+4. Open http://127.0.0.1:18888 and follow MediaForge-System/docs/USER-GUIDE.md.
 
-Auto selects NVIDIA, Intel or CPU for Proof Frame after runtime checks.
-Text and optional Hero generation report their own backends.
-See MediaForge-System/docs/PLATFORM-SUPPORT.md for tested environments.
+PowerShell example: .\MediaForge-Windows.cmd status
+Replace status with stop or doctor for those actions.
+Closing the browser leaves services running; use stop when finished.
+First downloads need internet and disk space. Models are cached locally.
 
-Internet is needed for first downloads. Models stay in the local cache.
-Use the launcher with status or stop to inspect or stop this installation.
+Setup: MediaForge-System/docs/QUICKSTART.md
+Help and memory: MediaForge-System/docs/TROUBLESHOOTING.md
+Intel B60 is validated on Windows/WSL2. Croatian output needs manual review.

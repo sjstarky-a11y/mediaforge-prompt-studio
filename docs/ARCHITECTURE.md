@@ -27,3 +27,6 @@ UI and service behaviour remain explicit profiles pending further consolidation.
 an explicit source list. `runtime/PACKAGE-MANIFEST.json` describes public sources,
 not local configurations. `local/`, `.env`, runtime reports, model caches and test
 media must not be committed or included in public artifacts.
+
+User guides are indexed in [docs/README](README.md). Historical release notes live
+under `docs/archive/`; current packages include the active user and maintenance guides.

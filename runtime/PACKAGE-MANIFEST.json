@@ -21,13 +21,18 @@
   },
   {
     "file": ".github/ISSUE_TEMPLATE/bug_report.yml",
-    "bytes": 1809,
-    "sha256": "c07ab9f84c642dcf743c4618a241b2fa08fb972fa33ef64b7deae53255ea6cfe"
+    "bytes": 1783,
+    "sha256": "87b30d897c358b9b301384cc5093a3951f304176ec8ff62b6f28c0aa9ed9937f"
   },
   {
     "file": ".github/ISSUE_TEMPLATE/config.yml",
     "bytes": 194,
     "sha256": "b443e04080054c95cd4dbef6d423d0c8846cd12c81baaca4f67f8ffc91cd16cf"
+  },
+  {
+    "file": ".github/ISSUE_TEMPLATE/test_feedback.yml",
+    "bytes": 970,
+    "sha256": "858b9bd750993253a986804c616ad91b5f4950e5738ba00e4ab016010427e300"
   },
   {
     "file": ".github/workflows/validate.yml",
@@ -41,18 +46,13 @@
   },
   {
     "file": "CHANGELOG.md",
-    "bytes": 7737,
-    "sha256": "7a3c694c6105993c7f3d018b443d6837f379aaf87fd11620e4a083aa001f1856"
+    "bytes": 7912,
+    "sha256": "b89e6078f40927b67c09b61dd0e4e6de9d1763a6c136f35ddf731cff204bccbd"
   },
   {
     "file": "CONTRIBUTING.md",
-    "bytes": 855,
-    "sha256": "9451c04268cf8440b4baa34923d2bf91d5fc19d2db3e56fb77ddc018cd509940"
-  },
-  {
-    "file": "DEVELOPMENT-V0.3.md",
-    "bytes": 6663,
-    "sha256": "60a030a54ff4bac5c8c6a8b65f7cddd9fd590141426dc691f90aec48c07b3a08"
+    "bytes": 913,
+    "sha256": "df815753e108be1b57beadc88021389f62a1819e9ad50d1fd0ee8dd9fda9fc3a"
   },
   {
     "file": "Dockerfile",
@@ -70,11 +70,6 @@
     "sha256": "300101d2825c37c0952eb644e242507b08b9429b96e04754b79ac3a49bb8e0d9"
   },
   {
-    "file": "LINUX-TEST-V0.3.md",
-    "bytes": 2901,
-    "sha256": "522c8a1e947f7269670a9a952afd008c59741209126bf8302b6f64487bb4b69d"
-  },
-  {
     "file": "MediaForge-Linux.sh",
     "bytes": 925,
     "sha256": "747e742aee85a06c8f97678d5c72c7e01c834d1433e06247df50ac01e5606354"
@@ -85,34 +80,24 @@
     "sha256": "c14dc8bd74275e603a7fb171f29685c64ef56d53d201e1343486db023000e167"
   },
   {
-    "file": "PACKAGING-V0.3.md",
-    "bytes": 3196,
-    "sha256": "9b928c982ff108d642a373762c94a69c607ce97f487bf580dd34b53e72de5114"
-  },
-  {
-    "file": "PUBLIC-TEST-V0.1A.txt",
-    "bytes": 1203,
-    "sha256": "cfa6523ad796cfbaade0922b69f80afe653f7ab11adb0d9c145523a513ea9b00"
-  },
-  {
     "file": "README.md",
-    "bytes": 4648,
-    "sha256": "8a0bf8f67c9ef874a925b20c925901ba44038c2f6f3949f71c08fdbf4035f44d"
+    "bytes": 2930,
+    "sha256": "ed37e9fddb6786346ca4ddc87648ef2a0701509c8dd7766e2e9d1216bcc49fa0"
   },
   {
     "file": "SECURITY.md",
-    "bytes": 1699,
-    "sha256": "756d27dba6057c2acf533cdfd24dcc4a3455b211ca913ee74a0f88c890e50dbb"
+    "bytes": 1214,
+    "sha256": "8cc6980703739bc71dbeb68fd3f1fc4bad7af37413018bf26b65a4fcf8e78bc7"
   },
   {
     "file": "START-HERE-LINUX.txt",
-    "bytes": 601,
-    "sha256": "8ae46023b01945b3bfd6e2e9cfd0787924651dd193d7ef816d157af5f4dbfa81"
+    "bytes": 659,
+    "sha256": "d7af0b90ef5e0318b85a90ef759a90d185cbf47a9859bf7a9982d96247df2864"
   },
   {
     "file": "START-HERE-WINDOWS.txt",
-    "bytes": 595,
-    "sha256": "d8d7d68d1de8a128bb3eeea16a3d7ab7644e289606d8638aafeea9862af89a65"
+    "bytes": 754,
+    "sha256": "29359539bdb16629802ff53d714d54820af2be2b21edadfdd4506c09e56181a5"
   },
   {
     "file": "app/assets/mediaforge-logo.png",
@@ -241,8 +226,8 @@
   },
   {
     "file": "docs/ARCHITECTURE.md",
-    "bytes": 1731,
-    "sha256": "ca1b8fcb6a2c77fd046ecb4f91cc94fc1a9b3e1f8c88512c6b790b4b71566069"
+    "bytes": 1903,
+    "sha256": "ee0d54dc1ffb2b8763ea28fe961e02346264761008725abe5b8f8e35a077c798"
   },
   {
     "file": "docs/INTEL-GPU.md",
@@ -255,9 +240,59 @@
     "sha256": "655588c636e35bb988676398b5877fff1ccc9e9e52b444ce8f3cad33d550b0c5"
   },
   {
+    "file": "docs/MAINTENANCE.md",
+    "bytes": 1611,
+    "sha256": "d975c0ac8781335b0208904831b1126f7f00f95f81d9b6cb3cde1054e0d8138e"
+  },
+  {
     "file": "docs/PLATFORM-SUPPORT.md",
     "bytes": 3183,
     "sha256": "bcc8c3f1b922ec57635a02e54d645248ad67502a7fb3411ba3f08ea525a693d3"
+  },
+  {
+    "file": "docs/QUICKSTART.md",
+    "bytes": 3085,
+    "sha256": "baaa9bb268d31bad619524f40d659aff2bfccf8a8136b5fdf1fe74a0f1c9478c"
+  },
+  {
+    "file": "docs/README.md",
+    "bytes": 660,
+    "sha256": "c0753f6b4382689c21a4d8f623c2757cccd9d81b0bb1397b1e2527fd183c0570"
+  },
+  {
+    "file": "docs/TROUBLESHOOTING.md",
+    "bytes": 2253,
+    "sha256": "31a537d93385b54bfb2f6a2275f1d1e4361e397fe54a97a25bf389be171aca01"
+  },
+  {
+    "file": "docs/USER-GUIDE.md",
+    "bytes": 2159,
+    "sha256": "a7e64e21b17603fd327b4383672ec7fec97fc2e0d674b222cce4f517457c5efe"
+  },
+  {
+    "file": "docs/archive/DEVELOPMENT-V0.3.md",
+    "bytes": 6667,
+    "sha256": "43356c56ff39873f23ad02ca851c2ee48da88595bea18782157c43fd1d4cd624"
+  },
+  {
+    "file": "docs/archive/LINUX-TEST-V0.3.md",
+    "bytes": 2905,
+    "sha256": "d7ffe461e4021defa0e99f39ca2bbf20d3578947effe8d8a3db39a5db583094a"
+  },
+  {
+    "file": "docs/archive/PACKAGING-V0.3.md",
+    "bytes": 3200,
+    "sha256": "f79d92302d652cd6cdeb91f7a79a75424eb127236f3032122bcfaf758c5b1562"
+  },
+  {
+    "file": "docs/archive/PUBLIC-TEST-V0.1A.txt",
+    "bytes": 1291,
+    "sha256": "65a2eb40b73213aa07b5143be02fdd4b517c593da423075b38e037922166ac17"
+  },
+  {
+    "file": "docs/archive/README.md",
+    "bytes": 325,
+    "sha256": "94f046c8848fb28b27cde128cdcce9da183a27c6775abee3179029569671fdc2"
   },
   {
     "file": "doctor.ps1",
@@ -366,8 +401,8 @@
   },
   {
     "file": "scripts/build_release.py",
-    "bytes": 17365,
-    "sha256": "0eb77764ec42333e126663c4b39324af37e41a4e23ccd8559f82c010bed6266a"
+    "bytes": 18400,
+    "sha256": "f295cb001602b498d9652b11048c95522f6fbb888fb866d3e488fe28ecee4fd1"
   },
   {
     "file": "scripts/intel-runtime.sh",
@@ -626,8 +661,8 @@
   },
   {
     "file": "tests/test_release_builder.py",
-    "bytes": 6222,
-    "sha256": "eeed73e34662e0eeb26d589ea41c841d20848ef8b367914cd8e022a30a20df8f"
+    "bytes": 6226,
+    "sha256": "83757d29d7e45a810ac25c1902fa40f6505291ee2979b760110a9a9b8383e533"
   },
   {
     "file": "tests/test_runtime_status.py",

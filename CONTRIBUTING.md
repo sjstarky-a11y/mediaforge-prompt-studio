@@ -1,25 +1,20 @@
-# Contributing and feedback
+# Feedback and contributions
 
-MediaForge Prompt Studio is proprietary source-available software, not an
-open-source project. Public-test feedback and reproducible bug reports are
-welcome.
+MediaForge is proprietary source-available software. Reproducible bug reports and
+public-test feedback are welcome; see [LICENSE](LICENSE) for permitted use.
 
-## Bug reports
+## Report a problem
 
-Before opening an issue:
+1. Run the launcher with `status`; check [troubleshooting](docs/TROUBLESHOOTING.md).
+2. Check existing [issues](https://github.com/sjstarky-a11y/mediaforge-prompt-studio/issues).
+3. Open a bug report with version, OS, component, steps and expected/actual result.
+4. Use a small public example. Include the allowlisted Doctor report if useful.
 
-1. confirm that Docker Desktop is running;
-2. run `./status.ps1` from PowerShell;
-3. remove credentials, prompts, personal data, and unrelated logs; and
-4. check whether the issue already exists.
+Remove private prompts, model inventories, personal paths, credentials and
+unrelated logs. Report security concerns [privately](SECURITY.md).
 
-Include the smallest reproducible prompt or workflow. State whether the issue
-affects Prompt Doctor, Fidelity Guard, Visual Proof Frame, or Model Adapter.
+## Code and derivative work
 
-## Code contributions
-
-Pull requests and derivative implementations are not accepted unless the
-copyright owner has provided prior written permission. See `LICENSE`.
-
-Submitting feedback does not grant a license to the MediaForge source code,
-branding, or product design.
+Pull requests and derivative implementations require the copyright owner's prior
+written permission. Submitting feedback grants no license to the source code,
+branding or product design.

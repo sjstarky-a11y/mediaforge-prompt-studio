@@ -1,4 +1,4 @@
-> Historical v0.3 reference. For the current preview, see [README](README.md) and [platform support](docs/PLATFORM-SUPPORT.md).
+> Historical v0.3 reference. For the current preview, see [README](../../README.md) and [platform support](../PLATFORM-SUPPORT.md).
 
 # MediaForge v0.3 — NVIDIA + Multi-Model Runtime
 

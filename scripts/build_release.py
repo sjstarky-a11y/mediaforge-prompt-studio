@@ -8,6 +8,8 @@ import binascii
 import hashlib
 import io
 import json
+import posixpath
+import re
 import struct
 import tarfile
 import tempfile
@@ -31,7 +33,17 @@ COMMON_FILES = (
     Path("CHANGELOG.md"),
     Path("Dockerfile"),
     Path("LICENSE"),
-    Path("PACKAGING-V0.3.md"),
+    Path("docs/MAINTENANCE.md"),
+    Path("docs/README.md"),
+    Path("docs/archive/README.md"),
+    Path("docs/archive/DEVELOPMENT-V0.3.md"),
+    Path("docs/archive/PACKAGING-V0.3.md"),
+    Path("docs/archive/LINUX-TEST-V0.3.md"),
+    Path("docs/archive/PUBLIC-TEST-V0.1A.txt"),
+
+    Path("docs/QUICKSTART.md"),
+    Path("docs/USER-GUIDE.md"),
+    Path("docs/TROUBLESHOOTING.md"),
     Path("README.md"),
     Path("SECURITY.md"),
     Path("docker-compose.nvidia.yml"),
@@ -195,13 +207,27 @@ def release_destination(relative: Path, spec: PlatformSpec) -> Path:
 
 def _normalized_content(source: Path, relative: Path, spec: PlatformSpec) -> bytes:
     content = source.read_bytes()
-    if relative == Path("README.md"):
+    if relative.suffix.lower() == ".md":
         text = content.decode("utf-8")
-        for folder in ("docs/", "LICENSES/"):
-            text = text.replace("](" + folder, "](" + SYSTEM_DIRECTORY.as_posix() + "/" + folder)
-        text = text.replace("](SECURITY.md)", "](MediaForge-System/SECURITY.md)")
-        text = text.replace("](solohost/v0.3.1/)", "](https://github.com/sjstarky-a11y/mediaforge-prompt-studio/tree/main/solohost/v0.3.1)")
-        content = text.encode("utf-8")
+        source_root = source.parents[len(relative.parts) - 1]
+        bundled = set(collect_source_files(source_root, spec))
+        current = release_destination(relative, spec).as_posix()
+
+        def rewrite_link(match):
+            target = match.group(1)
+            if target.startswith(("#", "/")) or re.match(r"[a-zA-Z][a-zA-Z0-9+.-]*:", target):
+                return match.group(0)
+            file_part, marker, anchor = target.partition("#")
+            resolved = Path(posixpath.normpath(posixpath.join(relative.parent.as_posix(), file_part)))
+            suffix = marker + anchor
+            if resolved in bundled:
+                packaged = release_destination(resolved, spec).as_posix()
+                link = posixpath.relpath(packaged, posixpath.dirname(current) or ".") + suffix
+            else:
+                link = "https://github.com/sjstarky-a11y/mediaforge-prompt-studio/blob/main/" + resolved.as_posix() + suffix
+            return "](" + link + ")"
+
+        content = re.sub(r"\]\(([^)]+)\)", rewrite_link, text).encode("utf-8")
     if spec.key == "windows" and relative.suffix.lower() in {".cmd", ".txt"}:
         text = content.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
         return text.replace("\n", "\r\n").encode("utf-8")

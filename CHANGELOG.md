@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.4 preview
+## v0.4 preview — 22 October 2026
 
 - Reconcile standalone Windows/Linux development with main and preserve SoloHost v0.3.1 configuration.
 - Share backend selection and runtime reporting between platform launchers.
@@ -10,7 +10,9 @@
 - Extend narrow fidelity checks for common object substitutions and invented time of day.
 - Keep text, Proof Frame and Hero runtime claims independent.
 - Export allowlisted diagnostics and exclude local configurations from packages.
-- Add platform support and Intel setup documentation.
+- Add concise installation, usage, platform, Intel and troubleshooting guides.
+- Group historical notes under docs/archive and refresh issue forms.
+- Keep documentation links valid in both extracted packages.
 
 
 All notable MediaForge Prompt Studio public-test and SoloHost packaging changes are documented here.

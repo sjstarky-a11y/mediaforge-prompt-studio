@@ -1,96 +1,60 @@
 # MediaForge Prompt Studio
 
-**Refine the prompt. Protect the intent. Preview the scene locally.**
+**Prepare a video prompt. Review the intent. Preview the scene locally.**
 
-MediaForge Prompt Studio helps prepare cinematic prompts, check whether an edit
-preserves the original idea, and create a local image preview before committing
-to a video generation workflow.
+A local workspace for refining cinematic prompts, checking selected changes,
+and generating still-image previews before using a separate video generator.
 
-The v0.4 development preview brings the Windows and Linux standalone packages
-together and adds automatic Intel GPU selection alongside the CPU and NVIDIA
-paths. Hardware support is reported per function, with CPU compatibility fallback.
+**[Download v0.4 preview](https://github.com/sjstarky-a11y/mediaforge-prompt-studio/releases/tag/v0.4-preview)**
+· [Install](docs/QUICKSTART.md) · [Use the app](docs/USER-GUIDE.md) · [Help](docs/TROUBLESHOOTING.md)
 
-> Source available for personal, non-commercial evaluation under [LICENSE](LICENSE).
-> Third-party software and models retain their own [licenses](LICENSES/THIRD_PARTY.md).
+## What it does
 
-## Features
+| Tool | Purpose |
+| --- | --- |
+| Prompt Doctor | Improve, diagnose, or structure a prompt |
+| Fidelity Guard / Intent Lock | Flag selected changes to the original meaning |
+| Fast / Quality Proof | Generate a still-image scene preview |
+| Hero Frame Set | Optionally compare three image candidates |
+| Model Adapter | Format an approved prompt for a video workflow |
 
-- **Prompt Doctor:** prepare English or Croatian prompts using a local language model.
-- **Fidelity Guard / Intent Lock:** review additions and protect the source intent.
-- **Fast and Quality Proof:** generate a local scene preview.
-- **Hero Frame Set:** optionally create three candidates and select a preferred frame.
-- **Model Adapter:** format approved prompts for the supported video services without
-  inventing camera moves, dialogue or creative direction.
+Generated text and images need your review. The app does not render video.
 
-## Windows and Linux
+## Start
 
-| Package | Target | Start |
+1. Install Docker and enable Docker Model Runner.
+2. Download the package for your system and extract it into a new folder.
+3. Start the launcher below. First use installs; later use starts the app.
+
+| System | Launcher | Requirements |
 | --- | --- | --- |
-| Windows | Windows 11 x64, Docker Desktop with WSL2 and Model Runner | `MediaForge-Windows.cmd` |
-| Linux | Ubuntu 24.04 x86_64, Docker Engine, Compose and Model Runner | `./MediaForge-Linux.sh` |
+| Windows | Double-click `MediaForge-Windows.cmd` | Windows 11 x64; Docker Desktop with WSL2 |
+| Linux | Run `./MediaForge-Linux.sh` | Ubuntu 24.04 x86_64; Docker Engine, Compose, Model Runner |
 
-Install Docker and enable Model Runner before first use. The first installation
-needs an internet connection and several gigabytes of free space for model caches.
-Once downloaded, inference runs locally. Models are not bundled in the archives.
+Open `http://127.0.0.1:18888`. Internet is needed for the first model downloads;
+models are cached locally and are not included in the packages.
 
-From a source checkout on Windows:
+## Hardware and limits
 
-```powershell
-.\install.ps1
-```
+- **CPU, NVIDIA and Intel:** automatic runtime selection with CPU compatibility fallback.
+- **Intel Arc Pro B60:** text and Fast/Quality Proof verified on Windows/WSL2.
+- **Linux:** source/package checks pass; native Intel GPU installation still needs a hardware test.
+- **Croatian:** experimental; grammar and meaning errors can escape Fidelity Guard.
+- **Hero:** separate CPU/NVIDIA service. macOS packages are not provided in this preview.
 
-On Linux:
+See [platform support](docs/PLATFORM-SUPPORT.md) and [recorded Intel tests](docs/INTEL-TESTS.md).
 
-```bash
-./install.sh --auto
-```
+## Documentation
 
-The installer checks available execution environments and selects **NVIDIA, Intel,
-or CPU** for Fast/Quality Proof. An Intel selection requires a real GPU calculation;
-detecting a card name is insufficient. An unavailable GPU in Auto mode falls back
-to CPU. Explicit GPU mode reports an error if its check fails.
+[All guides](docs/README.md) · [Intel setup](docs/INTEL-GPU.md) · [Architecture](docs/ARCHITECTURE.md)
+· [Changelog](CHANGELOG.md) · [Report a problem](https://github.com/sjstarky-a11y/mediaforge-prompt-studio/issues/new/choose)
 
-Prompt Doctor also uses Intel OpenVINO on a verified Intel profile with at least
-16 GiB of reported GPU memory. While its public text model is preparing, requests
-use the local Docker Model Runner fallback and report that route. Other profiles
-use Model Runner's own backend. Hero Frame Set uses its separate CPU or NVIDIA service. See the [platform support table](docs/PLATFORM-SUPPORT.md) for tested
-environments and limitations, and the [Intel guide](docs/INTEL-GPU.md) for setup.
+Local settings, model caches, prompts and generated media are excluded from public
+packages. See [privacy and diagnostics](docs/TROUBLESHOOTING.md#share-a-report).
 
-Intel Arc Pro B60 has completed public Windows/WSL2 text and Proof Frame tests.
-See the [dated validation note](docs/INTEL-TESTS.md) for timings,
-visual findings and the remaining Linux-host checks.
+Pi SoloHost is managed separately through Pi Desktop:
+[distribution guide](https://github.com/sjstarky-a11y/mediaforge-prompt-studio/tree/main/solohost).
 
-The default application address is `http://127.0.0.1:18888`. Host ports can be
-changed in the local `.env` file. Prompt Doctor can become ready while the image
-model is still downloading or loading. Use `status.ps1` or `./status.sh` to check.
-
-## Local settings and privacy
-
-Public defaults belong to this standalone product. Private model selections,
-workflows and configurations from other projects are not included.
-
-- Keep personal settings in `.env`, `local/` or files ending in `.local.json`.
-- Model caches and runtime reports are excluded from Git and release packages.
-- `doctor.ps1` or `./doctor.sh` creates an allowlisted report without model names,
-  prompts, responses, URLs, local paths or logs.
-- Application health and detailed status are local tools and may show local
-  settings. Do not copy them wholesale into a public issue.
-
-## Distribution and development
-
-The standalone packages share one Windows/Linux runtime policy under
-`app/runtime_tools/`. The [architecture guide](docs/ARCHITECTURE.md) describes the
-source and packaging layout. Development changes are reviewed before promotion
-to the default branch; a source preview is not automatically a published release.
-
-The [published releases](https://github.com/sjstarky-a11y/mediaforge-prompt-studio/releases)
-contain older Windows/Linux packages. The new preview packages are built from this
-branch with `scripts/build_release.py --version v0.4-preview`.
-
-Pi SoloHost is a separately managed distribution under `solohost/`; its published
-v0.3.1 configuration is preserved in [solohost/v0.3.1](solohost/v0.3.1/).
-Use Pi Desktop to manage that installation.
-
-Please use [GitHub Issues](https://github.com/sjstarky-a11y/mediaforge-prompt-studio/issues)
-for reproducible public-package bugs and follow [SECURITY.md](SECURITY.md) for
-private vulnerability reports.
+**License:** source available for personal, non-commercial evaluation under
+[LICENSE](LICENSE). Modification, redistribution and commercial use require the
+owner's permission. [Third-party licenses](LICENSES/THIRD_PARTY.md) apply separately.
