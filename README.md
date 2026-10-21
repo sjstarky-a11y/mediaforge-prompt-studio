@@ -1,195 +1,96 @@
-# MediaForge Prompt Studio — Public Test v0.1a CPU
+# MediaForge Prompt Studio
 
-**Fix the prompt → protect the intent → see it before you generate.**
+**Refine the prompt. Protect the intent. Preview the scene locally.**
 
-This repository contains the first standalone public-test package for
-MediaForge Prompt Studio.
+MediaForge Prompt Studio helps prepare cinematic prompts, check whether an edit
+preserves the original idea, and create a local image preview before committing
+to a video generation workflow.
 
-> **License:** Source available for personal, non-commercial evaluation only.
-> This is not an open-source project. See [`LICENSE`](LICENSE).
+The v0.4 development preview brings the Windows and Linux standalone packages
+together and adds automatic Intel GPU selection alongside the CPU and NVIDIA
+paths. Hardware support is reported per function, with CPU compatibility fallback.
 
-## Distribution tracks
+> Source available for personal, non-commercial evaluation under [LICENSE](LICENSE).
+> Third-party software and models retain their own [licenses](LICENSES/THIRD_PARTY.md).
 
-This repository now documents two tested distribution tracks:
+## Features
 
-- **Pi SoloHost v0.3.1** — current SoloHost package configuration is stored under [`solohost/v0.3.1/`](solohost/v0.3.1/). Docker Desktop must already be running and Docker Model Runner must be enabled before Pi Desktop recreates or installs the app.
-- **Standalone Public Test v0.1a CPU** — the repository-root installer and Compose files remain the original Windows CPU public-test package.
+- **Prompt Doctor:** prepare English or Croatian prompts using a local language model.
+- **Fidelity Guard / Intent Lock:** review additions and protect the source intent.
+- **Fast and Quality Proof:** generate a local scene preview.
+- **Hero Frame Set:** optionally create three candidates and select a preferred frame.
+- **Model Adapter:** format approved prompts for the supported video services without
+  inventing camera moves, dialogue or creative direction.
 
-The two tracks share the MediaForge product direction but use different packaging. The root standalone Compose is intentionally not replaced by the SoloHost Compose.
+## Windows and Linux
 
-## What is included
+| Package | Target | Start |
+| --- | --- | --- |
+| Windows | Windows 11 x64, Docker Desktop with WSL2 and Model Runner | `MediaForge-Windows.cmd` |
+| Linux | Ubuntu 24.04 x86_64, Docker Engine, Compose and Model Runner | `./MediaForge-Linux.sh` |
 
-- Prompt Doctor
-- Fidelity Guard / Intent Lock
-- Visual Proof Frame
-- Fast Proof 768×768
-- Quality Proof 1024×1024
-- Single-Frame Extraction
-- Model Adapter
-- Generic Video
-- Runway Gen-4.5
-- Veo 3.1
-- Kling VIDEO 3.0
+Install Docker and enable Model Runner before first use. The first installation
+needs an internet connection and several gigabytes of free space for model caches.
+Once downloaded, inference runs locally. Models are not bundled in the archives.
 
-## Public Test v0.1a scope
-
-This first package intentionally runs inference on **CPU / Compatible mode**.
-
-The installer already records the detected NVIDIA / AMD / Intel GPU hardware in `runtime/hardware-profile.json`, but GPU acceleration is not enabled in v0.1a. GPU backends will be added as separate public-test milestones without changing the MediaForge UI workflow.
-
-## Requirements
-
-- Windows 11 x64
-- Docker Desktop
-- Docker Compose
-- Docker Model Runner
-- Internet connection for the first model downloads
-- Enough free RAM and disk space for local AI models
-
-Docker Model Runner must expose host-side TCP access on port `12434`. `install.ps1` attempts to configure this automatically with Docker Desktop's current `--tcp=12434` syntax.
-
-## Install
-
-1. Install and start Docker Desktop.
-2. Extract or clone this repository.
-3. Open PowerShell in the repository folder.
-4. Run:
+From a source checkout on Windows:
 
 ```powershell
-Set-ExecutionPolicy -Scope Process Bypass
 .\install.ps1
 ```
 
-The installer will:
+On Linux:
 
-1. detect CPU/RAM/GPU hardware,
-2. verify Docker,
-3. enable Docker Model Runner,
-4. pull `ai/qwen2.5:3B-Q4_K_M`,
-5. build MediaForge,
-6. start OpenVINO Model Server,
-7. download/cache the SDXL INT8 model on first use,
-8. open the configured app URL (`http://127.0.0.1:18888/` by default).
-
-### First SDXL download
-
-MediaForge Prompt Doctor becomes available as soon as the web app and Qwen are ready. Visual Proof Frame requires a separate, large SDXL INT8 download on the first install. On a slower connection this can take up to an hour.
-
-While SDXL downloads:
-
-- MediaForge itself is running; this is not an installation failure.
-- Prompt Doctor can already be used.
-- The installer reports elapsed time and the current local cache size.
-- The installer window may be closed without stopping the containers.
-- Run `.\status.ps1` later to confirm `OVMS ready: True`.
-
-The SDXL files are cached under `data/ovms-models/` and are reused on later starts.
-
-## Ports
-
-Default host ports are configured in `.env`:
-
-```dotenv
-MEDIAFORGE_APP_PORT=18888
-MEDIAFORGE_OVMS_PORT=8010
+```bash
+./install.sh --auto
 ```
 
-Edit these values before starting the stack if either port is already occupied. `install.ps1`, `start.ps1`, `status.ps1`, and Docker Compose all use the configured values.
+The installer checks available execution environments and selects **NVIDIA, Intel,
+or CPU** for Fast/Quality Proof. An Intel selection requires a real GPU calculation;
+detecting a card name is insufficient. An unavailable GPU in Auto mode falls back
+to CPU. Explicit GPU mode reports an error if its check fails.
 
-## Start later
+Prompt Doctor also uses Intel OpenVINO on a verified Intel profile with at least
+16 GiB of reported GPU memory. While its public text model is preparing, requests
+use the local Docker Model Runner fallback and report that route. Other profiles
+use Model Runner's own backend. Hero Frame Set uses its separate CPU or NVIDIA service. See the [platform support table](docs/PLATFORM-SUPPORT.md) for tested
+environments and limitations, and the [Intel guide](docs/INTEL-GPU.md) for setup.
 
-```powershell
-.\start.ps1
-```
+Intel Arc Pro B60 has completed public Windows/WSL2 text and Proof Frame tests.
+See the [dated validation note](docs/INTEL-TESTS.md) for timings,
+visual findings and the remaining Linux-host checks.
 
-## Stop
+The default application address is `http://127.0.0.1:18888`. Host ports can be
+changed in the local `.env` file. Prompt Doctor can become ready while the image
+model is still downloading or loading. Use `status.ps1` or `./status.sh` to check.
 
-```powershell
-.\stop.ps1
-```
+## Local settings and privacy
 
-## Status / troubleshooting
+Public defaults belong to this standalone product. Private model selections,
+workflows and configurations from other projects are not included.
 
-```powershell
-.\status.ps1
-```
+- Keep personal settings in `.env`, `local/` or files ending in `.local.json`.
+- Model caches and runtime reports are excluded from Git and release packages.
+- `doctor.ps1` or `./doctor.sh` creates an allowlisted report without model names,
+  prompts, responses, URLs, local paths or logs.
+- Application health and detailed status are local tools and may show local
+  settings. Do not copy them wholesale into a public issue.
 
-Useful logs:
+## Distribution and development
 
-```powershell
-docker logs mediaforge-prompt-studio
-docker logs mediaforge-ovms-sdxl-cpu
-```
+The standalone packages share one Windows/Linux runtime policy under
+`app/runtime_tools/`. The [architecture guide](docs/ARCHITECTURE.md) describes the
+source and packaging layout. Development changes are reviewed before promotion
+to the default branch; a source preview is not automatically a published release.
 
-## Local models
+The [published releases](https://github.com/sjstarky-a11y/mediaforge-prompt-studio/releases)
+contain older Windows/Linux packages. The new preview packages are built from this
+branch with `scripts/build_release.py --version v0.4-preview`.
 
-Prompt Doctor:
+Pi SoloHost is a separately managed distribution under `solohost/`; its published
+v0.3.1 configuration is preserved in [solohost/v0.3.1](solohost/v0.3.1/).
+Use Pi Desktop to manage that installation.
 
-`ai/qwen2.5:3B-Q4_K_M`
-
-Visual Proof Frame:
-
-`OpenVINO/stable-diffusion-xl-base-1.0-int8-ov`
-
-Downloaded models are cached locally. The OVMS model cache is stored under `data/ovms-models/` and is excluded from Git.
-
-## Privacy
-
-The Public Test package is designed to run locally. Prompt Doctor requests go to the local Docker Model Runner endpoint, and Proof Frame requests go to the local OpenVINO Model Server service.
-
-## Current limitation
-
-This is a **Windows / CPU public-test milestone**, not the final universal installer.
-
-Planned runtime milestones:
-
-- NVIDIA acceleration
-- Intel acceleration
-- AMD acceleration
-- AUTO hardware/backend selection
-
-CPU remains the compatibility fallback.
-
-## Distribution architecture
-
-```text
-                    MediaForge Core
-                          |
-             +------------+------------+
-             |                         |
-        Pi SoloHost                GitHub / Docker
-             |                         |
-        Pi Desktop                Public installer
-             |                         |
-         localhost                  localhost
-```
-
-The same MediaForge core is intended to serve both distribution paths.
-
-## Feedback and security
-
-- Use GitHub Issues for reproducible, non-sensitive public-test bugs.
-- Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before submitting feedback.
-- Follow [`SECURITY.md`](SECURITY.md) for private vulnerability reports.
-- Never publish private prompts, credentials, personal data, or full unrelated logs.
-
-## License
-
-MediaForge Prompt Studio's original code, UI, product logic, documentation, and
-branding are copyright © 2026 Siniša Josip Starčević. All rights are reserved.
-Viewing the source and running an unmodified copy for personal, non-commercial
-evaluation are permitted; modification, redistribution, derivative works,
-hosted services, and commercial use require prior written permission. See
-[`LICENSE`](LICENSE) for the controlling terms.
-
-## Third-party software and model licenses
-
-Third-party runtimes, packages, and downloaded models retain their own licenses.
-See [`LICENSES/THIRD_PARTY.md`](LICENSES/THIRD_PARTY.md).
-
-## Project status
-
-- **Pi SoloHost: v0.3.1 — installation/setup hardening**
-- **Standalone Windows package: Public Test v0.1a CPU**
-
-Both tracks are for testing and feedback before wider release.
+Please use [GitHub Issues](https://github.com/sjstarky-a11y/mediaforge-prompt-studio/issues)
+for reproducible public-package bugs and follow [SECURITY.md](SECURITY.md) for
+private vulnerability reports.

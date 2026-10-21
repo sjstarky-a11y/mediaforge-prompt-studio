@@ -1,0 +1,72 @@
+name: ${MEDIAFORGE_PROJECT_NAME:-mediaforge-prompt-studio-public}
+
+services:
+  mediaforge:
+    extends:
+      file: docker-compose.yml
+      service: mediaforge
+    environment:
+      MEDIAFORGE_ACTIVE_TEXT_RUNTIME: ${MEDIAFORGE_ACTIVE_TEXT_RUNTIME:-dmr}
+      MEDIAFORGE_INTEL_TEXT_URL: http://text-intel:8000/v3
+      MEDIAFORGE_INTEL_TEXT_MODEL: ${MEDIAFORGE_INTEL_TEXT_MODEL:-OpenVINO/Qwen2.5-7B-Instruct-int4-ov}
+      MEDIAFORGE_IMAGE_BACKEND: Intel GPU / OpenVINO
+      MEDIAFORGE_HERO_BACKEND: FLUX.2 Klein 4B / CPU
+
+  ovms-sdxl:
+    extends:
+      file: docker-compose.yml
+      service: ovms-sdxl
+    build:
+      context: ./intel_runtime
+    image: mediaforge-intel-runtime:v0.4-preview
+    container_name: ${MEDIAFORGE_INTEL_IMAGE_CONTAINER:-mediaforge-ovms-intel}
+    command:
+      - --rest_port
+      - "8000"
+      - --model_repository_path
+      - /models
+      - --task
+      - image_generation
+      - --source_model
+      - ${MEDIAFORGE_IMAGE_MODEL:-OpenVINO/stable-diffusion-xl-base-1.0-int8-ov}
+      - --target_device
+      - ${MEDIAFORGE_IMAGE_DEVICE:-GPU}
+    devices:
+      - /dev/dxg:/dev/dxg
+    volumes:
+      - /usr/lib/wsl:/usr/lib/wsl:ro
+
+  image-flux:
+    extends:
+      file: docker-compose.yml
+      service: image-flux
+
+  text-intel:
+    profiles: ["intel-text"]
+    image: mediaforge-intel-runtime:v0.4-preview
+    build:
+      context: ./intel_runtime
+    container_name: ${MEDIAFORGE_INTEL_TEXT_CONTAINER:-mediaforge-text-intel}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MEDIAFORGE_INTEL_TEXT_PORT:-8013}:8000"
+    command:
+      - --rest_port
+      - "8000"
+      - --model_repository_path
+      - /models
+      - --task
+      - text_generation
+      - --source_model
+      - ${MEDIAFORGE_INTEL_TEXT_MODEL:-OpenVINO/Qwen2.5-7B-Instruct-int4-ov}
+      - --target_device
+      - ${MEDIAFORGE_IMAGE_DEVICE:-GPU.0}
+      - --cache_size
+      - "1"
+      - --max_num_seqs
+      - "1"
+    devices:
+      - /dev/dxg:/dev/dxg
+    volumes:
+      - ./data/intel-text-models:/models
+      - /usr/lib/wsl:/usr/lib/wsl:ro

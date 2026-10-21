@@ -1,0 +1,12 @@
+MediaForge Prompt Studio - Linux preview
+
+1. Use Ubuntu 24.04 x86_64 with Docker Engine, Compose and Model Runner.
+2. Run ./MediaForge-Linux.sh. First use installs; later use starts.
+
+Auto selects NVIDIA, Intel or CPU for Proof Frame after runtime checks.
+Intel needs the supported compute driver and render-device permissions.
+Text and optional Hero generation report their own backends.
+See MediaForge-System/docs/PLATFORM-SUPPORT.md for validation scope.
+
+Internet is needed for first downloads. Models stay in the local cache.
+Use ./MediaForge-Linux.sh status or stop to manage this installation.
