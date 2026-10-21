@@ -1,28 +1,26 @@
-# Security policy
+# Security
 
-## Supported version
+## Scope
 
-Security fixes currently target the latest public-test release only.
+The current v0.4 preview is under development. Older releases remain available
+for reference; continued security maintenance of those versions is not promised.
 
-| Version | Supported |
-| --- | --- |
-| 0.1a | Yes |
-| Earlier public tests | No |
+## Report privately
 
-## Reporting a vulnerability
+Use [GitHub private vulnerability reporting](https://github.com/sjstarky-a11y/mediaforge-prompt-studio/security/advisories/new)
+if available. Otherwise contact the owner privately using an available contact
+method on the [owner's profile](https://github.com/sjstarky-a11y).
+Do not post vulnerability details, credentials or private data in a public issue.
 
-Do not publish credentials, private prompts, personal data, exploit details, or
-other sensitive information in a public issue.
+Include the version, OS, affected component, minimal reproduction and impact.
+Share only the sanitized evidence needed to reproduce the problem.
 
-Report a suspected vulnerability privately through the repository owner's
-GitHub profile. Include:
+## Local services and data
 
-- affected version;
-- Windows and Docker Desktop versions;
-- clear reproduction steps;
-- expected and observed behavior; and
-- the minimum logs needed to reproduce the problem, with secrets removed.
+App and inference ports bind to localhost by default. Keep Model Runner and these
+ports off untrusted networks. Review third-party model licenses and provenance.
 
-The project runs local AI services and exposes them only on `127.0.0.1` by
-default. Do not change bindings to `0.0.0.0` unless you understand and accept
-the network exposure.
+Local `.env`, `local/`, model caches and runtime reports are excluded from public
+packages. The shareable Doctor report excludes model names, prompts, responses,
+paths, URLs and logs. Detailed status output is local and must be reviewed before
+sharing. See [troubleshooting](docs/TROUBLESHOOTING.md#share-a-report).

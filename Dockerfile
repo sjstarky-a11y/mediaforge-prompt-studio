@@ -8,9 +8,8 @@ WORKDIR /app
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-COPY app/main.py /app/main.py
-COPY app/index.html /app/index.html
-COPY app/assets /app/assets
+COPY app /app
+COPY models /models
 
 EXPOSE 8080
 

@@ -1,0 +1,14 @@
+MediaForge Prompt Studio v0.4 preview - Linux
+
+1. Use Ubuntu 24.04 x86_64 with Docker Engine, Compose and Model Runner.
+2. Run ./MediaForge-Linux.sh. First use installs; later use starts.
+3. Open http://127.0.0.1:18888 and follow MediaForge-System/docs/USER-GUIDE.md.
+
+Example: ./MediaForge-Linux.sh status
+Replace status with stop or doctor for those actions.
+Closing the browser leaves services running; use stop when finished.
+First downloads need internet and disk space. Models are cached locally.
+
+Setup: MediaForge-System/docs/QUICKSTART.md
+Help: MediaForge-System/docs/TROUBLESHOOTING.md
+Native Linux GPU installation still needs hardware validation.

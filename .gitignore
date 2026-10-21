@@ -1,8 +1,14 @@
 .env
 data/
 runtime/hardware-profile.json
+runtime/runtime-profile.json
 runtime/install-log.txt
+runtime/install-linux.log
+runtime/doctor-report.txt
 *.zip
+*.tar.gz
+dist/
+SHA256SUMS*.txt
 __pycache__/
 *.pyc
 .DS_Store
@@ -10,3 +16,15 @@ Thumbs.db
 .idea/
 .vscode/
 *.log
+
+# Local hardware, probe evidence, private model configuration and test media.
+runtime/*
+!runtime/PACKAGE-MANIFEST.json
+local/
+*.local.json
+*.local.yml
+*.local.yaml
+
+.env.*
+!.env.example
+.venv/

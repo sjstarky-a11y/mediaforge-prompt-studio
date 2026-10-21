@@ -1,3 +1,5 @@
+Historical v0.1a reference. Current instructions: ../../README.md and ../QUICKSTART.md
+
 MEDIAFORGE PROMPT STUDIO
 PUBLIC TEST PACKAGE v0.1a CPU
 

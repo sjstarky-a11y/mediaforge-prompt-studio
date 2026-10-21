@@ -1,0 +1,15 @@
+MediaForge Prompt Studio v0.4 preview - Windows
+
+1. Start Docker Desktop with the WSL2 engine.
+2. Enable Docker Model Runner and local TCP access in its AI settings.
+3. Double-click MediaForge-Windows.cmd. First use installs; later use starts.
+4. Open http://127.0.0.1:18888 and follow MediaForge-System/docs/USER-GUIDE.md.
+
+PowerShell example: .\MediaForge-Windows.cmd status
+Replace status with stop or doctor for those actions.
+Closing the browser leaves services running; use stop when finished.
+First downloads need internet and disk space. Models are cached locally.
+
+Setup: MediaForge-System/docs/QUICKSTART.md
+Help and memory: MediaForge-System/docs/TROUBLESHOOTING.md
+Intel B60 is validated on Windows/WSL2. Croatian output needs manual review.

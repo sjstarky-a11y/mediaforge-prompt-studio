@@ -21,6 +21,44 @@ terms at the model's download source before use.
 Model page:
 https://hub.docker.com/r/ai/qwen2.5
 
+## Optional Prompt Doctor models
+
+The v0.3 development catalog can reference additional Qwen and Gemma variants.
+No optional model weights are included in this repository. Qwen model pages
+identify Apache 2.0 licensing; Gemma variants are governed by the separate
+Gemma Terms. `manage-models.ps1` requires explicit acknowledgement before it
+downloads a catalog entry with non-Apache terms.
+
+Model pages:
+
+- https://hub.docker.com/r/ai/qwen3
+- https://hub.docker.com/r/ai/gemma3-qat
+
+## NVIDIA image runtime
+
+The optional NVIDIA profile uses PyTorch and Hugging Face Diffusers in a
+separate CUDA-enabled container. It downloads the configured Stable Diffusion
+model on first use; weights are not stored in this repository.
+
+- PyTorch: BSD-style license — https://github.com/pytorch/pytorch/blob/main/LICENSE
+- Diffusers: Apache 2.0 — https://github.com/huggingface/diffusers/blob/main/LICENSE
+- Transformers: Apache 2.0 — https://github.com/huggingface/transformers/blob/main/LICENSE
+
+The default CUDA image model is `stabilityai/stable-diffusion-xl-base-1.0`.
+Its model card identifies the CreativeML Open RAIL++-M license. Users must
+review and accept the model terms at the download source:
+https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0
+
+## FLUX.2 Klein 4B Hero Frame model
+
+The optional Hero Frame Set downloads `black-forest-labs/FLUX.2-klein-4B`
+from Hugging Face only after the user confirms first use. Model weights are not
+included in this repository or the release archives. The model card identifies
+the license as Apache 2.0. Users should review the current model card and terms
+at the download source before use:
+
+https://huggingface.co/black-forest-labs/FLUX.2-klein-4B
+
 ## OpenVINO Model Server
 
 Used to serve the Visual Proof Frame image model locally.
@@ -56,3 +94,11 @@ licenses. This notice is not a substitute for their full terms. The installer
 downloads third-party software and models separately; users must review and
 comply with the terms presented by each download source. No third-party model
 weights are stored in this repository.
+
+## Optional Intel text runtime
+
+The Intel text profile uses the official public
+[OpenVINO/Qwen2.5-7B-Instruct-int4-ov](https://huggingface.co/OpenVINO/Qwen2.5-7B-Instruct-int4-ov)
+conversion of Qwen2.5-7B-Instruct, under Apache 2.0 as documented on its model card.
+Weights are downloaded separately to the local cache; they are not bundled or
+relicensed by this repository. OpenVINO Model Server retains its upstream license.

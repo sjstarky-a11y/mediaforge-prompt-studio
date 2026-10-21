@@ -9,7 +9,10 @@ permissions:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -20,15 +23,89 @@ jobs:
           python-version: "3.12"
 
       - name: Validate Python syntax
-        run: python -m py_compile app/main.py
+        run: python -m compileall -q app image_cuda image_flux intel_runtime scripts
+
+      - name: Install application dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate shared source modules
+        run: python scripts/sync_shared.py --check
+
+      - name: Validate model catalog
+        run: python -m json.tool models/model-catalog.json
+
+      - name: Validate package manifest
+        run: python scripts/build_manifest.py --check
+
+      - name: Validate browser JavaScript syntax
+        run: |
+          node -e 'const fs=require("fs"); const html=fs.readFileSync("app/index.html","utf8"); const script=html.match(/<script>([\s\S]*?)<\/script>/); if(!script) throw new Error("script not found"); new Function(script[1]);'
+
+      - name: Run runtime profile tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Validate PowerShell syntax
+        shell: pwsh
+        run: |
+          $files = @(
+            "build-release.ps1",
+            "doctor.ps1",
+            "scripts/runtime-common.ps1",
+            "detect-hardware.ps1",
+            "detect-runtime.ps1",
+            "install.ps1",
+            "manage-models.ps1",
+            "runtime-policy.ps1",
+            "start.ps1",
+            "status.ps1",
+            "stop.ps1"
+          )
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $file),
+              [ref]$tokens,
+              [ref]$errors
+            )
+            if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error $_ }
+              exit 1
+            }
+          }
+
+      - name: Validate NVIDIA runtime policy
+        shell: pwsh
+        run: |
+          & ./tests/test-runtime-policy.ps1
+
+      - name: Validate Linux shell syntax
+        shell: bash
+        run: |
+          bash -n MediaForge-Linux.sh build-release.sh install.sh start.sh stop.sh status.sh doctor.sh manage-models.sh
+          bash -n detect-hardware.sh detect-runtime.sh runtime-policy.sh
+          bash -n scripts/mediaforge-common.sh scripts/intel-runtime.sh tests/test-linux-runtime-policy.sh
+
+      - name: Validate Linux NVIDIA runtime policy
+        shell: bash
+        run: bash ./tests/test-linux-runtime-policy.sh
+
+      - name: Validate reproducible Windows and Linux packaging
+        run: python scripts/build_release.py --check
 
       - name: Validate Docker Compose
-        run: docker compose config --quiet
+        if: runner.os == 'Linux'
+        run: |
+          docker compose -f docker-compose.yml config --quiet
+          docker compose -f docker-compose.nvidia.yml config --quiet
+          docker compose -f docker-compose.intel.yml config --quiet
+          docker compose -f docker-compose.intel-wsl.yml config --quiet
 
       - name: Confirm private runtime files are absent
         shell: bash
         run: |
           test ! -f .env
           test ! -f runtime/hardware-profile.json
+          test ! -f runtime/runtime-profile.json
           test ! -f runtime/install-log.txt
           test ! -d data

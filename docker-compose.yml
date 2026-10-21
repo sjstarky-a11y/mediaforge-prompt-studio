@@ -1,23 +1,34 @@
-name: mediaforge-prompt-studio-public
+name: ${MEDIAFORGE_PROJECT_NAME:-mediaforge-prompt-studio-public}
 
 services:
   mediaforge:
     build:
       context: .
       dockerfile: Dockerfile
-    image: mediaforge-prompt-studio:public-v0.1a-cpu
-    container_name: mediaforge-prompt-studio
+    image: mediaforge-prompt-studio:v0.4-preview
+    container_name: ${MEDIAFORGE_APP_CONTAINER:-mediaforge-prompt-studio}
     restart: unless-stopped
     ports:
       - "127.0.0.1:${MEDIAFORGE_APP_PORT:-18888}:8080"
     environment:
       MEDIAFORGE_DMR_URL: ${MEDIAFORGE_DMR_URL:-http://host.docker.internal:12434/engines/llama.cpp/v1}
+      MEDIAFORGE_DMR_MANAGEMENT_URL: ${MEDIAFORGE_DMR_MANAGEMENT_URL:-http://host.docker.internal:12434}
       MEDIAFORGE_DMR_API_KEY: ${MEDIAFORGE_DMR_API_KEY:-docker-model-runner}
       MEDIAFORGE_MODEL: ${MEDIAFORGE_MODEL:-ai/qwen2.5:3B-Q4_K_M}
+      MEDIAFORGE_IMAGE_API_URL: ${MEDIAFORGE_IMAGE_API_URL:-http://ovms-sdxl:8000/v3}
+      MEDIAFORGE_IMAGE_MODEL: ${MEDIAFORGE_IMAGE_MODEL:-OpenVINO/stable-diffusion-xl-base-1.0-int8-ov}
+      MEDIAFORGE_IMAGE_BACKEND: ${MEDIAFORGE_IMAGE_BACKEND:-OpenVINO CPU}
+      MEDIAFORGE_HERO_API_URL: ${MEDIAFORGE_HERO_API_URL:-http://image-flux:8000/v1}
+      MEDIAFORGE_HERO_MODEL: ${MEDIAFORGE_HERO_MODEL:-black-forest-labs/FLUX.2-klein-4B}
+      MEDIAFORGE_HERO_BACKEND: ${MEDIAFORGE_HERO_BACKEND:-FLUX.2 Klein 4B / CPU}
       MEDIAFORGE_OVMS_IMAGE_URL: ${MEDIAFORGE_OVMS_IMAGE_URL:-http://ovms-sdxl:8000/v3}
       MEDIAFORGE_OVMS_IMAGE_MODEL: ${MEDIAFORGE_OVMS_IMAGE_MODEL:-OpenVINO/stable-diffusion-xl-base-1.0-int8-ov}
       MEDIAFORGE_DEFAULT_LANGUAGE: English
-      MEDIAFORGE_RUNTIME: ${MEDIAFORGE_RUNTIME:-cpu}
+      MEDIAFORGE_RUNTIME_MODE: ${MEDIAFORGE_RUNTIME_MODE:-auto}
+      MEDIAFORGE_RUNTIME_PROFILE_PATH: /runtime/runtime-profile.json
+      MEDIAFORGE_IMAGE_DEVICE: ${MEDIAFORGE_IMAGE_DEVICE:-CPU}
+    volumes:
+      - ./runtime:/runtime:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -25,10 +36,10 @@ services:
 
   ovms-sdxl:
     image: openvino/model_server:latest
-    container_name: mediaforge-ovms-sdxl-cpu
+    container_name: ${MEDIAFORGE_CPU_IMAGE_CONTAINER:-mediaforge-ovms-sdxl-cpu}
     restart: unless-stopped
     ports:
-      - "127.0.0.1:${MEDIAFORGE_OVMS_PORT:-8010}:8000"
+      - "127.0.0.1:${MEDIAFORGE_IMAGE_PORT:-8010}:8000"
     volumes:
       - ./data/ovms-models:/models
     command:
@@ -41,4 +52,18 @@ services:
       - --source_model
       - OpenVINO/stable-diffusion-xl-base-1.0-int8-ov
       - --target_device
-      - CPU
+      - ${MEDIAFORGE_IMAGE_DEVICE:-CPU}
+
+  image-flux:
+    build:
+      context: ./image_flux
+      dockerfile: Dockerfile.cpu
+    image: mediaforge-image-flux-cpu:v0.3
+    container_name: ${MEDIAFORGE_HERO_IMAGE_CONTAINER:-mediaforge-image-flux}
+    restart: unless-stopped
+    environment:
+      MEDIAFORGE_HERO_MODEL: ${MEDIAFORGE_HERO_MODEL:-black-forest-labs/FLUX.2-klein-4B}
+      MEDIAFORGE_HERO_DEVICE: cpu
+      HF_HOME: /models/huggingface
+    volumes:
+      - ./data/huggingface:/models/huggingface

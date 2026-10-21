@@ -8,6 +8,22 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from fidelity_concepts import (
+    auto_correct_narrow_lighting_review,
+    detect_unrequested_creative_issues,
+    output_structure_issues,
+)
+from model_catalog import (
+    build_model_inventory,
+    is_valid_model_id,
+    load_model_catalog,
+    model_prompt_prefix,
+    parse_dmr_model_ids,
+)
+from system_api import system_router
+from proof_scene import source_scene_fallback
+from text_backend import TextBackend
+
 
 APP_NAME = "MediaForge Prompt Studio"
 
@@ -17,20 +33,74 @@ DMR_URL = os.getenv(
 ).rstrip("/")
 
 DMR_API_KEY = os.getenv("MEDIAFORGE_DMR_API_KEY", "docker-model-runner")
-MODEL_NAME = os.getenv("MEDIAFORGE_MODEL", "ai/qwen2.5:3B-Q4_K_M")
+DMR_MANAGEMENT_URL = os.getenv(
+    "MEDIAFORGE_DMR_MANAGEMENT_URL",
+    DMR_URL.split("/engines/", 1)[0],
+).rstrip("/")
+DMR_MODEL = os.getenv("MEDIAFORGE_MODEL", "ai/qwen2.5:3B-Q4_K_M")
+TEXT_BACKEND = TextBackend(DMR_URL, DMR_MANAGEMENT_URL, DMR_MODEL, DMR_API_KEY)
+MODEL_NAME = TEXT_BACKEND.default_model
+MODEL_CATALOG_PATH = os.getenv(
+    "MEDIAFORGE_MODEL_CATALOG_PATH",
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "models",
+        "model-catalog.json",
+    ),
+)
+MODEL_CATALOG = load_model_catalog(MODEL_CATALOG_PATH)
 DEFAULT_LANGUAGE = os.getenv("MEDIAFORGE_DEFAULT_LANGUAGE", "English")
 MAX_TOKENS = int(os.getenv("MEDIAFORGE_MAX_TOKENS", "700"))
 TEMPERATURE = float(os.getenv("MEDIAFORGE_TEMPERATURE", "0.55"))
 
-# V1.2 Visual Proof Frame test service.
-# This points to the completely separate OVMS container running on the host.
-OVMS_IMAGE_URL = os.getenv(
-    "MEDIAFORGE_OVMS_IMAGE_URL",
-    "http://host.docker.internal:8010/v3",
+# Visual Proof Frame uses an OpenAI-compatible image generation endpoint.
+# Legacy OVMS variable names remain supported for v0.1a configuration files.
+IMAGE_API_URL = os.getenv(
+    "MEDIAFORGE_IMAGE_API_URL",
+    os.getenv("MEDIAFORGE_OVMS_IMAGE_URL", "http://host.docker.internal:8010/v3"),
 ).rstrip("/")
-OVMS_IMAGE_MODEL = os.getenv(
-    "MEDIAFORGE_OVMS_IMAGE_MODEL",
-    "OpenVINO/stable-diffusion-xl-base-1.0-int8-ov",
+IMAGE_MODEL = os.getenv(
+    "MEDIAFORGE_IMAGE_MODEL",
+    os.getenv(
+        "MEDIAFORGE_OVMS_IMAGE_MODEL",
+        "OpenVINO/stable-diffusion-xl-base-1.0-int8-ov",
+    ),
+)
+IMAGE_BACKEND = os.getenv("MEDIAFORGE_IMAGE_BACKEND", "OpenVINO CPU")
+
+
+def derive_image_readiness_url(image_api_url: str) -> str:
+    """Return the standard readiness endpoint for an image API base URL."""
+    base = image_api_url.rstrip("/")
+    for suffix in ("/v3", "/v1"):
+        if base.endswith(suffix):
+            base = base[: -len(suffix)]
+            break
+    return f"{base}/v2/health/ready"
+
+
+IMAGE_READY_URL = os.getenv(
+    "MEDIAFORGE_IMAGE_READY_URL",
+    derive_image_readiness_url(IMAGE_API_URL),
+).rstrip("/")
+IMAGE_PREPARING_MESSAGE = (
+    "Visual Proof model is being prepared. The first download is several "
+    "gigabytes and may take some time. Prompt Doctor remains available."
+)
+
+HERO_API_URL = os.getenv(
+    "MEDIAFORGE_HERO_API_URL",
+    "http://host.docker.internal:8020/v1",
+).rstrip("/")
+HERO_MODEL = os.getenv(
+    "MEDIAFORGE_HERO_MODEL",
+    "black-forest-labs/FLUX.2-klein-4B",
+)
+HERO_BACKEND = os.getenv("MEDIAFORGE_HERO_BACKEND", "FLUX.2 Klein 4B")
+HERO_DOWNLOAD_MESSAGE = (
+    "Hero Frame Set is preparing its optional local model. First use downloads "
+    "approximately 12 GB; keep at least 15 GB free. Prompt Doctor and Fast Proof "
+    "remain available."
 )
 
 
@@ -40,6 +110,7 @@ app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 class GenerateRequest(BaseModel):
     user_input: str = Field(..., min_length=3, max_length=6000)
+    model: str | None = Field(default=None, min_length=3, max_length=200)
     mode: Literal[
         "improve",
         "diagnose",
@@ -61,6 +132,7 @@ class GenerateResponse(BaseModel):
     model: str
     mode: str
     fidelity: FidelityObserverResult
+    backend: str = "Local text provider"
 
 
 class ProofFrameRequest(BaseModel):
@@ -86,6 +158,14 @@ class ProofFrameResponse(BaseModel):
     cleanup_notes: list[str] = Field(default_factory=list)
 
 
+class HeroFrameSetRequest(BaseModel):
+    source_prompt: str = Field(..., min_length=3, max_length=6000)
+    final_prompt: str = Field(..., min_length=3, max_length=12000)
+    mode: Literal["improve", "cinematic", "commercial"] = "improve"
+    aspect_ratio: Literal["16:9", "9:16", "1:1"] = "16:9"
+    base_seed: int = Field(default=42, ge=0, le=2147483645)
+
+
 class ModelAdapterRequest(BaseModel):
     source_prompt: str = Field(..., min_length=3, max_length=6000)
     approved_prompt: str = Field(..., min_length=3, max_length=12000)
@@ -98,6 +178,8 @@ class ModelAdapterResponse(BaseModel):
     status: Literal["MODEL READY"]
     profile: str
     prompt: str
+    changed: bool
+    adaptation_notes: list[str] = Field(default_factory=list)
     fidelity: FidelityObserverResult
 
 
@@ -106,10 +188,10 @@ def build_system_prompt(mode: str, aspect_ratio: str, language: str) -> str:
 You are MediaForge Prompt Doctor, a specialized assistant for improving prompts for AI video generation.
 
 LANGUAGE
-- The application is English-only.
-- The user prompt is expected to be written in English.
-- Always write the complete final answer in English.
-- Do not translate the answer into another language.
+- Accept source prompts in English or Croatian.
+- Write diagnosis bullet content and the final prompt body in OUTPUT_LANGUAGE.
+- Preserve the exact English section headings required below so the application can identify each section.
+- Preserve explicitly quoted dialogue in its original language.
 
 TARGET FORMAT
 - Target aspect ratio: {aspect_ratio}.
@@ -186,6 +268,8 @@ OUTPUT HYGIENE
 - Do not include generic filler.
 - Do not add extra headings beyond those required by the selected mode.
 """.strip()
+
+    base = base.replace("OUTPUT_LANGUAGE", language)
 
     if mode == "improve":
         task = """
@@ -385,22 +469,54 @@ SHOT 3 - CLOSE-UP: She takes a sip from the same cup.
 Do not output any explanation before or after the two required sections.
 """.strip()
 
-    return base + "\n\n" + task
+    return base + "\n\n" + task + f"\n\nOUTPUT LANGUAGE: {language}. Every diagnosis bullet and every prompt paragraph must be in {language}; only the fixed section headings stay in English."
 
-@app.get("/health")
-def health():
-    return {
-        "status": "ok",
-        "app": APP_NAME,
-        "model": MODEL_NAME,
-        "dmr_url": DMR_URL,
-    }
+app.include_router(system_router(
+    APP_NAME, MODEL_NAME, DMR_URL, HERO_BACKEND, IMAGE_BACKEND,
+    IMAGE_READY_URL, IMAGE_PREPARING_MESSAGE, TEXT_BACKEND,
+))
+
+
+@app.get("/api/hero-status")
+async def hero_status():
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            response = await client.get(f"{HERO_API_URL}/status")
+        response.raise_for_status()
+        data = response.json()
+        return {
+            "available": True,
+            "ready": data.get("ready", False),
+            "state": data.get("state", "available"),
+            "message": data.get("message", HERO_DOWNLOAD_MESSAGE),
+            "download_gb_approx": data.get("download_gb_approx", 12),
+            "size": data.get("size", "512x512"),
+            "frames": data.get("frames", 3),
+            "backend": HERO_BACKEND,
+            "active_job": data.get("active_job"),
+        }
+    except Exception:
+        return {
+            "available": False,
+            "ready": False,
+            "state": "unavailable",
+            "message": "Hero Frame Set service is not available. Fast Proof can still be used.",
+            "download_gb_approx": 12,
+            "size": "512x512",
+            "frames": 3,
+            "backend": HERO_BACKEND,
+        }
+
+
+@app.get("/api/models")
+async def models():
+    return await TEXT_BACKEND.inventory(MODEL_CATALOG)
 
 
 def build_canonical_meaning(user_input: str, language: str) -> str:
     return (
         "CANONICAL MEANING LOCK:\n"
-        "- Treat the user's English prompt as the authoritative source of truth.\n"
+        "- Treat the user's prompt in its original language as the authoritative source of truth.\n"
         "- Preserve every explicit subject, action, object, setting, time, spatial relationship, camera instruction, product detail, and exclusion.\n"
         "- Do not replace concrete user facts with stylistic alternatives.\n"
         "- Do not infer a different story from the user's prompt."
@@ -1650,6 +1766,7 @@ def observe_output_fidelity(
     result: str,
     mode: str,
     aspect_ratio: str,
+    require_mode_structure: bool = True,
 ) -> FidelityObserverResult:
     """
     V1.1 observer-only validation.
@@ -1683,6 +1800,20 @@ def observe_output_fidelity(
     _observer_check_spatial(user_input, target, issues)
     _observer_check_unrequested_human_details(user_input, target, issues)
     _observer_check_product_and_constraints(user_input, target, issues)
+    issues.extend(
+        detect_unrequested_creative_issues(
+            source=user_input,
+            target=target,
+            mode=mode,
+        )
+    )
+    issues.extend(
+        output_structure_issues(
+            result=result,
+            mode=mode,
+            require_mode_structure=require_mode_structure,
+        )
+    )
 
     if aspect_ratio == "9:16":
         if not _observer_has_any(target, ["9:16", "vertical"]):
@@ -1701,6 +1832,7 @@ def observe_output_fidelity_safe(
     result: str,
     mode: str,
     aspect_ratio: str,
+    require_mode_structure: bool = True,
 ) -> FidelityObserverResult:
     """
     Never allow the observer layer to break a successful V1.0 generation.
@@ -1712,6 +1844,7 @@ def observe_output_fidelity_safe(
             result=result,
             mode=mode,
             aspect_ratio=aspect_ratio,
+            require_mode_structure=require_mode_structure,
         )
     except Exception:
         return FidelityObserverResult(
@@ -1756,7 +1889,11 @@ def build_commercial_deterministic(user_input: str) -> str:
 
 @app.post("/api/generate", response_model=GenerateResponse)
 async def generate(req: GenerateRequest):
-    if req.mode == "commercial":
+    active_model = (req.model or MODEL_NAME).strip()
+    if not is_valid_model_id(active_model):
+        raise HTTPException(status_code=400, detail="Invalid local text model identifier.")
+
+    if req.mode == "commercial" and req.language == "English":
         result = build_commercial_deterministic(req.user_input)
         fidelity = observe_output_fidelity_safe(
             user_input=req.user_input,
@@ -1766,9 +1903,10 @@ async def generate(req: GenerateRequest):
         )
         return GenerateResponse(
             result=result,
-            model=MODEL_NAME,
+            model=active_model,
             mode=req.mode,
             fidelity=fidelity,
+            backend="Local rules (no model inference)",
         )
 
     system_prompt = build_system_prompt(req.mode, req.aspect_ratio, req.language)
@@ -1786,13 +1924,14 @@ async def generate(req: GenerateRequest):
         "commercial": 0.20,
     }.get(req.mode, TEMPERATURE)
     payload = {
-        "model": MODEL_NAME,
+        "model": active_model,
         "messages": [
             {"role": "system", "content": system_prompt},
             {
                 "role": "user",
                 "content": (
-                    guarded_user_input
+                    model_prompt_prefix(active_model, MODEL_CATALOG)
+                    + guarded_user_input
                     + "\n\n"
                     + canonical_meaning
                     + "\n\n"
@@ -1821,25 +1960,18 @@ async def generate(req: GenerateRequest):
     }
 
     try:
-        async with httpx.AsyncClient(timeout=180.0) as client:
-            response = await client.post(
-                f"{DMR_URL}/chat/completions",
-                headers=headers,
-                json=payload,
-            )
-            response.raise_for_status()
-            data = response.json()
+        data, active_model, text_backend = await TEXT_BACKEND.complete(active_model, payload)
 
     except httpx.HTTPStatusError as exc:
         raise HTTPException(
             status_code=502,
-            detail=f"Docker Model Runner returned HTTP {exc.response.status_code}: {exc.response.text}",
+            detail=f"Local text service returned HTTP {exc.response.status_code}: {exc.response.text}",
         )
 
     except Exception as exc:
         raise HTTPException(
             status_code=502,
-            detail=f"Could not connect to Docker Model Runner: {exc}",
+            detail=f"Could not connect to the local text service: {exc}",
         )
 
     try:
@@ -1847,7 +1979,7 @@ async def generate(req: GenerateRequest):
     except Exception:
         raise HTTPException(
             status_code=502,
-            detail=f"Unexpected response from Docker Model Runner: {data}",
+            detail=f"Unexpected response from the local text service: {data}",
         )
 
     if req.mode == "improve":
@@ -1884,11 +2016,30 @@ async def generate(req: GenerateRequest):
         aspect_ratio=req.aspect_ratio,
     )
 
+    if fidelity.status == "REVIEW":
+        corrected_result, corrections = auto_correct_narrow_lighting_review(
+            source=req.user_input,
+            target=result,
+            mode=req.mode,
+            issues=fidelity.issues,
+        )
+        if corrections:
+            corrected_fidelity = observe_output_fidelity_safe(
+                user_input=req.user_input,
+                result=corrected_result,
+                mode=req.mode,
+                aspect_ratio=req.aspect_ratio,
+            )
+            if corrected_fidelity.status == "INTENT PROTECTED":
+                result = corrected_result
+                fidelity = corrected_fidelity
+
     return GenerateResponse(
         result=result,
-        model=MODEL_NAME,
+        model=active_model,
         mode=req.mode,
         fidelity=fidelity,
+        backend=text_backend,
     )
 
 
@@ -2162,6 +2313,9 @@ def _proof_clean_selected_clause(clause: str) -> str:
 
     # Observation/action phrasing for a still image.
     verb_map = [
+        (r"(?i)^enters\b", "entering"),
+        (r"(?i)^walks\b", "walking"),
+        (r"(?i)^carries\b", "carrying"),
         (r"(?i)^looks back\b", "looking back"),
         (r"(?i)^looks outside\b", "looking outside"),
         (r"(?i)^looks out\b", "looking out"),
@@ -2181,7 +2335,8 @@ def _proof_choose_single_frame_clause(source_text: str) -> tuple[str, str]:
     clauses = _proof_extract_action_clauses(source_text)
 
     if len(clauses) <= 1:
-        return (clauses[0] if clauses else source_text.strip(), "single_moment")
+        selected = clauses[0] if clauses else source_text.strip()
+        return (_proof_clean_selected_clause(selected), "single_moment")
 
     # V1.2.4a: stable position + observation is the strongest single-frame pair.
     # Example: "stops beneath the screen" + "looks back toward the empty seats".
@@ -2210,6 +2365,9 @@ def _proof_build_single_frame(source_text: str) -> tuple[str, str]:
     s = _observer_normalize(source_text)
     subject = _proof_subject_phrase(source_text)
     environment = _proof_environment_phrase(source_text)
+    preserved_scene = source_scene_fallback(source_text, subject, environment)
+    if preserved_scene is not None:
+        return preserved_scene, "source_scene_preserved"
     selected_clause, reason = _proof_choose_single_frame_clause(source_text)
 
     # Strong deterministic conversions for common, visually clear sequences.
@@ -2256,10 +2414,17 @@ def _proof_build_single_frame(source_text: str) -> tuple[str, str]:
     selected = selected_clause.rstrip(".")
     selected_text = selected[0].lower() + selected[1:] if selected else "in the final visible state"
 
+    if "cinema" in s:
+        selected_text = re.sub(
+            r"(?i)^(?:entering|walking into)\s+(?:an?\s+)?(?:old\s+)?(?:abandoned\s+)?cinema\b",
+            "walking into the auditorium",
+            selected_text,
+        )
+
     frame = f"Photorealistic cinematic still of {subject} in {environment}, {selected_text}."
 
     explicit_details = []
-    if "camera bag" in s:
+    if "camera bag" in s and "camera bag" not in _observer_normalize(selected_text):
         explicit_details.append("a small camera bag visible over the shoulder")
     if "worn red seats" in s:
         explicit_details.append("rows of worn red seats")
@@ -2304,7 +2469,7 @@ def build_visual_proof_prompt(
 
 
 # ---------------------------------------------------------------------------
-# V1.3.4 MODEL ADAPTER CORE — GENERIC VIDEO + RUNWAY GEN-4.5 + VEO 3.1 + KLING VIDEO 3.0
+# MODEL ADAPTER V2 — GENERIC VIDEO + RUNWAY GEN-4.5 + VEO 3.1 + KLING VIDEO 3.0
 #
 # Core principle:
 #   Adapt the format, never rewrite the idea.
@@ -2331,11 +2496,55 @@ def _adapter_clean_prompt_text(approved_prompt: str, mode: str) -> str:
     return target.strip()
 
 
-def _build_generic_video_prompt(approved_prompt: str, mode: str) -> str:
-    return _adapter_clean_prompt_text(approved_prompt, mode)
+def _adapter_section_breaks(target: str, labels: tuple[str, ...]) -> str:
+    """Put already-explicit model cues on their own lines without rewriting them."""
+    if not labels:
+        return target
+
+    label_pattern = "|".join(re.escape(label) for label in labels)
+    return re.sub(
+        rf"[ \t]+(?=(?:{label_pattern})\s*:)",
+        "\n",
+        target,
+        flags=re.IGNORECASE,
+    )
 
 
-def _build_runway_gen4_5_prompt(approved_prompt: str, mode: str) -> str:
+def _adapter_result(
+    profile_name: str,
+    original: str,
+    adapted: str,
+    changed_notes: list[str],
+    unchanged_note: str,
+) -> tuple[str, bool, list[str]]:
+    adapted = adapted.strip()
+    changed = adapted != original
+    if changed:
+        return adapted, True, changed_notes
+    return adapted, False, [
+        f"{profile_name}: approved prompt is compatible as-is.",
+        unchanged_note,
+    ]
+
+
+def _build_generic_video_prompt(
+    approved_prompt: str,
+    mode: str,
+) -> tuple[str, bool, list[str]]:
+    target = _adapter_clean_prompt_text(approved_prompt, mode)
+    return _adapter_result(
+        profile_name="Generic Video",
+        original=target,
+        adapted=target,
+        changed_notes=[],
+        unchanged_note="No model-specific rewrite was requested or required.",
+    )
+
+
+def _build_runway_gen4_5_prompt(
+    approved_prompt: str,
+    mode: str,
+) -> tuple[str, bool, list[str]]:
     """
     Runway Gen-4.5 profile, intentionally minimal.
 
@@ -2347,24 +2556,37 @@ def _build_runway_gen4_5_prompt(approved_prompt: str, mode: str) -> str:
     - no invented creative details
     - one clean copy/paste prompt
     """
-    target = _adapter_clean_prompt_text(approved_prompt, mode)
+    original = _adapter_clean_prompt_text(approved_prompt, mode)
+    target = original
+    notes: list[str] = []
 
     # Keep sentence content intact. We only normalize a few generic wrapper
     # phrases so the output reads as a direct video-generation prompt.
-    target = re.sub(
-        r"(?i)\bthe camera maintains a steady,\s*",
-        "The camera remains steady in a ",
+    target, camera_changes = re.subn(
+        r"(?i)\bthe camera maintains a steady,\s*([a-z-]+(?:\s+[a-z-]+)?) shot,\s*",
+        r"A steady \1 camera shot, ",
         target,
     )
+    if camera_changes:
+        notes.append("Normalized the existing camera direction for Runway Gen-4.5.")
 
     # Avoid duplicate whitespace introduced by normalization.
     target = re.sub(r"[ \t]{2,}", " ", target)
     target = re.sub(r"\s+([,.;:])", r"\1", target)
-    return target.strip()
+    return _adapter_result(
+        profile_name="Runway Gen-4.5",
+        original=original,
+        adapted=target,
+        changed_notes=notes,
+        unchanged_note="No motion or camera direction was invented.",
+    )
 
 
 
-def _build_veo_3_1_prompt(approved_prompt: str, mode: str) -> str:
+def _build_veo_3_1_prompt(
+    approved_prompt: str,
+    mode: str,
+) -> tuple[str, bool, list[str]]:
     """
     Veo 3.1 profile, intentionally minimal.
 
@@ -2376,23 +2598,44 @@ def _build_veo_3_1_prompt(approved_prompt: str, mode: str) -> str:
     - do not invent new creative details
     - one clean copy/paste prompt
     """
-    target = _adapter_clean_prompt_text(approved_prompt, mode)
+    original = _adapter_clean_prompt_text(approved_prompt, mode)
+    target = original
+    notes: list[str] = []
 
     # Small formatting adaptation only:
     # make an existing camera instruction slightly more direct for video prompting.
-    target = re.sub(
+    target, camera_changes = re.subn(
         r"(?i)\bthe camera maintains a steady,\s*([a-z-]+(?:\s+[a-z-]+)?) shot,\s*",
         r"The camera remains steady in a \1 shot, ",
         target,
     )
+    if camera_changes:
+        notes.append("Normalized the existing camera direction for Veo 3.1.")
+
+    sectioned = _adapter_section_breaks(
+        target,
+        ("Audio", "Ambient sound", "Sound effects", "Dialogue"),
+    )
+    if sectioned != target:
+        target = sectioned
+        notes.append("Separated existing audio or dialogue cues for Veo 3.1.")
 
     target = re.sub(r"[ \t]{2,}", " ", target)
     target = re.sub(r"\s+([,.;:])", r"\1", target)
-    return target.strip()
+    return _adapter_result(
+        profile_name="Veo 3.1",
+        original=original,
+        adapted=target,
+        changed_notes=notes,
+        unchanged_note="No audio, dialogue, motion, or camera detail was invented.",
+    )
 
 
 
-def _build_kling_video_3_0_prompt(approved_prompt: str, mode: str) -> str:
+def _build_kling_video_3_0_prompt(
+    approved_prompt: str,
+    mode: str,
+) -> tuple[str, bool, list[str]]:
     """
     Kling VIDEO 3.0 profile, intentionally minimal.
 
@@ -2404,38 +2647,64 @@ def _build_kling_video_3_0_prompt(approved_prompt: str, mode: str) -> str:
     - do not invent shots, dialogue, audio, characters, or scene details
     - one clean copy/paste prompt
     """
-    target = _adapter_clean_prompt_text(approved_prompt, mode)
+    original = _adapter_clean_prompt_text(approved_prompt, mode)
+    target = original
+    notes: list[str] = []
 
     # Kling 3.0 accepts natural narrative prompting, so keep the approved
     # sequence intact and apply only a small camera-phrase normalization.
-    target = re.sub(
+    target, camera_changes = re.subn(
         r"(?i)\bthe camera maintains a steady,\s*([a-z-]+(?:\s+[a-z-]+)?) shot,\s*",
         r"Steady \1 camera shot, ",
         target,
     )
+    if camera_changes:
+        notes.append("Normalized the existing camera direction for Kling VIDEO 3.0.")
+
+    sectioned = _adapter_section_breaks(
+        target,
+        ("Shot 1", "Shot 2", "Shot 3", "Shot 4", "Shot 5", "Shot 6", "Audio", "Dialogue"),
+    )
+    if sectioned != target:
+        target = sectioned
+        notes.append("Separated existing shot, audio, or dialogue cues for Kling VIDEO 3.0.")
 
     target = re.sub(r"[ \t]{2,}", " ", target)
     target = re.sub(r"\s+([,.;:])", r"\1", target)
-    return target.strip()
+    return _adapter_result(
+        profile_name="Kling VIDEO 3.0",
+        original=original,
+        adapted=target,
+        changed_notes=notes,
+        unchanged_note="No multi-shot structure, audio, dialogue, or camera detail was invented.",
+    )
 
 
-def _build_model_ready_prompt(profile: str, approved_prompt: str, mode: str) -> tuple[str, str]:
+def _build_model_ready_prompt(
+    profile: str,
+    approved_prompt: str,
+    mode: str,
+) -> tuple[str, str, bool, list[str]]:
     if profile == "kling_video_3_0":
-        return "Kling VIDEO 3.0", _build_kling_video_3_0_prompt(approved_prompt, mode)
+        prompt, changed, notes = _build_kling_video_3_0_prompt(approved_prompt, mode)
+        return "Kling VIDEO 3.0", prompt, changed, notes
 
     if profile == "veo_3_1":
-        return "Veo 3.1", _build_veo_3_1_prompt(approved_prompt, mode)
+        prompt, changed, notes = _build_veo_3_1_prompt(approved_prompt, mode)
+        return "Veo 3.1", prompt, changed, notes
 
     if profile == "runway_gen4_5":
-        return "Runway Gen-4.5", _build_runway_gen4_5_prompt(approved_prompt, mode)
+        prompt, changed, notes = _build_runway_gen4_5_prompt(approved_prompt, mode)
+        return "Runway Gen-4.5", prompt, changed, notes
 
-    return "Generic Video", _build_generic_video_prompt(approved_prompt, mode)
+    prompt, changed, notes = _build_generic_video_prompt(approved_prompt, mode)
+    return "Generic Video", prompt, changed, notes
 
 
 @app.post("/api/model-adapter", response_model=ModelAdapterResponse)
 async def model_adapter(req: ModelAdapterRequest):
     """
-    V1.3.4 model adapter endpoint.
+    Transparent Model Adapter v2 endpoint.
 
     Supported profiles:
     - generic_video
@@ -2445,6 +2714,8 @@ async def model_adapter(req: ModelAdapterRequest):
 
     The approved creative prompt is treated as locked. The adapter performs
     deterministic format adaptation only and must remain INTENT PROTECTED.
+    The response states whether the prompt changed instead of implying that a
+    compatible-as-is prompt was rewritten.
     """
     approved_fidelity = observe_output_fidelity_safe(
         user_input=req.source_prompt,
@@ -2462,7 +2733,7 @@ async def model_adapter(req: ModelAdapterRequest):
             },
         )
 
-    profile_name, adapted_prompt = _build_model_ready_prompt(
+    profile_name, adapted_prompt, changed, adaptation_notes = _build_model_ready_prompt(
         profile=req.profile,
         approved_prompt=req.approved_prompt,
         mode=req.mode,
@@ -2473,6 +2744,7 @@ async def model_adapter(req: ModelAdapterRequest):
         result=adapted_prompt,
         mode=req.mode,
         aspect_ratio=req.aspect_ratio,
+        require_mode_structure=False,
     )
 
     if adapted_fidelity.status != "INTENT PROTECTED":
@@ -2488,6 +2760,8 @@ async def model_adapter(req: ModelAdapterRequest):
         status="MODEL READY",
         profile=profile_name,
         prompt=adapted_prompt,
+        changed=changed,
+        adaptation_notes=adaptation_notes,
         fidelity=adapted_fidelity,
     )
 
@@ -2503,54 +2777,49 @@ def _proof_quality_config(quality: str) -> tuple[str, int]:
     return "768x768", 16
 
 
-@app.post("/api/proof-frame", response_model=ProofFrameResponse)
-async def generate_proof_frame(req: ProofFrameRequest):
-    """
-    V1.2 isolated proof-of-concept with proof-only deterministic cleanup.
-
-    V1.1 remains unchanged. The original Prompt Doctor result is never rewritten.
-    """
+def _prepare_visual_prompt(
+    source_prompt: str,
+    final_prompt: str,
+    mode: str,
+    aspect_ratio: str,
+) -> tuple[str, str, str, FidelityObserverResult, bool, list[str]]:
+    """Validate intent once and return the shared proof-safe scene prompt."""
     original_fidelity = observe_output_fidelity_safe(
-        user_input=req.source_prompt,
-        result=req.final_prompt,
-        mode=req.mode,
-        aspect_ratio=req.aspect_ratio,
+        user_input=source_prompt,
+        result=final_prompt,
+        mode=mode,
+        aspect_ratio=aspect_ratio,
     )
-
-    proof_source = req.final_prompt
+    proof_source = final_prompt
     cleanup_notes: list[str] = []
 
     if original_fidelity.status == "REVIEW":
-        # Auto-clean only when every issue is one of the known, narrow
-        # unrequested-human-detail inventions. Anything else stays blocked.
         allowed_prefixes = (
             "INVENTION: the final prompt adds facial expression",
             "INVENTION: the final prompt adds smile",
             "INVENTION: the final prompt adds emotion",
             "INVENTION: the final prompt adds reaction/gesture",
         )
-
         if original_fidelity.issues and all(
             issue.startswith(allowed_prefixes)
             for issue in original_fidelity.issues
         ):
             proof_source, cleanup_notes = _proof_cleanup_unrequested_human_details(
-                source_prompt=req.source_prompt,
-                final_prompt=req.final_prompt,
+                source_prompt=source_prompt,
+                final_prompt=final_prompt,
             )
 
     fidelity = observe_output_fidelity_safe(
-        user_input=req.source_prompt,
+        user_input=source_prompt,
         result=proof_source,
-        mode=req.mode,
-        aspect_ratio=req.aspect_ratio,
+        mode=mode,
+        aspect_ratio=aspect_ratio,
     )
-
     if fidelity.status != "INTENT PROTECTED":
         raise HTTPException(
             status_code=409,
             detail={
-                "message": "Proof Frame blocked because the proof-safe prompt is not INTENT PROTECTED.",
+                "message": "Visual Proof blocked because the proof-safe prompt is not INTENT PROTECTED.",
                 "original_fidelity": original_fidelity.model_dump(),
                 "fidelity_after_cleanup": fidelity.model_dump(),
                 "cleanup_applied": bool(cleanup_notes),
@@ -2559,15 +2828,45 @@ async def generate_proof_frame(req: ProofFrameRequest):
         )
 
     single_frame_prompt, selection_reason, negative_prompt = build_visual_proof_prompt(
-        source_prompt=req.source_prompt,
+        source_prompt=source_prompt,
         final_prompt=proof_source,
+        mode=mode,
+    )
+    return (
+        single_frame_prompt,
+        selection_reason,
+        negative_prompt,
+        fidelity,
+        bool(cleanup_notes),
+        cleanup_notes,
+    )
+
+
+@app.post("/api/proof-frame", response_model=ProofFrameResponse)
+async def generate_proof_frame(req: ProofFrameRequest):
+    """
+    V1.2 isolated proof-of-concept with proof-only deterministic cleanup.
+
+    V1.1 remains unchanged. The original Prompt Doctor result is never rewritten.
+    """
+    (
+        single_frame_prompt,
+        selection_reason,
+        negative_prompt,
+        fidelity,
+        cleanup_applied,
+        cleanup_notes,
+    ) = _prepare_visual_prompt(
+        source_prompt=req.source_prompt,
+        final_prompt=req.final_prompt,
         mode=req.mode,
+        aspect_ratio=req.aspect_ratio,
     )
 
     proof_size, proof_steps = _proof_quality_config(req.quality)
 
     payload = {
-        "model": OVMS_IMAGE_MODEL,
+        "model": IMAGE_MODEL,
         "prompt": single_frame_prompt,
         "negative_prompt": negative_prompt,
         "size": proof_size,
@@ -2579,7 +2878,7 @@ async def generate_proof_frame(req: ProofFrameRequest):
     try:
         async with httpx.AsyncClient(timeout=900.0) as client:
             response = await client.post(
-                f"{OVMS_IMAGE_URL}/images/generations",
+                f"{IMAGE_API_URL}/images/generations",
                 headers={"Content-Type": "application/json"},
                 json=payload,
             )
@@ -2590,15 +2889,24 @@ async def generate_proof_frame(req: ProofFrameRequest):
         raise HTTPException(
             status_code=502,
             detail=(
-                f"OVMS returned HTTP {exc.response.status_code}: "
+                f"{IMAGE_BACKEND} returned HTTP {exc.response.status_code}: "
                 f"{exc.response.text}"
             ),
+        )
+
+    except (httpx.ConnectError, httpx.ConnectTimeout):
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "state": "preparing",
+                "message": IMAGE_PREPARING_MESSAGE,
+            },
         )
 
     except Exception as exc:
         raise HTTPException(
             status_code=502,
-            detail=f"Could not connect to the separate OVMS image service: {exc}",
+            detail=f"Could not connect to the {IMAGE_BACKEND} image service: {exc}",
         )
 
     try:
@@ -2606,12 +2914,12 @@ async def generate_proof_frame(req: ProofFrameRequest):
     except Exception:
         raise HTTPException(
             status_code=502,
-            detail=f"Unexpected response from OVMS image service: {data}",
+            detail=f"Unexpected response from {IMAGE_BACKEND} image service: {data}",
         )
 
     return ProofFrameResponse(
         image_b64=image_b64,
-        model=OVMS_IMAGE_MODEL,
+        model=IMAGE_MODEL,
         quality=req.quality,
         size=proof_size,
         proof_prompt=single_frame_prompt,
@@ -2619,9 +2927,95 @@ async def generate_proof_frame(req: ProofFrameRequest):
         selection_reason=selection_reason,
         negative_prompt=negative_prompt,
         fidelity=fidelity,
-        cleanup_applied=bool(cleanup_notes),
+        cleanup_applied=cleanup_applied,
         cleanup_notes=cleanup_notes,
     )
+
+
+@app.post("/api/hero-frame-set")
+async def create_hero_frame_set(req: HeroFrameSetRequest):
+    (
+        single_frame_prompt,
+        selection_reason,
+        _negative_prompt,
+        fidelity,
+        cleanup_applied,
+        cleanup_notes,
+    ) = _prepare_visual_prompt(
+        source_prompt=req.source_prompt,
+        final_prompt=req.final_prompt,
+        mode=req.mode,
+        aspect_ratio=req.aspect_ratio,
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.post(
+                f"{HERO_API_URL}/hero-sets",
+                json={
+                    "prompt": single_frame_prompt,
+                    "seeds": [req.base_seed, req.base_seed + 1, req.base_seed + 2],
+                },
+            )
+            if response.status_code == 409:
+                raise HTTPException(status_code=409, detail=response.json().get("detail"))
+            response.raise_for_status()
+            data = response.json()
+    except HTTPException:
+        raise
+    except (httpx.ConnectError, httpx.ConnectTimeout):
+        raise HTTPException(status_code=503, detail=HERO_DOWNLOAD_MESSAGE)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"{HERO_BACKEND} returned HTTP {exc.response.status_code}: {exc.response.text}",
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Could not start Hero Frame Set: {exc}")
+
+    return {
+        **data,
+        "model": HERO_MODEL,
+        "proof_prompt": single_frame_prompt,
+        "selection_reason": selection_reason,
+        "fidelity": fidelity.model_dump(),
+        "cleanup_applied": cleanup_applied,
+        "cleanup_notes": cleanup_notes,
+    }
+
+
+@app.get("/api/hero-frame-set/{job_id}")
+async def hero_frame_set_status(job_id: str):
+    if not re.fullmatch(r"[0-9a-f]{32}", job_id):
+        raise HTTPException(status_code=422, detail="Invalid Hero Frame Set job ID.")
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(f"{HERO_API_URL}/hero-sets/{job_id}")
+        if response.status_code == 404:
+            raise HTTPException(status_code=404, detail="Hero Frame Set job not found.")
+        response.raise_for_status()
+        return response.json()
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Could not read Hero Frame Set status: {exc}")
+
+
+@app.post("/api/hero-frame-set/{job_id}/cancel")
+async def cancel_hero_frame_set(job_id: str):
+    if not re.fullmatch(r"[0-9a-f]{32}", job_id):
+        raise HTTPException(status_code=422, detail="Invalid Hero Frame Set job ID.")
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(f"{HERO_API_URL}/hero-sets/{job_id}/cancel")
+        if response.status_code == 404:
+            raise HTTPException(status_code=404, detail="Hero Frame Set job not found.")
+        response.raise_for_status()
+        return response.json()
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Could not cancel Hero Frame Set: {exc}")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -2631,11 +3025,3 @@ def index():
             return HTMLResponse(file.read())
     except FileNotFoundError:
         return HTMLResponse("<h1>index.html not found</h1>", status_code=500)
-
-
-
-
-
-
-
-
