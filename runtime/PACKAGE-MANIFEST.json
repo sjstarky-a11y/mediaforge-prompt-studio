@@ -526,8 +526,8 @@
   },
   {
     "file": "solohost/config_options.yml",
-    "bytes": 3246,
-    "sha256": "5e4c52f366e627c28cc5df2269701635d99bd7fbcc7b39e45fec0da3ce3dd44e"
+    "bytes": 3802,
+    "sha256": "e2bdb157f5f0033743a89e41a554e79195b96839ff65b993ebadccc83122c744"
   },
   {
     "file": "solohost/docker-compose.yml",
@@ -691,8 +691,8 @@
   },
   {
     "file": "tests/test_solohost_source.py",
-    "bytes": 3692,
-    "sha256": "e6e3bf09065b289050ef232547c4a4593e4eb740f8abdebfb6843b981a52b733"
+    "bytes": 4029,
+    "sha256": "f282b4aacda4cd392df1d2ca9d1a1ba0f190c7a7b2f14b8bc669c4579bcdb709"
   },
   {
     "file": "tests/test_startup_listener.py",
