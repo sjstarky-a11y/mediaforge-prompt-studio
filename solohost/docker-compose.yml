@@ -1,6 +1,6 @@
 services:
   mediaforge-studio:
-    image: aerialcroatia/mediaforge-prompt-studio:0.3-solohost.8
+    image: aerialcroatia/mediaforge-prompt-studio:0.3-solohost.9
 
     labels:
       - pi.ui.primary=true
