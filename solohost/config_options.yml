@@ -3,10 +3,19 @@ title: MediaForge Prompt Studio v0.3.2 Configurator
 eyebrow: Director's Cut AI Pro · Local Prompt Doctor
 
 description: >
+  Before installing, start Docker Desktop and wait until Docker Engine is
+  running. In Docker Desktop Settings > AI, enable Docker Model Runner.
+
   Better AI video starts with a better prompt. MediaForge Prompt Studio turns
   rough ideas into clear, production-ready prompts with stronger scene
   direction, camera movement, lighting, framing and atmosphere, while keeping
   your original creative idea in control.
+
+  The first installation may download the local Prompt Doctor model. This
+  can take some time depending on your internet connection and computer.
+
+  When the web app starts, it shows "Starting MediaForge..." and opens
+  automatically when ready. No manual refresh is needed.
 
   The lightweight Core installs without an image model. Optional Visual Proof
   can generate one Proof Frame or three Hero Frame options directly on your
@@ -17,9 +26,13 @@ description: >
 
 output_file: .env
 
-after_save: Saved. Pi Desktop will recreate MediaForge with the selected local features.
+after_save: >
+  Saved. Keep Docker Desktop running with Docker Model Runner enabled.
+  Pi Desktop will recreate MediaForge with the selected local features.
 
-footer_hint: Core is lightweight. Visual Proof is optional, local and CPU-limited to protect Pi Node stability.
+footer_hint: >
+  Requires Docker Desktop with Docker Model Runner enabled. Core is lightweight.
+  Visual Proof is optional, local and CPU-limited to protect Pi Node stability.
 
 fixed_values:
   - name: MEDIAFORGE_MODEL

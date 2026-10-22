@@ -37,6 +37,15 @@ class SoloHostSourceTests(unittest.TestCase):
         for limit in ('"4.0"', '"8.0"', '"12.0"', '"16.0"'):
             self.assertIn(f"value: {limit}", self.public)
 
+    def test_public_profile_explains_first_installation(self):
+        for instruction in (
+            "enable Docker Model Runner",
+            "first installation may download",
+            "opens\n  automatically when ready",
+            "No manual refresh is needed",
+        ):
+            self.assertIn(instruction, self.public)
+
     def test_compose_uses_public_versioned_images(self):
         self.assertNotIn("build:", self.compose)
         self.assertIn(
