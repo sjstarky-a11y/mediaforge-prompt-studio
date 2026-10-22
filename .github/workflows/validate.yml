@@ -39,10 +39,13 @@ jobs:
 
       - name: Validate browser JavaScript syntax
         run: |
-          node -e 'const fs=require("fs"); const html=fs.readFileSync("app/index.html","utf8"); const script=html.match(/<script>([\s\S]*?)<\/script>/); if(!script) throw new Error("script not found"); new Function(script[1]);'
+          node -e 'const fs=require("fs"); for (const file of ["app/index.html", "app/startup.html", "solohost/app/index.html", "solohost/app/startup.html"]) { const html=fs.readFileSync(file,"utf8"); const script=html.match(/<script>([\s\S]*?)<\/script>/); if(!script) throw new Error("script not found: "+file); new Function(script[1]); }'
 
       - name: Run runtime profile tests
         run: python -m unittest discover -s tests -v
+
+      - name: Validate startup screen behaviour
+        run: node tests/test_startup_page.js
 
       - name: Validate PowerShell syntax
         shell: pwsh

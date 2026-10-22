@@ -1,9 +1,20 @@
-# MediaForge Prompt Studio v0.3 — Pi SoloHost Profiles
+# MediaForge Prompt Studio v0.3.2 — Pi SoloHost
 
 This directory is the versioned source for the Pi SoloHost edition of
 MediaForge Prompt Studio. It is intentionally kept separate from the standard
 Windows/Linux installer: SoloHost uses Docker Model Runner for its fixed text
 model and is managed by Pi Desktop.
+
+## First launch
+
+The app shows **Starting MediaForge…** while its web interface is prepared,
+then opens automatically. A manual refresh is not required. If startup takes
+longer than a minute, the page offers **Try again** and points to Pi Desktop's
+Logs tab. Model downloads are managed separately by Pi Desktop.
+
+The current app image is `aerialcroatia/mediaforge-prompt-studio:0.3-solohost.9`.
+The optional image service remains on `0.3-solohost.8`. The `v0.3.1/` folder is
+a historical package snapshot.
 
 ## Shared behaviour
 
@@ -65,3 +76,11 @@ Use Pi Desktop to start, stop and configure the SoloHost app. Do not launch a
 second manual Compose stack on port `18888` while the Pi-managed app is
 running. Pi Node is a separate application and is not modified by either
 profile.
+
+## Distribution
+
+New installations must use this folder's updated `docker-compose.yml` and
+`config_options.yml`, with the app image available in the public registry.
+Updating GitHub alone does not update a package already stored in the SoloHost
+catalog. Publish the revised package there as well. Existing installations need
+the updated package; restarting an old image does not install this fix.

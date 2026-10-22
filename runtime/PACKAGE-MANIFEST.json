@@ -36,8 +36,8 @@
   },
   {
     "file": ".github/workflows/validate.yml",
-    "bytes": 3566,
-    "sha256": "edcfdac30e817ea8a8f09ed9e8c5e2792bf65d32ea55d065910af7ce4bbd650a"
+    "bytes": 3774,
+    "sha256": "009a02560832edb3a890b9a6f34ce6bdc2ef2b82f57725896ac4f3fef2497d4d"
   },
   {
     "file": ".gitignore",
@@ -46,8 +46,8 @@
   },
   {
     "file": "CHANGELOG.md",
-    "bytes": 7912,
-    "sha256": "b89e6078f40927b67c09b61dd0e4e6de9d1763a6c136f35ddf731cff204bccbd"
+    "bytes": 8400,
+    "sha256": "577445c91171912a17ca04334147c527d904ce21d77303d2d8e5f60c75167858"
   },
   {
     "file": "CONTRIBUTING.md",
@@ -56,8 +56,8 @@
   },
   {
     "file": "Dockerfile",
-    "bytes": 309,
-    "sha256": "24f93c9c33d454d5d056301b06b18135d897eacb68b1f4034a2d7630983f9335"
+    "bytes": 269,
+    "sha256": "6f27e7efad4bbc994affba17cefd946a097ecc0370ca533db9e3737f186a1ae9"
   },
   {
     "file": "LICENSE",
@@ -165,6 +165,16 @@
     "sha256": "791d8d2dbbf429bff8f5359d3e2b8f4ad7d15a6ef285a35b73f3792eeefd6437"
   },
   {
+    "file": "app/serve.py",
+    "bytes": 2724,
+    "sha256": "b13f1416d6d0dd92d1be6ae9b999fb74987a5ac0b05e757934e0227fba1d4224"
+  },
+  {
+    "file": "app/startup.html",
+    "bytes": 2964,
+    "sha256": "4e8d88617225cff3e9dd5bab7f8d9fddf4a6b5ae60f8f1aea401912cb267d1e2"
+  },
+  {
     "file": "app/system_api.py",
     "bytes": 1884,
     "sha256": "9caf3398a11a5e7c999911ae779ad6ab74d35bac20c34c73a2cb45af7eb6e697"
@@ -261,8 +271,8 @@
   },
   {
     "file": "docs/TROUBLESHOOTING.md",
-    "bytes": 2253,
-    "sha256": "31a537d93385b54bfb2f6a2275f1d1e4361e397fe54a97a25bf389be171aca01"
+    "bytes": 2436,
+    "sha256": "ef38498fc39aff436fe3a4a9e2716cfe26374ffc4a2e9a533d770820c9bdc536"
   },
   {
     "file": "docs/USER-GUIDE.md",
@@ -441,8 +451,8 @@
   },
   {
     "file": "scripts/sync_shared.py",
-    "bytes": 881,
-    "sha256": "215c5ef01913d20c3b981e866cf095bb3bd505c91b3007930fc14cea5dd161ee"
+    "bytes": 905,
+    "sha256": "1b1ab05aa07f4e6f4b68ccde69d1d186a2d373b0d4f6b6a494488389fa9630b7"
   },
   {
     "file": "solohost/.dockerignore",
@@ -451,13 +461,13 @@
   },
   {
     "file": "solohost/Dockerfile",
-    "bytes": 543,
-    "sha256": "c016b5bb72b5e74c56224b5050612b2e82c348e0702de9b539decab3f6b18773"
+    "bytes": 575,
+    "sha256": "74a263329fa60b7ed49b9ae868d1014b3c7bd5d06c0103e939ac251f4b1146cc"
   },
   {
     "file": "solohost/README.md",
-    "bytes": 3075,
-    "sha256": "67578dee6fd7c346717dd7044e879246dda0a108ceacbeac81b541b4dba05cb2"
+    "bytes": 3976,
+    "sha256": "b32b8e5f8799f1030801c0ae27d063902fb9c11bdd13bf3a36d8c5c938d53057"
   },
   {
     "file": "solohost/app.json",
@@ -495,6 +505,16 @@
     "sha256": "5f226c718e1d6522d84f876621f0d34f3fded83f883a87cb3eaf022979c262ae"
   },
   {
+    "file": "solohost/app/serve.py",
+    "bytes": 2724,
+    "sha256": "b13f1416d6d0dd92d1be6ae9b999fb74987a5ac0b05e757934e0227fba1d4224"
+  },
+  {
+    "file": "solohost/app/startup.html",
+    "bytes": 2964,
+    "sha256": "4e8d88617225cff3e9dd5bab7f8d9fddf4a6b5ae60f8f1aea401912cb267d1e2"
+  },
+  {
     "file": "solohost/config_options.core.yml",
     "bytes": 1608,
     "sha256": "a751649fdfce724feb20cdc15791a2988cdf9f684b7a20f36c6dff75e5407119"
@@ -506,13 +526,13 @@
   },
   {
     "file": "solohost/config_options.yml",
-    "bytes": 3244,
-    "sha256": "2253bd413106d730fe4179262557080b3f0048a234f5e74636ebbf3b2433e91f"
+    "bytes": 3246,
+    "sha256": "5e4c52f366e627c28cc5df2269701635d99bd7fbcc7b39e45fec0da3ce3dd44e"
   },
   {
     "file": "solohost/docker-compose.yml",
     "bytes": 2025,
-    "sha256": "a4424c6c16850f1a018765a529e6391484c812f4a6f5919d076ddcece4cd165d"
+    "sha256": "70cbc96adc9f249e7d015a0a7a92c65bdf6f018443a43174c2069c2eb674b1dd"
   },
   {
     "file": "solohost/image_flux/Dockerfile.cpu",
@@ -672,7 +692,17 @@
   {
     "file": "tests/test_solohost_source.py",
     "bytes": 3692,
-    "sha256": "eb219a93691c9df30b4adb7ab17de36a516b323b53b5807b9e17135d76f271d9"
+    "sha256": "e6e3bf09065b289050ef232547c4a4593e4eb740f8abdebfb6843b981a52b733"
+  },
+  {
+    "file": "tests/test_startup_listener.py",
+    "bytes": 5017,
+    "sha256": "7510e8236f71d1ea6bd6eb1cbfc7f8f4bc4d941085c3da131ba6ecb26fbef2f6"
+  },
+  {
+    "file": "tests/test_startup_page.js",
+    "bytes": 2785,
+    "sha256": "5056b72533c57e344727ff46374d178820420b2a09836528e6c1991883eae6a0"
   },
   {
     "file": "tests/test_static_scene.py",

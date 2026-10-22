@@ -3,6 +3,7 @@
 | Symptom | First step |
 | --- | --- |
 | App does not open | Start Docker; run the launcher with `status` |
+| SoloHost shows white on its first automatic launch | Install the updated SoloHost package (app image `0.3-solohost.9` or later); it shows startup progress and opens automatically |
 | First image is slow / preparing | Allow the initial download and model loading to finish |
 | Intel was detected but CPU is selected | Check the driver and GPU bridge; run `doctor` |
 | Text uses Model Runner | Intel may be preparing, have insufficient reported memory, or a DMR model was explicitly selected |

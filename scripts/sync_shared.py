@@ -1,9 +1,9 @@
-"""Keep pure shared SoloHost modules generated from the main application source."""
+"""Keep shared SoloHost helpers and startup UI in sync with the main source."""
 import argparse
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SHARED = ("fidelity_concepts.py", "model_catalog.py")
+SHARED = ("fidelity_concepts.py", "model_catalog.py", "serve.py", "startup.html")
 
 
 def sync(check=False):

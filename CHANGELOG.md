@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.3.2 SoloHost — 22 October 2026
+
+- Show a lightweight startup screen before loading the web application.
+- Open the interface automatically when ready, including first installation.
+- Offer a retry and a clear message if startup takes longer than a minute.
+- Keep the HTTP listener open during startup and handover to Uvicorn.
+- Share the startup helper with standalone builds; keep the v0.3.1 snapshot.
+- Use app image `0.3-solohost.9`; the optional image service stays on `.8`.
+
 ## v0.4 preview — 22 October 2026
 
 - Reconcile standalone Windows/Linux development with main and preserve SoloHost v0.3.1 configuration.
